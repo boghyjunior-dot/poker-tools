@@ -172,7 +172,6 @@ describe('board', () => {
 
   it('keeps locked-suit combos in range when blocked by board', () => {
     const aks = ALL_CELLS.find((c) => c.label === 'AKs')!
-    const key = cellKey(aks.row, aks.col)
     const board: BoardCard[] = [{ rank: 0, suit: 's' }, { rank: 5, suit: 'h' }, { rank: 8, suit: 'd' }]
     const inRange = getCombosInRange(aks, new Set(['s']), ['s', 'h'], board)
     expect(inRange).toContain('s')
