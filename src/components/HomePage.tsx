@@ -102,7 +102,6 @@ export function HomePage() {
             title="Randomizer"
             description="Generate a random number from 1 to 100. Auto-generates every 15 seconds or roll manually."
             accent="border-emerald-800/60 hover:border-emerald-600/80"
-            external
           />
         </div>
       </div>
