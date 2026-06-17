@@ -28,13 +28,21 @@ interface RangeContextValue {
 
 const RangeContext = createContext<RangeContextValue | null>(null)
 
-export function RangeProvider({ children }: { children: ReactNode }) {
+export function RangeProvider({
+  children,
+  persist = true,
+}: {
+  children: ReactNode
+  persist?: boolean
+}) {
   const [state, dispatch] = useReducer(rangeReducer, initialState, (init) => {
+    if (!persist) return init
     const saved = loadState()
     return saved ? { ...init, ...saved } : init
   })
 
   useEffect(() => {
+    if (!persist) return
     saveState(state)
   }, [
     state.cellStates,

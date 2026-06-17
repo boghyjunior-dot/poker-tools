@@ -22,6 +22,16 @@ function DiceIcon() {
   )
 }
 
+function PracticeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="5" />
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 function EquityIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
@@ -88,6 +98,13 @@ export function HomePage() {
             title="MDF Range Tool"
             description="Paint your range, pick a bet size, tag hands to call or fold, and track Minimum Defense Frequency."
             accent="border-indigo-800/60 hover:border-indigo-600/80"
+          />
+          <ToolCard
+            href="practice.html"
+            icon={<PracticeIcon />}
+            title="MDF Practice"
+            description="Gamified drill: defend a preset range on flop, turn, and river vs random bets. Score your fold accuracy."
+            accent="border-rose-800/60 hover:border-rose-600/80"
           />
           <ToolCard
             href="equity.html"

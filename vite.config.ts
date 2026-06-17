@@ -14,6 +14,7 @@ export default defineConfig({
         home: path.resolve(__dirname, 'home.html'),
         mdf: path.resolve(__dirname, 'mdf.html'),
         equity: path.resolve(__dirname, 'equity.html'),
+        practice: path.resolve(__dirname, 'practice.html'),
         randomizer: path.resolve(__dirname, 'randomizer.html'),
       },
     },
