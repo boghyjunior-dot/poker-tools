@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { BackToMenu } from './BackToMenu'
 
 const AUTO_INTERVAL_MS = 15_000
 
@@ -86,7 +87,11 @@ export function RandomizerPage() {
   const progress = countdown / AUTO_INTERVAL_MS
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 gap-6">
+    <div className="relative min-h-screen flex flex-col items-center justify-center p-4 gap-6">
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6">
+        <BackToMenu />
+      </div>
+
       <header className="text-center">
         <h1 className="text-xl font-bold text-white">Randomizer</h1>
         <p className="text-xs text-slate-500 mt-0.5">1 – 100</p>

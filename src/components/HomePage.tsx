@@ -22,6 +22,18 @@ function DiceIcon() {
   )
 }
 
+function EquityIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+      <path d="M4 19V5" />
+      <path d="M4 19h16" />
+      <path d="M8 17V11" />
+      <path d="M12 17V7" />
+      <path d="M16 17v-4" />
+    </svg>
+  )
+}
+
 function ToolCard({
   href,
   icon,
@@ -76,6 +88,13 @@ export function HomePage() {
             title="MDF Range Tool"
             description="Paint your range, pick a bet size, tag hands to call or fold, and track Minimum Defense Frequency."
             accent="border-indigo-800/60 hover:border-indigo-600/80"
+          />
+          <ToolCard
+            href="equity.html"
+            icon={<EquityIcon />}
+            title="Equity Calculator"
+            description="Calculate preflop equity for a hand or range against one or more opponent ranges."
+            accent="border-violet-800/60 hover:border-violet-600/80"
           />
           <ToolCard
             href="randomizer.html"

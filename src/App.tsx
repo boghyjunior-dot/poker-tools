@@ -7,6 +7,7 @@ import { HandMatrix } from './components/HandMatrix'
 import { ComboPanel } from './components/ComboPanel'
 import { Legend } from './components/Legend'
 import { MdfTargetDisplay } from './components/MdfTargetDisplay'
+import { BackToMenu } from './components/BackToMenu'
 
 function App() {
   return (
@@ -14,15 +15,7 @@ function App() {
       <div className="min-h-screen p-4 sm:p-6 max-w-7xl mx-auto">
         <header className="mb-6 flex items-start gap-4">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <a
-                href="home.html"
-                className="text-xs text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1"
-              >
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" className="w-3 h-3"><path d="M10 12L6 8l4-4"/></svg>
-                Poker Tools
-              </a>
-            </div>
+            <BackToMenu className="mb-1" />
             <h1 className="text-2xl font-bold text-white mb-1">MDF Range Tool</h1>
             <p className="text-sm text-slate-400">
               Paint your range, pick a bet size, tag hands to call or fold, and track MDF fold %.

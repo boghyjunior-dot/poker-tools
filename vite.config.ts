@@ -13,6 +13,7 @@ export default defineConfig({
         main: path.resolve(__dirname, 'index.html'),
         home: path.resolve(__dirname, 'home.html'),
         mdf: path.resolve(__dirname, 'mdf.html'),
+        equity: path.resolve(__dirname, 'equity.html'),
         randomizer: path.resolve(__dirname, 'randomizer.html'),
       },
     },
