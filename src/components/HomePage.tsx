@@ -1,3 +1,14 @@
+import { FEATURE_PRACTICE_ENABLED } from '../lib/featureFlags'
+
+type ToolStatus = 'done' | 'in-progress' | 'in-review' | 'coming-soon'
+
+const STATUS_STYLES: Record<ToolStatus, { badge: string; label: string }> = {
+  done: { badge: 'bg-emerald-900/60 text-emerald-300', label: 'Done' },
+  'in-progress': { badge: 'bg-amber-900/60 text-amber-300', label: 'In progress' },
+  'in-review': { badge: 'bg-indigo-900/60 text-indigo-300', label: 'In review' },
+  'coming-soon': { badge: 'bg-slate-800 text-slate-500', label: 'Coming soon' },
+}
+
 function CardIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
@@ -32,6 +43,16 @@ function PracticeIcon() {
   )
 }
 
+function LeakIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+      <circle cx="10.5" cy="10.5" r="6.5" />
+      <path d="M15.5 15.5 21 21" />
+      <path d="M8 10.5h5M10.5 8v5" />
+    </svg>
+  )
+}
+
 function EquityIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
@@ -51,6 +72,8 @@ function ToolCard({
   description,
   accent,
   external,
+  disabled,
+  status,
 }: {
   href: string
   icon: React.ReactNode
@@ -58,7 +81,54 @@ function ToolCard({
   description: string
   accent: string
   external?: boolean
+  disabled?: boolean
+  status: ToolStatus
 }) {
+  const statusStyle = STATUS_STYLES[status]
+  const content = (
+    <>
+      <div className="flex items-center gap-3">
+        <span
+          className={
+            disabled
+              ? 'text-slate-600'
+              : 'text-slate-300 group-hover:text-white transition-colors'
+          }
+        >
+          {icon}
+        </span>
+        <h2 className={`text-lg font-semibold ${disabled ? 'text-slate-500' : 'text-white'}`}>
+          {title}
+        </h2>
+        {external ? (
+          <svg className="ml-auto w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            <polyline points="15 3 21 3 21 9" />
+            <line x1="10" y1="14" x2="21" y2="3" />
+          </svg>
+        ) : (
+          <span className={`ml-auto rounded px-2 py-0.5 text-xs font-medium uppercase tracking-wide ${statusStyle.badge}`}>
+            {statusStyle.label}
+          </span>
+        )}
+      </div>
+      <p className={`text-sm leading-relaxed ${disabled ? 'text-slate-600' : 'text-slate-400'}`}>
+        {description}
+      </p>
+    </>
+  )
+
+  if (disabled) {
+    return (
+      <div
+        aria-disabled="true"
+        className="flex flex-col gap-4 rounded-xl border border-slate-800/80 bg-slate-900/30 p-6 opacity-60 cursor-not-allowed"
+      >
+        {content}
+      </div>
+    )
+  }
+
   return (
     <a
       href={href}
@@ -66,18 +136,7 @@ function ToolCard({
       rel={external ? 'noopener noreferrer' : undefined}
       className={`group flex flex-col gap-4 rounded-xl border bg-slate-900/60 p-6 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl ${accent}`}
     >
-      <div className="flex items-center gap-3">
-        <span className="text-slate-300 group-hover:text-white transition-colors">{icon}</span>
-        <h2 className="text-lg font-semibold text-white">{title}</h2>
-        {external && (
-          <svg className="ml-auto w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-            <polyline points="15 3 21 3 21 9" />
-            <line x1="10" y1="14" x2="21" y2="3" />
-          </svg>
-        )}
-      </div>
-      <p className="text-sm text-slate-400 leading-relaxed">{description}</p>
+      {content}
     </a>
   )
 }
@@ -98,6 +157,7 @@ export function HomePage() {
             title="MDF Range Tool"
             description="Paint your range, pick a bet size, tag hands to call or fold, and track Minimum Defense Frequency."
             accent="border-indigo-800/60 hover:border-indigo-600/80"
+            status="in-progress"
           />
           <ToolCard
             href="practice.html"
@@ -105,6 +165,8 @@ export function HomePage() {
             title="MDF Practice"
             description="Gamified drill: defend a preset range on flop, turn, and river vs random bets. Score your fold accuracy."
             accent="border-rose-800/60 hover:border-rose-600/80"
+            status="coming-soon"
+            disabled={!FEATURE_PRACTICE_ENABLED}
           />
           <ToolCard
             href="equity.html"
@@ -112,6 +174,15 @@ export function HomePage() {
             title="Equity Calculator"
             description="Calculate preflop equity for a hand or range against one or more opponent ranges."
             accent="border-violet-800/60 hover:border-violet-600/80"
+            status="in-progress"
+          />
+          <ToolCard
+            href="leakfinder.html"
+            icon={<LeakIcon />}
+            title="Leak Finder"
+            description="Paste your stats from PokerTracker, Hold'em Manager, or Hand2Note and get feedback vs healthy baselines."
+            accent="border-cyan-800/60 hover:border-cyan-600/80"
+            status="in-review"
           />
           <ToolCard
             href="randomizer.html"
@@ -119,6 +190,7 @@ export function HomePage() {
             title="Randomizer"
             description="Generate a random number from 1 to 100. Auto-generates every 15 seconds or roll manually."
             accent="border-emerald-800/60 hover:border-emerald-600/80"
+            status="done"
           />
         </div>
       </div>

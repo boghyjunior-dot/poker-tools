@@ -1,5 +1,6 @@
 {
   "name": "poker-tools",
+  "description": "Client-side poker study suite: MDF ranges, practice drills, equity calculator, and randomizer",
   "private": true,
   "version": "0.0.0",
   "type": "module",

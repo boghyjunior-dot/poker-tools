@@ -20,7 +20,8 @@ import { isBoardCardTaken, shouldResetLocks, shouldResetStreetDecision } from '.
 import { getPredefinedRange, parsePredefinedRange } from '../lib/predefinedRanges'
 import { ALL_CELLS } from '../lib/matrix'
 
-const STORAGE_KEY = 'mdf-range-tool-state'
+const STORAGE_KEY = 'poker-tools-mdf-state'
+const LEGACY_STORAGE_KEY = 'mdf-range-tool-state'
 
 export interface SelectedCell {
   row: RankIndex
@@ -544,7 +545,14 @@ export function saveState(state: AppState): void {
 
 export function loadState(): Partial<AppState> | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    let raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) {
+      raw = localStorage.getItem(LEGACY_STORAGE_KEY)
+      if (raw) {
+        localStorage.setItem(STORAGE_KEY, raw)
+        localStorage.removeItem(LEGACY_STORAGE_KEY)
+      }
+    }
     if (!raw) return null
     const parsed = JSON.parse(raw) as Partial<AppState> & { mode?: string }
     const savedMode = parsed.mode as string | undefined

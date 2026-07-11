@@ -1,6 +1,19 @@
 import { fullDeckIndices } from './cards'
 import { evaluate } from './handEvaluator'
 import { expandRangeToCombos, holeCardsToCombo, type HoleCombo, type RangeCellStates } from './equityRange'
+import {
+  bountyAmountToChips,
+  bountyEquityAddPct,
+  buildBountyBreakdown,
+  buildCallEvResult,
+  computeShowdownPot,
+  heroCoversVillain,
+  PKO_IMMEDIATE_CAPTURE,
+  totalCapturableBountyChips,
+  totalEquityWithBounty,
+  type CallEvResult,
+  type StackBountyInput,
+} from './equityBounty'
 import type { BoardCard } from '../types/poker'
 
 export interface EquityHandPlayer {
@@ -22,16 +35,37 @@ export interface EquityPlayerResult {
   equity: number
   winPct: number
   tiePct: number
+  bountyEvChips?: number
+  bountyEquityAdd?: number
+  totalEquity?: number
+  chipEvChips?: number
+  totalEvChips?: number
 }
 
 export interface EquityResult {
   players: EquityPlayerResult[]
   iterations: number
   combos: number[]
+  buyIn?: number
+  startingStack?: number
+  effectiveStack?: number
+  existingPotChips?: number
+  playerPotTotal?: number
+  potChips?: number
+  capturableBountyChips?: number
+  callEv?: CallEvResult
 }
 
 export interface EquityOptions {
   iterations?: number
+  buyIn?: number
+  startingStack?: number
+  /** Antes + blinds already in the pot before the all-in. */
+  existingPot?: number
+  /** Chips hero must call; defaults to matched effective contribution when omitted. */
+  callAmount?: number
+  /** Parallel to players: stack per seat; bountyAmount only used for non-hero opponents. */
+  stacks?: StackBountyInput[]
 }
 
 const DEFAULT_ITERATIONS = 10_000
@@ -92,9 +126,21 @@ export function calculateEquity(players: EquityPlayer[], options: EquityOptions 
   if (players.length < 2) throw new Error('Need at least 2 players')
 
   const iterations = options.iterations ?? DEFAULT_ITERATIONS
+  const buyIn = options.buyIn
+  const startingStack = options.startingStack
+  const stackInfo = options.stacks
+  const useStacks =
+    buyIn !== undefined &&
+    buyIn > 0 &&
+    startingStack !== undefined &&
+    startingStack > 0 &&
+    stackInfo !== undefined &&
+    stackInfo.length === players.length
+
   const deck = fullDeckIndices()
   const wins = new Array(players.length).fill(0)
   const ties = new Array(players.length).fill(0)
+  const bountyChipsWon = new Array(players.length).fill(0)
   const comboCounts = players.map((player) => {
     if (player.type === 'hand') return 1
     return buildComboPool(player, new Set()).length
@@ -137,6 +183,22 @@ export function calculateEquity(players: EquityPlayer[], options: EquityOptions 
 
     if (winnerIndexes.length === 1) {
       wins[winnerIndexes[0]]++
+      if (useStacks) {
+        const heroIndex = 0
+        const winner = winnerIndexes[0]
+        if (winner === heroIndex) {
+          let iterationBounty = 0
+          for (let i = 1; i < players.length; i++) {
+            if (winnerIndexes.includes(i)) continue
+            const villainInfo = stackInfo![i]
+            const bountyAmount = villainInfo.bountyAmount ?? 0
+            if (bountyAmount <= 0) continue
+            if (!heroCoversVillain(stackInfo![heroIndex].stack, villainInfo.stack)) continue
+            iterationBounty += PKO_IMMEDIATE_CAPTURE * bountyAmountToChips(bountyAmount, buyIn!, startingStack!)
+          }
+          bountyChipsWon[heroIndex] += iterationBounty
+        }
+      }
     } else {
       const share = 1 / winnerIndexes.length
       for (const index of winnerIndexes) ties[index] += share
@@ -148,10 +210,107 @@ export function calculateEquity(players: EquityPlayer[], options: EquityOptions 
     throw new Error('Could not run simulation — check for overlapping cards or empty ranges')
   }
 
+  const effectiveStack = useStacks
+    ? Math.min(...stackInfo!.map((info) => info.stack))
+    : undefined
+
+  const heroCallAmount =
+    options.callAmount !== undefined && options.callAmount > 0
+      ? options.callAmount
+      : effectiveStack
+
+  const showdown =
+    useStacks && stackInfo
+      ? computeShowdownPot(
+          stackInfo.map((info) => info.stack),
+          {
+            existingPot: options.existingPot ?? 0,
+            heroCallAmount,
+          },
+        )
+      : undefined
+
+  const potChips = showdown?.potChips
+  const resolvedEffectiveStack = showdown?.effectiveStack ?? effectiveStack
+  const heroContribution = showdown?.contributions[0] ?? heroCallAmount
+  const capturableBountyChips = useStacks
+    ? totalCapturableBountyChips(
+        buildBountyBreakdown(
+          buyIn!,
+          startingStack!,
+          stackInfo![0].stack,
+          stackInfo!.slice(1),
+        ),
+      )
+    : undefined
+
+  const heroCallAmountForEv = heroContribution ?? heroCallAmount
+
+  const heroResult = (() => {
+    const index = 0
+    const equity = ((wins[index] + ties[index]) / completed) * 100
+    const avgBountyChips = bountyChipsWon[index] / completed
+    const chipEvChips =
+      useStacks && potChips !== undefined && heroContribution !== undefined
+        ? (equity / 100) * potChips - heroContribution
+        : undefined
+    const totalEvChips =
+      chipEvChips !== undefined ? chipEvChips + avgBountyChips : undefined
+    const bountyEquityAdd =
+      useStacks && potChips !== undefined && avgBountyChips > 0
+        ? bountyEquityAddPct(avgBountyChips, potChips)
+        : undefined
+    const totalEquity =
+      bountyEquityAdd !== undefined ? totalEquityWithBounty(equity, bountyEquityAdd) : undefined
+
+    return {
+      equity,
+      winPct: (wins[index] / completed) * 100,
+      tiePct: (ties[index] / completed) * 100,
+      avgBountyChips,
+      bountyEquityAdd,
+      totalEquity,
+      chipEvChips,
+      totalEvChips,
+    }
+  })()
+
+  const callEv =
+    potChips !== undefined && heroCallAmountForEv !== undefined && heroCallAmountForEv > 0
+      ? buildCallEvResult(
+          heroResult.equity,
+          potChips,
+          heroCallAmountForEv,
+          heroResult.avgBountyChips,
+        )
+      : undefined
+
   return {
     iterations: completed,
     combos: comboCounts,
+    buyIn: useStacks ? buyIn : undefined,
+    startingStack: useStacks ? startingStack : undefined,
+    effectiveStack: resolvedEffectiveStack,
+    existingPotChips: showdown?.existingPot,
+    playerPotTotal: showdown?.playerTotal,
+    potChips,
+    capturableBountyChips,
+    callEv,
     players: players.map((player, index) => {
+      if (index === 0) {
+        return {
+          name: player.name,
+          equity: heroResult.equity,
+          winPct: heroResult.winPct,
+          tiePct: heroResult.tiePct,
+          bountyEvChips: useStacks && heroResult.avgBountyChips > 0 ? heroResult.avgBountyChips : undefined,
+          bountyEquityAdd: heroResult.bountyEquityAdd,
+          totalEquity: heroResult.totalEquity,
+          chipEvChips: heroResult.chipEvChips,
+          totalEvChips: heroResult.totalEvChips,
+        }
+      }
+
       const equity = ((wins[index] + ties[index]) / completed) * 100
       return {
         name: player.name,

@@ -15,6 +15,7 @@ export default defineConfig({
         mdf: path.resolve(__dirname, 'mdf.html'),
         equity: path.resolve(__dirname, 'equity.html'),
         practice: path.resolve(__dirname, 'practice.html'),
+        leakfinder: path.resolve(__dirname, 'leakfinder.html'),
         randomizer: path.resolve(__dirname, 'randomizer.html'),
       },
     },

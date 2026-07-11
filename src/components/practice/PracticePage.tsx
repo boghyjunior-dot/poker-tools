@@ -26,6 +26,7 @@ import {
   parsePredefinedRange,
 } from '../../lib/predefinedRanges'
 import { MDF_BETS, type BoardCard } from '../../types/poker'
+import { FEATURE_PRACTICE_ENABLED } from '../../lib/featureFlags'
 
 type Phase = 'menu' | 'playing' | 'feedback' | 'complete'
 
@@ -34,7 +35,23 @@ function betDescription(label: string): string {
   return bet ? `${label} (${bet.foldPct}% fold target)` : label
 }
 
+function PracticeComingSoon() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-6">
+      <div className="w-full max-w-md text-center">
+        <BackToMenu className="mb-6" />
+        <h1 className="text-2xl font-bold text-slate-500 mb-2">MDF Practice</h1>
+        <p className="text-slate-600 text-sm">Coming soon</p>
+      </div>
+    </div>
+  )
+}
+
 export function PracticePage() {
+  if (!FEATURE_PRACTICE_ENABLED) {
+    return <PracticeComingSoon />
+  }
+
   return (
     <RangeProvider persist={false}>
       <PracticeGame />

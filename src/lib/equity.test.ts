@@ -59,4 +59,98 @@ describe('calculateEquity', () => {
     expect(result.players[0].equity).toBeGreaterThan(75)
     expect(result.players[1].equity).toBeLessThan(25)
   })
+
+  it('adds bounty EV when stacks and bounties are provided', () => {
+    const result = calculateEquity(
+      [
+        {
+          type: 'hand',
+          name: 'Hero',
+          cards: [cardFromRankSuit(0, 's'), cardFromRankSuit(0, 'h')],
+        },
+        {
+          type: 'hand',
+          name: 'Villain',
+          cards: [cardFromRankSuit(1, 's'), cardFromRankSuit(1, 'h')],
+        },
+      ],
+      {
+        iterations: 5000,
+        buyIn: 10,
+        startingStack: 10_000,
+        stacks: [
+          { stack: 12_000 },
+          { stack: 8000, bountyAmount: 10 },
+        ],
+      },
+    )
+
+    expect(result.capturableBountyChips).toBe(5000)
+    expect(result.players[0].bountyEvChips).toBeGreaterThan(0)
+    expect(result.players[0].bountyEquityAdd).toBeGreaterThan(0)
+    expect(result.players[0].totalEquity).toBeGreaterThan(result.players[0].equity)
+    expect(result.players[0].totalEvChips).toBeGreaterThan(result.players[0].chipEvChips!)
+  })
+
+  it('adds existing pot to player contributions at showdown', () => {
+    const result = calculateEquity(
+      [
+        {
+          type: 'hand',
+          name: 'Hero',
+          cards: [cardFromRankSuit(0, 's'), cardFromRankSuit(0, 'h')],
+        },
+        {
+          type: 'hand',
+          name: 'Villain',
+          cards: [cardFromRankSuit(1, 's'), cardFromRankSuit(1, 'h')],
+        },
+      ],
+      {
+        iterations: 5000,
+        buyIn: 10,
+        startingStack: 10_000,
+        existingPot: 2500,
+        stacks: [
+          { stack: 12_000 },
+          { stack: 8000, bountyAmount: 10 },
+        ],
+      },
+    )
+
+    expect(result.existingPotChips).toBe(2500)
+    expect(result.playerPotTotal).toBe(16_000)
+    expect(result.potChips).toBe(18_500)
+  })
+
+  it('returns call EV suggestion for hero', () => {
+    const result = calculateEquity(
+      [
+        {
+          type: 'hand',
+          name: 'Hero',
+          cards: [cardFromRankSuit(0, 's'), cardFromRankSuit(0, 'h')],
+        },
+        {
+          type: 'hand',
+          name: 'Villain',
+          cards: [cardFromRankSuit(1, 's'), cardFromRankSuit(1, 'h')],
+        },
+      ],
+      {
+        iterations: 5000,
+        buyIn: 10,
+        startingStack: 10_000,
+        stacks: [
+          { stack: 12_000 },
+          { stack: 8000, bountyAmount: 10 },
+        ],
+      },
+    )
+
+    expect(result.callEv).toBeDefined()
+    expect(result.callEv!.callAmount).toBe(8000)
+    expect(result.callEv!.recommendation).toBe('call')
+    expect(result.callEv!.evChips).toBeGreaterThan(0)
+  })
 })
