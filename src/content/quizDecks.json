@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "decks": [
+    {
+      "id": "mdf-and-pot-odds",
+      "name": "MDF & pot odds",
+      "description": "The defence maths behind the MDF Range Tool.",
+      "cards": [
+        {
+          "type": "heuristic",
+          "title": "Minimum Defense Frequency",
+          "body": "MDF = pot / (pot + bet). Defend at least that share of your range or villain profits by betting any two cards. The flip side is your fold cap: fold % = bet / (pot + bet).",
+          "tags": ["mdf", "core"]
+        },
+        {
+          "type": "heuristic",
+          "title": "Pot odds",
+          "body": "Break-even equity to call = bet / (pot + bet). A half-pot bet lays 3:1, so you need 25%. Same formula as the fold half of MDF — MDF is that number applied to your whole range instead of one hand.",
+          "tags": ["pot-odds", "core"]
+        },
+        {
+          "type": "heuristic",
+          "title": "Rule of 2 and 4",
+          "body": "On the flop with two cards to come, outs x 4 approximates your equity. On the turn with one card to come, outs x 2. Shade the flop number down when you hold 9+ outs, since it overstates by a few points.",
+          "tags": ["equity", "outs"]
+        },
+        {
+          "type": "flashcard",
+          "front": "MDF vs a 33% pot bet",
+          "back": "75% defend / 25% fold",
+          "tags": ["mdf"]
+        },
+        {
+          "type": "flashcard",
+          "front": "MDF vs a 50% pot bet",
+          "back": "67% defend / 33% fold",
+          "tags": ["mdf"]
+        },
+        {
+          "type": "flashcard",
+          "front": "MDF vs a 75% pot bet",
+          "back": "57% defend / 43% fold",
+          "tags": ["mdf"]
+        },
+        {
+          "type": "flashcard",
+          "front": "MDF vs a pot-sized bet",
+          "back": "50% defend / 50% fold",
+          "tags": ["mdf"]
+        },
+        {
+          "type": "flashcard",
+          "front": "MDF vs a 2x pot overbet",
+          "back": "33% defend / 66% fold",
+          "tags": ["mdf"]
+        },
+        {
+          "type": "choice",
+          "question": "Pot is 100. Villain bets 50. What share of your range should you continue with?",
+          "options": ["50%", "60%", "67%", "75%"],
+          "answer": "67%",
+          "explanation": "MDF = pot / (pot + bet) = 100 / 150 = 67%.",
+          "tags": ["mdf"]
+        },
+        {
+          "type": "choice",
+          "question": "Villain bets 75 into 100. What equity do you need for the call to break even?",
+          "options": ["30%", "37%", "43%", "50%"],
+          "answer": "43%",
+          "explanation": "Break-even equity = bet / (pot + bet) = 75 / 175 = 43%.",
+          "tags": ["pot-odds"]
+        },
+        {
+          "type": "choice",
+          "question": "You hold a flush draw on the flop (9 outs). Roughly what is your equity by the river?",
+          "options": ["18%", "27%", "36%", "45%"],
+          "answer": "36%",
+          "explanation": "9 outs x 4 = 36%. The true number is about 35%, so the rule barely overstates here.",
+          "tags": ["equity", "outs"]
+        }
+      ]
+    },
+    {
+      "id": "preflop-heuristics",
+      "name": "Preflop heuristics",
+      "description": "Opening, defending and 3-betting shortcuts for MTT play.",
+      "cards": [
+        {
+          "type": "heuristic",
+          "title": "Rule of 5-6-7 (BB defence)",
+          "body": "Defending the big blind vs a late-position open at ~40bb: call every suited hand, and take offsuit hands down to the 5x, 6x or 7x bar depending on how late the opener sat. Later position, lower bar.",
+          "tags": ["preflop", "bb-defense"]
+        },
+        {
+          "type": "heuristic",
+          "title": "Position widens everything",
+          "body": "Every step closer to the button widens your opening range roughly 1.5x. UTG opens ~15%, hijack ~20%, cutoff ~27%, button ~45%, small blind ~40% with a 3-bet-or-fold lean.",
+          "tags": ["preflop", "position"]
+        },
+        {
+          "type": "heuristic",
+          "title": "3-bet or fold under 25bb",
+          "body": "Below about 25bb, flatting out of position leaves an unplayable stack-to-pot ratio postflop. Turn marginal flats into 3-bet shoves or folds, and keep flats for position and deep stacks.",
+          "tags": ["preflop", "short-stack"]
+        },
+        {
+          "type": "flashcard",
+          "front": "Rough opening range: UTG at 40bb, 8-max",
+          "back": "About 15% — 77+, ATs+, KJs+, QJs, JTs, AQo+",
+          "tags": ["preflop", "rfi"]
+        },
+        {
+          "type": "flashcard",
+          "front": "Rough opening range: button at 40bb",
+          "back": "About 45% — all pairs, all suited aces and kings, most suited connectors, offsuit broadways down to A2o/K9o",
+          "tags": ["preflop", "rfi"]
+        },
+        {
+          "type": "choice",
+          "question": "Which hand class does the big blind defend most often vs a button open?",
+          "options": ["Offsuit broadways", "All suited hands", "Small pairs only", "Offsuit aces"],
+          "answer": "All suited hands",
+          "explanation": "Suited hands realise the most equity from out of position, so BB defence keeps every suited combo before it reaches for offsuit hands.",
+          "tags": ["preflop", "bb-defense"]
+        },
+        {
+          "type": "choice",
+          "question": "You open the cutoff and the button 3-bets. Roughly what portion of your opening range should continue?",
+          "options": ["About 20%", "About 40%", "About 60%", "About 80%"],
+          "answer": "About 40%",
+          "explanation": "Against a typical 3-bet size you defend around 40% of the range you opened, mixing 4-bets with calls and folding the weakest opens outright.",
+          "tags": ["preflop", "3bet"]
+        }
+      ]
+    },
+    {
+      "id": "tournament-spots",
+      "name": "Tournament spots",
+      "description": "ICM, stack depth and bounty rules of thumb.",
+      "cards": [
+        {
+          "type": "heuristic",
+          "title": "SPR sets your commitment",
+          "body": "Stack-to-pot ratio below 3 means top pair is usually committing. Between 3 and 6 you want two pair or better to stack off. Above 6 you need a strong draw or a big made hand.",
+          "tags": ["postflop", "spr"]
+        },
+        {
+          "type": "heuristic",
+          "title": "ICM tightens calls, not shoves",
+          "body": "Near a pay jump, calling ranges tighten hard because busting costs real money, while shoving ranges stay wide because fold equity is worth more. Shove wide, call tight.",
+          "tags": ["icm", "mtt"]
+        },
+        {
+          "type": "heuristic",
+          "title": "Bounties widen calls",
+          "body": "In a PKO, a bounty you can win outright is worth extra equity in the pot. Covering a short stack lets you call several percentage points wider than the chip maths alone would allow.",
+          "tags": ["pko", "mtt"]
+        },
+        {
+          "type": "flashcard",
+          "front": "SPR after a single raise and one caller preflop",
+          "back": "Usually 4 to 6 — the two-pair-or-better zone for stacking off",
+          "tags": ["postflop", "spr"]
+        },
+        {
+          "type": "choice",
+          "question": "On the money bubble with a big stack, how should you adjust vs the short stacks?",
+          "options": [
+            "Open tighter and avoid all confrontation",
+            "Open wider and attack their blinds",
+            "Call their shoves wider than usual",
+            "Play the same as any other stage"
+          ],
+          "answer": "Open wider and attack their blinds",
+          "explanation": "Short stacks cannot call without risking elimination at a pay jump, so a big stack profits by applying pressure — while still calling their shoves tightly.",
+          "tags": ["icm", "mtt"]
+        }
+      ]
+    }
+  ]
+}

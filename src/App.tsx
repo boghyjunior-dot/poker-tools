@@ -8,6 +8,7 @@ import { ComboPanel } from './components/ComboPanel'
 import { Legend } from './components/Legend'
 import { MdfTargetDisplay } from './components/MdfTargetDisplay'
 import { BackToMenu } from './components/BackToMenu'
+import { Footer } from './components/Footer'
 
 function App() {
   return (
@@ -62,6 +63,8 @@ function App() {
             </div>
           </section>
         </div>
+
+        <Footer />
       </div>
     </RangeProvider>
   )

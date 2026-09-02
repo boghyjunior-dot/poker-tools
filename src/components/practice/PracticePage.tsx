@@ -6,6 +6,7 @@ import { StatsBar } from '../StatsBar'
 import { MdfTargetDisplay } from '../MdfTargetDisplay'
 import { Legend } from '../Legend'
 import { BackToMenu } from '../BackToMenu'
+import { Footer } from '../Footer'
 import { PlayingCard } from '../PlayingCard'
 import { pruneFoldedCombosFromRange } from '../../lib/combos'
 import {
@@ -355,6 +356,7 @@ function PracticeGame() {
           )}
         </div>
       )}
+      <Footer />
     </div>
   )
 }

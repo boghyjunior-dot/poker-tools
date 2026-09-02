@@ -1,4 +1,5 @@
 import { FEATURE_PRACTICE_ENABLED } from '../lib/featureFlags'
+import { Footer } from './Footer'
 
 type ToolStatus = 'done' | 'in-progress' | 'in-review' | 'coming-soon'
 
@@ -49,6 +50,39 @@ function LeakIcon() {
       <circle cx="10.5" cy="10.5" r="6.5" />
       <path d="M15.5 15.5 21 21" />
       <path d="M8 10.5h5M10.5 8v5" />
+    </svg>
+  )
+}
+
+function QuizIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+      <rect x="3" y="4" width="14" height="16" rx="2" />
+      <path d="M7 4V2.5M17 8h3.5a.5.5 0 0 1 .5.5V19a2 2 0 0 1-2 2H9" />
+      <path d="M10 9.5a2 2 0 1 1 2.6 1.9c-.6.2-.9.7-.9 1.3v.3" />
+      <circle cx="11.7" cy="15.8" r=".9" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+function BountyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+      <rect x="3" y="8" width="18" height="12" rx="2" />
+      <path d="M3 12h18" />
+      <path d="M12 8v12" />
+      <path d="M12 8c-1.5-3-5-3.5-5-1.5S10.5 8 12 8Zm0 0c1.5-3 5-3.5 5-1.5S13.5 8 12 8Z" />
+    </svg>
+  )
+}
+
+function VarianceIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+      <path d="M3 20V4" />
+      <path d="M3 20h18" />
+      <path d="M6 15c2.5 0 3-7 5.5-7S15 17 18 17" />
+      <path d="M6 10c2.5 0 3.5 3 5.5 3s3.5-8 6.5-8" strokeOpacity="0.45" />
     </svg>
   )
 }
@@ -107,7 +141,7 @@ function ToolCard({
             <line x1="10" y1="14" x2="21" y2="3" />
           </svg>
         ) : (
-          <span className={`ml-auto rounded px-2 py-0.5 text-xs font-medium uppercase tracking-wide ${statusStyle.badge}`}>
+          <span className={`ml-auto shrink-0 whitespace-nowrap rounded px-2 py-0.5 text-xs font-medium uppercase tracking-wide ${statusStyle.badge}`}>
             {statusStyle.label}
           </span>
         )}
@@ -144,13 +178,13 @@ function ToolCard({
 export function HomePage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-lg">
+      <div className="w-full max-w-4xl">
         <header className="mb-10 text-center">
           <h1 className="text-3xl font-bold text-white mb-2">Poker Tools</h1>
           <p className="text-slate-400 text-sm">Choose a tool to get started</p>
         </header>
 
-        <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <ToolCard
             href="mdf.html"
             icon={<CardIcon />}
@@ -185,6 +219,30 @@ export function HomePage() {
             status="in-review"
           />
           <ToolCard
+            href="bounty.html"
+            icon={<BountyIcon />}
+            title="Mystery Bounty"
+            description="Work out what an average bounty is worth in cash and in big blinds, and how much wider it lets you call."
+            accent="border-fuchsia-800/60 hover:border-fuchsia-600/80"
+            status="in-progress"
+          />
+          <ToolCard
+            href="variance.html"
+            icon={<VarianceIcon />}
+            title="MTT Variance"
+            description="Simulate a tournament sample: downswings, confidence bands, and risk of ruin, with graphs of every run."
+            accent="border-sky-800/60 hover:border-sky-600/80"
+            status="done"
+          />
+          <ToolCard
+            href="quiz.html"
+            icon={<QuizIcon />}
+            title="Quiz Me"
+            description="Heuristics, flashcards and questions to drill the numbers. Study the bundled decks or import your own file."
+            accent="border-amber-800/60 hover:border-amber-600/80"
+            status="in-progress"
+          />
+          <ToolCard
             href="randomizer.html"
             icon={<DiceIcon />}
             title="Randomizer"
@@ -193,6 +251,8 @@ export function HomePage() {
             status="done"
           />
         </div>
+
+        <Footer />
       </div>
     </div>
   )

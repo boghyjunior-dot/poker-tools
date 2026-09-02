@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
+import { Footer } from '../Footer'
 import { PT4_SAMPLE_EXPORT } from '../../lib/pt4SampleExport'
 import {
   analyzeStats,
@@ -399,6 +400,7 @@ export function LeakFinderPage() {
           </p>
         )}
       </div>
+      <Footer />
     </div>
   )
 }

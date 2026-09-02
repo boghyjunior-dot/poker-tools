@@ -1,7 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { BackToMenu } from './BackToMenu'
+import { Footer } from './Footer'
 
 const AUTO_INTERVAL_MS = 15_000
+
+/**
+ * Pop-out window size. Small enough to tuck into a screen corner beside a
+ * table, big enough for the number and the roll button without scrolling —
+ * the layout still holds if it is dragged smaller.
+ */
+const POPUP_W = 230
+const POPUP_H = 260
 
 function random1to100() {
   return Math.floor(Math.random() * 100) + 1
@@ -49,6 +58,9 @@ export function RandomizerPage() {
   const [value, setValue] = useState(() => random1to100())
   const [auto, setAuto] = useState(false)
   const [countdown, setCountdown] = useState(AUTO_INTERVAL_MS)
+  // `?compact=1` strips the page down to the dial so it fits a corner window.
+  const [compact] = useState(() => new URLSearchParams(window.location.search).has('compact'))
+  const [popupBlocked, setPopupBlocked] = useState(false)
   const startRef = useRef<number>(0)
   const rafRef = useRef<number>(0)
 
@@ -86,6 +98,76 @@ export function RandomizerPage() {
 
   const progress = countdown / AUTO_INTERVAL_MS
 
+  const openPopup = () => {
+    const popup = window.open(
+      'randomizer.html?compact=1',
+      'poker-randomizer',
+      `popup=yes,width=${POPUP_W},height=${POPUP_H}`,
+    )
+    setPopupBlocked(popup === null)
+    popup?.focus()
+  }
+
+  const modeToggle = (size: 'full' | 'compact') => (
+    <div className={`flex rounded-lg bg-slate-800 p-0.5 ${size === 'full' ? 'w-48' : 'w-full'}`}>
+      <button
+        type="button"
+        onClick={() => {
+          setAuto(false)
+          setCountdown(AUTO_INTERVAL_MS)
+        }}
+        className={`flex-1 rounded-md font-medium transition-colors ${
+          size === 'full' ? 'px-3 py-1.5 text-xs' : 'px-2 py-1 text-[11px]'
+        } ${!auto ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+      >
+        Manual
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          roll()
+          resetTimer()
+          setAuto(true)
+        }}
+        className={`flex-1 rounded-md font-medium transition-colors ${
+          size === 'full' ? 'px-3 py-1.5 text-xs' : 'px-2 py-1 text-[11px]'
+        } ${auto ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+      >
+        Auto / 15s
+      </button>
+    </div>
+  )
+
+  if (compact) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-2.5 overflow-hidden p-3">
+        <div className="relative flex h-20 w-20 shrink-0 items-center justify-center">
+          {auto && <CountdownRing progress={progress} />}
+          <span
+            className="relative z-10 text-4xl font-bold tabular-nums transition-colors duration-300"
+            style={{ color: valueColor(value) }}
+          >
+            {value}
+          </span>
+        </div>
+
+        {modeToggle('compact')}
+
+        <button
+          type="button"
+          onClick={handleManualRoll}
+          className="w-full rounded-lg bg-indigo-600 py-2 text-xs font-semibold text-white transition-all hover:bg-indigo-500 active:scale-95"
+        >
+          Roll
+        </button>
+
+        <p className="h-3 text-[10px] leading-3 text-slate-500">
+          {auto ? `Next in ${Math.ceil(countdown / 1000)}s` : ''}
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center p-4 gap-6">
       <div className="absolute top-4 left-4 sm:top-6 sm:left-6">
@@ -107,33 +189,7 @@ export function RandomizerPage() {
         </span>
       </div>
 
-      <div className="flex rounded-lg bg-slate-800 p-0.5 w-48">
-        <button
-          type="button"
-          onClick={() => {
-            setAuto(false)
-            setCountdown(AUTO_INTERVAL_MS)
-          }}
-          className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-            !auto ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          Manual
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            roll()
-            resetTimer()
-            setAuto(true)
-          }}
-          className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-            auto ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          Auto / 15s
-        </button>
-      </div>
+      {modeToggle('full')}
 
       <button
         type="button"
@@ -148,6 +204,28 @@ export function RandomizerPage() {
           Next roll in {Math.ceil(countdown / 1000)}s
         </p>
       )}
+
+      <div className="flex flex-col items-center gap-1.5">
+        <button
+          type="button"
+          onClick={openPopup}
+          className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 px-3 py-1.5 text-xs text-slate-400 transition-colors hover:border-slate-500 hover:text-slate-200"
+        >
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-3.5 w-3.5" aria-hidden>
+            <path d="M9 2h5v5" />
+            <path d="M14 2 7.5 8.5" />
+            <path d="M12 9.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.5" />
+          </svg>
+          Pop out to a corner window
+        </button>
+        {popupBlocked && (
+          <p className="max-w-xs text-center text-[11px] text-amber-400">
+            Your browser blocked the pop-up. Allow pop-ups for this site and try again.
+          </p>
+        )}
+      </div>
+
+      <Footer className="w-full max-w-sm" />
     </div>
   )
 }

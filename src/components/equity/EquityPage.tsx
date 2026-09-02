@@ -20,6 +20,7 @@ import { cellKey, type BoardCard, type RankIndex } from '../../types/poker'
 import { EquityMatrix } from './EquityMatrix'
 import { HoleCardPicker } from './HoleCardPicker'
 import { BackToMenu } from '../BackToMenu'
+import { Footer } from '../Footer'
 
 type HeroMode = 'hand' | 'range'
 type VillainMode = 'hand' | 'range'
@@ -256,6 +257,7 @@ export function EquityPage() {
           )}
           <StackField
             label="Hero stack"
+              emoji="🪙"
             value={heroStack}
             onChange={setHeroStack}
             placeholder={String(resolvedStartingStack)}
@@ -336,6 +338,7 @@ export function EquityPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <StackField
                   label={`V${activeVillain + 1} stack`}
+                  emoji="🪙"
                   value={currentVillain.stack}
                   onChange={(stack) => updateVillain(activeVillain, { stack })}
                   placeholder={String(resolvedStartingStack)}
@@ -343,6 +346,7 @@ export function EquityPage() {
                 />
                 <BountyField
                   label={`V${activeVillain + 1} bounty`}
+                  emoji="🎯"
                   value={currentVillain.bountyAmount}
                   onChange={(bountyAmount) => updateVillain(activeVillain, { bountyAmount })}
                   buyIn={resolvedBuyIn}
@@ -362,6 +366,7 @@ export function EquityPage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <StackField
               label="Buy-in"
+              emoji="💵"
               value={buyIn}
               onChange={setBuyIn}
               placeholder="10"
@@ -369,6 +374,7 @@ export function EquityPage() {
             />
             <StackField
               label="Starting stack"
+              emoji="🪙"
               value={startingStack}
               onChange={setStartingStack}
               placeholder="10000"
@@ -376,6 +382,7 @@ export function EquityPage() {
             />
             <StackField
               label="Existing pot"
+              emoji="💰"
               value={existingPot}
               onChange={setExistingPot}
               placeholder="0"
@@ -383,6 +390,7 @@ export function EquityPage() {
             />
             <StackField
               label="Call amount"
+              emoji="📞"
               value={callAmount}
               onChange={setCallAmount}
               placeholder={String(derivedCallAmount)}
@@ -516,6 +524,7 @@ export function EquityPage() {
           </div>
         )}
       </section>
+      <Footer />
     </div>
   )
 }
@@ -575,12 +584,14 @@ function PresetSelect({ onLoad }: { onLoad: (id: string) => void }) {
 
 function StackField({
   label,
+  emoji,
   value,
   onChange,
   placeholder,
   hint,
 }: {
   label: string
+  emoji?: string
   value: string
   onChange: (value: string) => void
   placeholder: string
@@ -588,7 +599,14 @@ function StackField({
 }) {
   return (
     <label className="flex flex-col gap-1 text-sm text-slate-300">
-      <span>{label}</span>
+      <span>
+        {emoji && (
+          <span aria-hidden="true" className="mr-1">
+            {emoji}
+          </span>
+        )}
+        {label}
+      </span>
       <input
         type="text"
         inputMode="decimal"
@@ -647,6 +665,7 @@ function CallSuggestion({
 
 function BountyField({
   label,
+  emoji,
   value,
   onChange,
   buyIn,
@@ -655,6 +674,7 @@ function BountyField({
   covered,
 }: {
   label: string
+  emoji?: string
   value: string
   onChange: (value: string) => void
   buyIn: number
@@ -667,7 +687,14 @@ function BountyField({
 
   return (
     <label className="flex flex-col gap-1 text-sm text-slate-300">
-      <span>{label}</span>
+      <span>
+        {emoji && (
+          <span aria-hidden="true" className="mr-1">
+            {emoji}
+          </span>
+        )}
+        {label}
+      </span>
       <input
         type="text"
         inputMode="decimal"

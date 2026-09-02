@@ -35,6 +35,7 @@ export function BetSizeBar() {
 
       <div className="flex flex-wrap items-center gap-2 pl-1 border-l border-slate-700 ml-1">
         <label className="flex items-center gap-1.5 text-sm text-slate-400">
+          <span aria-hidden="true">💵</span>
           Bet
           <input
             type="number"
@@ -49,6 +50,7 @@ export function BetSizeBar() {
           />
         </label>
         <label className="flex items-center gap-1.5 text-sm text-slate-400">
+          <span aria-hidden="true">💰</span>
           Pot
           <input
             type="number"
