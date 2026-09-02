@@ -260,6 +260,85 @@ export const PREDEFINED_RANGES: PredefinedRange[] = [
   },
 ]
 
+/**
+ * Top-X% ranges ordered by all-in equity vs a random hand — the same basis
+ * PokerStove/Equilab use for their percentage slider. Each range is a strict
+ * superset of the one above it, so they nest cleanly. Combo counts land within
+ * ~1 percentage point of the nominal label: the strength ordering is kept
+ * faithful rather than padded with weaker hands to hit an exact count.
+ */
+export const PERCENT_RANGES: PredefinedRange[] = [
+  {
+    id: 'top-10',
+    label: 'Top 10%',
+    category: 'Top %',
+    description: 'Top 10% — big pairs, strong suited aces and broadways (140 combos · 10.6%)',
+    tokens: ['77+', 'A9s+', 'KTs+', 'QTs+', 'JTs', 'AJo+', 'KQo'],
+  },
+  {
+    id: 'top-15',
+    label: 'Top 15%',
+    category: 'Top %',
+    description: 'Top 15% — adds mid pairs, more suited aces and broadways (204 combos · 15.4%)',
+    tokens: ['55+', 'A7s+', 'A5s', 'K9s+', 'Q9s+', 'J9s+', 'T9s', 'ATo+', 'KJo+'],
+  },
+  {
+    id: 'top-20',
+    label: 'Top 20%',
+    category: 'Top %',
+    description: 'Top 20% — all suited aces, suited connectors down to 98s (262 combos · 19.8%)',
+    tokens: ['44+', 'A2s+', 'K8s+', 'Q9s+', 'J9s+', 'T8s+', '98s', 'A9o+', 'KJo+', 'QJo'],
+  },
+  {
+    id: 'top-25',
+    label: 'Top 25%',
+    category: 'Top %',
+    description: 'Top 25% — all pairs, suited kings to K5s, offsuit broadways (338 combos · 25.5%)',
+    tokens: ['22+', 'A2s+', 'K5s+', 'Q8s+', 'J8s+', 'T8s+', '97s+', '87s', 'A8o+', 'KTo+', 'QJo', 'JTo'],
+  },
+  {
+    id: 'top-30',
+    label: 'Top 30%',
+    category: 'Top %',
+    description: 'Top 30% — all suited kings, weaker suited queens, A7o+ (406 combos · 30.6%)',
+    tokens: ['22+', 'A2s+', 'K2s+', 'Q6s+', 'J7s+', 'T7s+', '97s+', '87s', '76s', 'A7o+', 'K9o+', 'QTo+', 'JTo'],
+  },
+  {
+    id: 'top-40',
+    label: 'Top 40%',
+    category: 'Top %',
+    description: 'Top 40% — all offsuit aces, suited hands down to 54s (526 combos · 39.7%)',
+    tokens: [
+      '22+', 'A2s+', 'K2s+', 'Q2s+', 'J4s+', 'T6s+', '95s+', '85s+', '75s+', '65s', '54s',
+      'A2o+', 'K9o+', 'QTo+', 'JTo',
+    ],
+  },
+  {
+    id: 'top-50',
+    label: 'Top 50%',
+    category: 'Top %',
+    description: 'Top 50% — nearly every suited hand plus K7o+, Q9o+, J9o+, T9o (670 combos · 50.5%)',
+    tokens: [
+      '22+', 'A2s+', 'K2s+', 'Q2s+', 'J2s+', 'T2s+', '92s+', '82s+', '72s+', '62s+', '52s+', '43s',
+      'A2o+', 'K7o+', 'Q9o+', 'J9o+', 'T9o',
+    ],
+  },
+  {
+    id: 'full-range',
+    label: 'Full range (100%)',
+    category: 'Top %',
+    description: 'Every hand — all 169 cells, 1,326 combos (100%)',
+    tokens: [
+      '22+',
+      'A2s+', 'K2s+', 'Q2s+', 'J2s+', 'T2s+', '92s+', '82s+', '72s+', '62s+', '52s+', '42s+', '32s',
+      'A2o+', 'K2o+', 'Q2o+', 'J2o+', 'T2o+', '92o+', '82o+', '72o+', '62o+', '52o+', '42o+', '32o',
+    ],
+  },
+]
+
+/** Presets offered by the equity calculator: top-X% ranges plus the positional ranges. */
+export const EQUITY_PRESET_RANGES: PredefinedRange[] = [...PERCENT_RANGES, ...PREDEFINED_RANGES]
+
 export function getPredefinedRange(id: string): PredefinedRange | undefined {
   return PREDEFINED_RANGES.find((range) => range.id === id)
 }

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { PREDEFINED_RANGES, parsePredefinedRange } from '../../lib/predefinedRanges'
+import { EQUITY_PRESET_RANGES, parsePredefinedRange } from '../../lib/predefinedRanges'
 import {
   calculateEquity,
   formatMarginOfError,
@@ -205,7 +205,7 @@ export function EquityPage() {
   }
 
   const loadPreset = (rangeId: string, target: 'hero' | 'villain') => {
-    const preset = PREDEFINED_RANGES.find((range) => range.id === rangeId)
+    const preset = EQUITY_PRESET_RANGES.find((range) => range.id === rangeId)
     if (!preset) return
     const states = parsePredefinedRange(preset) as RangeCellStates
     if (target === 'hero') setHeroRange(states)
@@ -546,6 +546,8 @@ function ModeToggle({
 }
 
 function PresetSelect({ onLoad }: { onLoad: (id: string) => void }) {
+  const categories = [...new Set(EQUITY_PRESET_RANGES.map((range) => range.category))]
+
   return (
     <select
       defaultValue=""
@@ -558,10 +560,14 @@ function PresetSelect({ onLoad }: { onLoad: (id: string) => void }) {
       className="w-full rounded-md border border-slate-600 bg-slate-800 text-slate-200 text-xs px-2 py-1.5"
     >
       <option value="">Load preset range…</option>
-      {PREDEFINED_RANGES.map((range) => (
-        <option key={range.id} value={range.id}>
-          {range.category} · {range.label}
-        </option>
+      {categories.map((category) => (
+        <optgroup key={category} label={category}>
+          {EQUITY_PRESET_RANGES.filter((range) => range.category === category).map((range) => (
+            <option key={range.id} value={range.id} title={range.description}>
+              {category === 'Top %' ? range.label : `${range.category} · ${range.label}`}
+            </option>
+          ))}
+        </optgroup>
       ))}
     </select>
   )
