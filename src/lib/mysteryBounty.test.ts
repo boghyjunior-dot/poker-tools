@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { callingRequirement, calculateMysteryBounty, type MysteryBountyConfig } from './mysteryBounty'
+import {
+  calculateMysteryBounty,
+  calculateRemainingBounties,
+  callingRequirement,
+  cleanTiers,
+  type MysteryBountyConfig,
+} from './mysteryBounty'
 
 // A $1,000 mystery bounty: $500 prize pool, $450 bounties, $50 fee.
 // 1,000 entries, bounties drawn from Day 2 with 150 players left, 20k stacks.
@@ -181,5 +187,122 @@ describe('callingRequirement', () => {
 
   it('returns zero rather than dividing by zero on an empty pot', () => {
     expect(callingRequirement(0, 0, 10)).toEqual({ without: 0, with: 0 })
+  })
+})
+
+describe('calculateRemainingBounties', () => {
+  // A picked-over drum: the big envelopes are gone, 40 small ones remain.
+  const ladder = [
+    { value: 100_000, count: 1 },
+    { value: 20_000, count: 2 },
+    { value: 5_000, count: 7 },
+    { value: 1_000, count: 40 },
+  ]
+
+  const opts = { chipsPerUnit: 40, bigBlind: 5_000 }
+
+  it('averages over what is actually left in the drum', () => {
+    const result = calculateRemainingBounties({ tiers: ladder, ...opts })!
+    expect(result.envelopes).toBe(50)
+    expect(result.pool).toBe(100_000 + 40_000 + 35_000 + 40_000)
+    expect(result.averageBounty).toBeCloseTo(215_000 / 50, 6)
+  })
+
+  it('names the envelope you are most likely to draw', () => {
+    const result = calculateRemainingBounties({ tiers: ladder, ...opts })!
+    expect(result.mostLikely?.value).toBe(1_000)
+    expect(result.mostLikely?.chance).toBeCloseTo(40 / 50, 9)
+    // The mean is dragged four times above it by a single big envelope.
+    expect(result.averageBounty).toBeGreaterThan(result.mostLikely!.value * 4)
+  })
+
+  it('reports the median, which a skewed ladder makes the honest number', () => {
+    const result = calculateRemainingBounties({ tiers: ladder, ...opts })!
+    expect(result.medianBounty).toBe(1_000)
+  })
+
+  it('gives each tier its draw chance and its share of the money', () => {
+    const result = calculateRemainingBounties({ tiers: ladder, ...opts })!
+    const top = result.tiers[0]
+    expect(top.value).toBe(100_000)
+    expect(top.chance).toBeCloseTo(1 / 50, 9)
+    // One envelope in fifty holds nearly half the money left.
+    expect(top.share).toBeCloseTo(100_000 / 215_000, 9)
+    expect(result.tiers.reduce((sum, t) => sum + t.chance, 0)).toBeCloseTo(1, 9)
+    expect(result.tiers.reduce((sum, t) => sum + t.share, 0)).toBeCloseTo(1, 9)
+  })
+
+  it('sorts the ladder from richest to poorest whatever order it was typed in', () => {
+    const jumbled = [
+      { value: 1_000, count: 40 },
+      { value: 100_000, count: 1 },
+      { value: 5_000, count: 7 },
+    ]
+    const result = calculateRemainingBounties({ tiers: jumbled, ...opts })!
+    expect(result.tiers.map((t) => t.value)).toEqual([100_000, 5_000, 1_000])
+  })
+
+  it('converts to chips and big blinds the same way the full pool does', () => {
+    const result = calculateRemainingBounties({ tiers: ladder, ...opts })!
+    expect(result.averageBountyChips).toBeCloseTo(result.averageBounty * 40, 6)
+    expect(result.averageBountyBb).toBeCloseTo((result.averageBounty * 40) / 5_000, 6)
+  })
+
+  it('is worth fewer big blinds as the blinds climb', () => {
+    const result = calculateRemainingBounties({ tiers: ladder, ...opts })!
+    const bbs = result.levels.map((level) => level.bountyBb)
+    for (let i = 1; i < bbs.length; i++) expect(bbs[i]).toBeLessThan(bbs[i - 1])
+  })
+
+  it('says whether the drum is still rich or has been picked over', () => {
+    const rich = calculateRemainingBounties({
+      tiers: [{ value: 100_000, count: 1 }, { value: 1_000, count: 4 }],
+      ...opts,
+      startingAverage: 5_000,
+    })!
+    expect(rich.richnessVsStart).toBeGreaterThan(1)
+
+    const pickedOver = calculateRemainingBounties({
+      tiers: [{ value: 1_000, count: 40 }],
+      ...opts,
+      startingAverage: 5_000,
+    })!
+    expect(pickedOver.richnessVsStart).toBeLessThan(1)
+  })
+
+  it('has no opinion on richness without a starting average', () => {
+    expect(calculateRemainingBounties({ tiers: ladder, ...opts })!.richnessVsStart).toBeNull()
+  })
+
+  it('ignores empty, zero and negative rungs', () => {
+    expect(cleanTiers([
+      { value: 5_000, count: 2 },
+      { value: 0, count: 9 },
+      { value: 1_000, count: 0 },
+      { value: -100, count: 3 },
+    ])).toEqual([{ value: 5_000, count: 2 }])
+  })
+
+  it('rounds a fractional envelope count down to whole envelopes', () => {
+    const result = calculateRemainingBounties({ tiers: [{ value: 1_000, count: 3.9 }], ...opts })!
+    expect(result.envelopes).toBe(3)
+  })
+
+  it('returns null when nothing is left to draw', () => {
+    expect(calculateRemainingBounties({ tiers: [], ...opts })).toBeNull()
+    expect(calculateRemainingBounties({ tiers: [{ value: 0, count: 0 }], ...opts })).toBeNull()
+  })
+
+  it('handles a flat drum where every envelope is the same', () => {
+    const result = calculateRemainingBounties({ tiers: [{ value: 2_000, count: 12 }], ...opts })!
+    expect(result.averageBounty).toBe(2_000)
+    expect(result.medianBounty).toBe(2_000)
+    expect(result.mostLikely?.chance).toBe(1)
+  })
+
+  it('feeds the calling requirement like any other bounty figure', () => {
+    const result = calculateRemainingBounties({ tiers: ladder, ...opts })!
+    const { without, with: withBounty } = callingRequirement(12, 1.5, result.averageBountyBb)
+    expect(withBounty).toBeLessThan(without)
   })
 })

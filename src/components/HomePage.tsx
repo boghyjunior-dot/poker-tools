@@ -233,7 +233,7 @@ const SECTIONS: { name: string; blurb: string; tools: Tool[] }[] = [
         description:
           'Calculate preflop equity for a hand or range against one or more opponent ranges.',
         accent: 'border-violet-800/60 hover:border-violet-600/80',
-        status: 'in-progress',
+        status: 'in-review',
       },
       {
         href: 'bounty.html',
@@ -242,7 +242,7 @@ const SECTIONS: { name: string; blurb: string; tools: Tool[] }[] = [
         description:
           'Work out what an average bounty is worth in cash and in big blinds, and how much wider it lets you call.',
         accent: 'border-fuchsia-800/60 hover:border-fuchsia-600/80',
-        status: 'in-progress',
+        status: 'in-review',
       },
       {
         href: 'variance.html',
