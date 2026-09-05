@@ -10,73 +10,114 @@
           "type": "heuristic",
           "title": "Minimum Defense Frequency",
           "body": "MDF = pot / (pot + bet). Defend at least that share of your range or villain profits by betting any two cards. The flip side is your fold cap: fold % = bet / (pot + bet).",
-          "tags": ["mdf", "core"]
+          "tags": [
+            "mdf",
+            "core"
+          ]
         },
         {
           "type": "heuristic",
           "title": "Pot odds",
           "body": "Break-even equity to call = bet / (pot + bet). A half-pot bet lays 3:1, so you need 25%. Same formula as the fold half of MDF — MDF is that number applied to your whole range instead of one hand.",
-          "tags": ["pot-odds", "core"]
+          "tags": [
+            "pot-odds",
+            "core"
+          ]
         },
         {
           "type": "heuristic",
           "title": "Rule of 2 and 4",
           "body": "On the flop with two cards to come, outs x 4 approximates your equity. On the turn with one card to come, outs x 2. Shade the flop number down when you hold 9+ outs, since it overstates by a few points.",
-          "tags": ["equity", "outs"]
+          "tags": [
+            "equity",
+            "outs"
+          ]
         },
         {
           "type": "flashcard",
           "front": "MDF vs a 33% pot bet",
           "back": "75% defend / 25% fold",
-          "tags": ["mdf"]
+          "tags": [
+            "mdf"
+          ]
         },
         {
           "type": "flashcard",
           "front": "MDF vs a 50% pot bet",
           "back": "67% defend / 33% fold",
-          "tags": ["mdf"]
+          "tags": [
+            "mdf"
+          ]
         },
         {
           "type": "flashcard",
           "front": "MDF vs a 75% pot bet",
           "back": "57% defend / 43% fold",
-          "tags": ["mdf"]
+          "tags": [
+            "mdf"
+          ]
         },
         {
           "type": "flashcard",
           "front": "MDF vs a pot-sized bet",
           "back": "50% defend / 50% fold",
-          "tags": ["mdf"]
+          "tags": [
+            "mdf"
+          ]
         },
         {
           "type": "flashcard",
           "front": "MDF vs a 2x pot overbet",
           "back": "33% defend / 66% fold",
-          "tags": ["mdf"]
+          "tags": [
+            "mdf"
+          ]
         },
         {
           "type": "choice",
           "question": "Pot is 100. Villain bets 50. What share of your range should you continue with?",
-          "options": ["50%", "60%", "67%", "75%"],
+          "options": [
+            "50%",
+            "60%",
+            "67%",
+            "75%"
+          ],
           "answer": "67%",
           "explanation": "MDF = pot / (pot + bet) = 100 / 150 = 67%.",
-          "tags": ["mdf"]
+          "tags": [
+            "mdf"
+          ]
         },
         {
           "type": "choice",
           "question": "Villain bets 75 into 100. What equity do you need for the call to break even?",
-          "options": ["30%", "37%", "43%", "50%"],
+          "options": [
+            "30%",
+            "37%",
+            "43%",
+            "50%"
+          ],
           "answer": "43%",
           "explanation": "Break-even equity = bet / (pot + bet) = 75 / 175 = 43%.",
-          "tags": ["pot-odds"]
+          "tags": [
+            "pot-odds"
+          ]
         },
         {
           "type": "choice",
           "question": "You hold a flush draw on the flop (9 outs). Roughly what is your equity by the river?",
-          "options": ["18%", "27%", "36%", "45%"],
+          "options": [
+            "18%",
+            "27%",
+            "36%",
+            "45%"
+          ],
           "answer": "36%",
           "explanation": "9 outs x 4 = 36%. The true number is about 35%, so the rule barely overstates here.",
-          "tags": ["equity", "outs"]
+          "tags": [
+            "equity",
+            "outs"
+          ]
         }
       ]
     },
@@ -89,47 +130,78 @@
           "type": "heuristic",
           "title": "Rule of 5-6-7 (BB defence)",
           "body": "Defending the big blind vs a late-position open at ~40bb: call every suited hand, and take offsuit hands down to the 5x, 6x or 7x bar depending on how late the opener sat. Later position, lower bar.",
-          "tags": ["preflop", "bb-defense"]
+          "tags": [
+            "preflop",
+            "bb-defense"
+          ]
         },
         {
           "type": "heuristic",
           "title": "Position widens everything",
           "body": "Every step closer to the button widens your opening range roughly 1.5x. UTG opens ~15%, hijack ~20%, cutoff ~27%, button ~45%, small blind ~40% with a 3-bet-or-fold lean.",
-          "tags": ["preflop", "position"]
+          "tags": [
+            "preflop",
+            "position"
+          ]
         },
         {
           "type": "heuristic",
           "title": "3-bet or fold under 25bb",
           "body": "Below about 25bb, flatting out of position leaves an unplayable stack-to-pot ratio postflop. Turn marginal flats into 3-bet shoves or folds, and keep flats for position and deep stacks.",
-          "tags": ["preflop", "short-stack"]
+          "tags": [
+            "preflop",
+            "short-stack"
+          ]
         },
         {
           "type": "flashcard",
           "front": "Rough opening range: UTG at 40bb, 8-max",
           "back": "About 15% — 77+, ATs+, KJs+, QJs, JTs, AQo+",
-          "tags": ["preflop", "rfi"]
+          "tags": [
+            "preflop",
+            "rfi"
+          ]
         },
         {
           "type": "flashcard",
           "front": "Rough opening range: button at 40bb",
           "back": "About 45% — all pairs, all suited aces and kings, most suited connectors, offsuit broadways down to A2o/K9o",
-          "tags": ["preflop", "rfi"]
+          "tags": [
+            "preflop",
+            "rfi"
+          ]
         },
         {
           "type": "choice",
           "question": "Which hand class does the big blind defend most often vs a button open?",
-          "options": ["Offsuit broadways", "All suited hands", "Small pairs only", "Offsuit aces"],
+          "options": [
+            "Offsuit broadways",
+            "All suited hands",
+            "Small pairs only",
+            "Offsuit aces"
+          ],
           "answer": "All suited hands",
           "explanation": "Suited hands realise the most equity from out of position, so BB defence keeps every suited combo before it reaches for offsuit hands.",
-          "tags": ["preflop", "bb-defense"]
+          "tags": [
+            "preflop",
+            "bb-defense"
+          ]
         },
         {
           "type": "choice",
           "question": "You open the cutoff and the button 3-bets. Roughly what portion of your opening range should continue?",
-          "options": ["About 20%", "About 40%", "About 60%", "About 80%"],
+          "options": [
+            "About 20%",
+            "About 40%",
+            "About 60%",
+            "About 80%"
+          ],
           "answer": "About 40%",
           "explanation": "Against a typical 3-bet size you defend around 40% of the range you opened, mixing 4-bets with calls and folding the weakest opens outright.",
-          "tags": ["preflop", "3bet"]
+          "tags": [
+            "preflop",
+            "3bet"
+          ]
         }
       ]
     },
@@ -142,25 +214,37 @@
           "type": "heuristic",
           "title": "SPR sets your commitment",
           "body": "Stack-to-pot ratio below 3 means top pair is usually committing. Between 3 and 6 you want two pair or better to stack off. Above 6 you need a strong draw or a big made hand.",
-          "tags": ["postflop", "spr"]
+          "tags": [
+            "postflop",
+            "spr"
+          ]
         },
         {
           "type": "heuristic",
           "title": "ICM tightens calls, not shoves",
           "body": "Near a pay jump, calling ranges tighten hard because busting costs real money, while shoving ranges stay wide because fold equity is worth more. Shove wide, call tight.",
-          "tags": ["icm", "mtt"]
+          "tags": [
+            "icm",
+            "mtt"
+          ]
         },
         {
           "type": "heuristic",
           "title": "Bounties widen calls",
           "body": "In a PKO, a bounty you can win outright is worth extra equity in the pot. Covering a short stack lets you call several percentage points wider than the chip maths alone would allow.",
-          "tags": ["pko", "mtt"]
+          "tags": [
+            "pko",
+            "mtt"
+          ]
         },
         {
           "type": "flashcard",
           "front": "SPR after a single raise and one caller preflop",
           "back": "Usually 4 to 6 — the two-pair-or-better zone for stacking off",
-          "tags": ["postflop", "spr"]
+          "tags": [
+            "postflop",
+            "spr"
+          ]
         },
         {
           "type": "choice",
@@ -173,7 +257,337 @@
           ],
           "answer": "Open wider and attack their blinds",
           "explanation": "Short stacks cannot call without risking elimination at a pay jump, so a big stack profits by applying pressure — while still calling their shoves tightly.",
-          "tags": ["icm", "mtt"]
+          "tags": [
+            "icm",
+            "mtt"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "combo-maths",
+      "name": "Combo maths",
+      "description": "Counting combos, and why the 13x13 grid misleads you about them.",
+      "cards": [
+        {
+          "type": "heuristic",
+          "title": "6 / 4 / 12",
+          "body": "A pair has 6 combos, a suited hand 4, an offsuit hand 12. Every combo count you will ever need preflop comes from those three numbers.",
+          "tags": [
+            "combos",
+            "core"
+          ]
+        },
+        {
+          "type": "heuristic",
+          "title": "The grid lies about frequency",
+          "body": "Suited and offsuit each take 78 of the 169 cells — the same 46% of the grid. But offsuit is three times the combos, so it is 70.6% of the hands you are actually dealt against 23.5% suited. Equal area on screen, very unequal at the table.",
+          "tags": [
+            "combos",
+            "ranges"
+          ]
+        },
+        {
+          "type": "heuristic",
+          "title": "Offsuit widens a range three times faster",
+          "body": "Dropping your offsuit floor one rank adds 12 combos per hand; dropping the suited floor adds 4. Axs+ is 48 combos, Axo+ is 144 — same twelve cells, triple the weight. Watch the offsuit bars when you are tuning an opening range.",
+          "tags": [
+            "combos",
+            "ranges"
+          ]
+        },
+        {
+          "type": "heuristic",
+          "title": "Blockers cut combos, not hands",
+          "body": "Holding one ace leaves villain 3 aces, so AA drops from 6 combos to C(3,2) = 3 — halved. Holding an ace and a king cuts AK from 16 to 9. Card removal bites hardest on the exact hands you are worried about.",
+          "tags": [
+            "combos",
+            "blockers"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "Combos in a full range",
+          "back": "1,326 — that is C(52,2)",
+          "tags": [
+            "combos"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "Hand types in the 13x13 grid",
+          "back": "169 — 13 pairs, 78 suited, 78 offsuit",
+          "tags": [
+            "combos"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "Combos in one pocket pair",
+          "back": "6 — C(4,2)",
+          "tags": [
+            "combos"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "Combos in one suited hand",
+          "back": "4 — one per suit",
+          "tags": [
+            "combos"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "Combos in one offsuit hand",
+          "back": "12 — 4 x 3",
+          "tags": [
+            "combos"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "Combos in AK, suited and offsuit together",
+          "back": "16 — 4 suited + 12 offsuit",
+          "tags": [
+            "combos"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "Share of a full range that is pairs",
+          "back": "5.9% — 78 of 1,326 combos",
+          "tags": [
+            "combos"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "Share of a full range that is suited",
+          "back": "23.5% — 312 of 1,326 combos",
+          "tags": [
+            "combos"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "Share of a full range that is offsuit",
+          "back": "70.6% — 936 of 1,326 combos",
+          "tags": [
+            "combos"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "How much more often is an offsuit hand dealt than its suited twin?",
+          "back": "Three times — 12 combos against 4",
+          "tags": [
+            "combos"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "Combos of all suited aces (Axs+)",
+          "back": "48 — 12 hands x 4",
+          "tags": [
+            "combos",
+            "ranges"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "Combos of all offsuit aces (Axo+)",
+          "back": "144 — 12 hands x 12",
+          "tags": [
+            "combos",
+            "ranges"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "How many hand combinations are there in a full range?",
+          "options": [
+            "169",
+            "1,024",
+            "1,326",
+            "2,652"
+          ],
+          "answer": "1,326",
+          "explanation": "C(52,2) = 52 x 51 / 2 = 1,326. 169 is the number of hand types, not combos. 2,652 is 52 x 51, which counts each hand twice.",
+          "tags": [
+            "combos"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "What share of a full range is pocket pairs?",
+          "options": [
+            "5.9%",
+            "7.7%",
+            "13%",
+            "23.5%"
+          ],
+          "answer": "5.9%",
+          "explanation": "13 pairs x 6 combos = 78, and 78 / 1,326 = 5.9%. The 7.7% trap is the share of grid cells (13 of 169), which is not the same thing.",
+          "tags": [
+            "combos"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "What share of a full range is suited hands?",
+          "options": [
+            "23.5%",
+            "30%",
+            "46.2%",
+            "12%"
+          ],
+          "answer": "23.5%",
+          "explanation": "78 suited types x 4 combos = 312, and 312 / 1,326 = 23.5%. The 46.2% trap is the share of grid cells — suited fills 78 of 169 squares but only a quarter of the combos.",
+          "tags": [
+            "combos"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "What share of a full range is offsuit hands?",
+          "options": [
+            "70.6%",
+            "46.2%",
+            "50%",
+            "58%"
+          ],
+          "answer": "70.6%",
+          "explanation": "78 offsuit types x 12 combos = 936, and 936 / 1,326 = 70.6%. Offsuit takes the same 46.2% of grid cells as suited, but three times the combos.",
+          "tags": [
+            "combos"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "You hold A♠K♦. How many combos of AA can villain still have?",
+          "options": [
+            "3",
+            "6",
+            "4",
+            "1"
+          ],
+          "answer": "3",
+          "explanation": "Three aces remain, and C(3,2) = 3. Holding a single ace halves villain aces from 6 combos to 3.",
+          "tags": [
+            "combos",
+            "blockers"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "You hold A♠A♥. How many combos of AK can villain have?",
+          "options": [
+            "8",
+            "16",
+            "12",
+            "4"
+          ],
+          "answer": "8",
+          "explanation": "Two aces are left and all four kings, so 2 x 4 = 8 — half the usual 16.",
+          "tags": [
+            "combos",
+            "blockers"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "Villain shows up with exactly JJ+ and AK. How many combos is that?",
+          "options": [
+            "40",
+            "34",
+            "46",
+            "24"
+          ],
+          "answer": "40",
+          "explanation": "JJ, QQ, KK, AA is 4 x 6 = 24, and AK is 16 (4 suited + 12 offsuit). 24 + 16 = 40.",
+          "tags": [
+            "combos",
+            "ranges"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "Which adds more combos to an opening range: every suited ace, or every offsuit ace?",
+          "options": [
+            "Offsuit, by three times",
+            "Suited, by three times",
+            "They are the same",
+            "Offsuit, by twelve times"
+          ],
+          "answer": "Offsuit, by three times",
+          "explanation": "Both are twelve cells on the grid, but Axs+ is 48 combos and Axo+ is 144. Offsuit hands carry 12 combos each against 4.",
+          "tags": [
+            "combos",
+            "ranges"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "A range of every pocket pair and nothing else is what percentage of hands?",
+          "options": [
+            "5.9%",
+            "7.7%",
+            "10%",
+            "13%"
+          ],
+          "answer": "5.9%",
+          "explanation": "78 combos of 1,326. All thirteen pairs together are still a very narrow range.",
+          "tags": [
+            "combos",
+            "ranges"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "You are dealt a hand at random. Which is most likely?",
+          "options": [
+            "A specific offsuit hand",
+            "A specific pocket pair",
+            "A specific suited hand",
+            "All equally likely"
+          ],
+          "answer": "A specific offsuit hand",
+          "explanation": "12 combos beats 6 for a pair and 4 for a suited hand. This is why a drill has to deal combo-weighted — picking a random grid square would show you suited hands about three times too often.",
+          "tags": [
+            "combos"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "How many suited hand types are there in the grid?",
+          "options": [
+            "78",
+            "169",
+            "13",
+            "312"
+          ],
+          "answer": "78",
+          "explanation": "C(13,2) = 78 ways to pick two different ranks. There are the same 78 offsuit types, plus 13 pairs, giving 169 cells. 312 is the suited combo count, not the type count.",
+          "tags": [
+            "combos"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "Your range is 22+ only. Roughly how many combos have you got?",
+          "options": [
+            "78",
+            "13",
+            "156",
+            "48"
+          ],
+          "answer": "78",
+          "explanation": "13 pairs x 6 = 78 combos, which is 5.9% of all hands.",
+          "tags": [
+            "combos",
+            "ranges"
+          ]
         }
       ]
     }

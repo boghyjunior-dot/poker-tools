@@ -1,13 +1,11 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
 import { Footer } from '../Footer'
 import { PT4_SAMPLE_EXPORT } from '../../lib/pt4SampleExport'
 import {
-  analyzeStats,
+  analyzeAll,
   CATEGORY_LABELS,
   formatStatUnit,
-  getStatRange,
-  getStatTarget,
   parsePositionalReport,
   parseStatsReport,
   POSITION_KEYS,
@@ -16,14 +14,30 @@ import {
   relevanceLabel,
   STAT_DEFINITIONS,
   statAppliesTo,
-  type AnalysisContext,
-  type Position,
   type PositionKey,
+  type RankedLeak,
   type RelevanceLevel,
   type Severity,
   type StatCategory,
   type StatResult,
 } from '../../lib/leakfinder'
+import { reportToMarkdown } from '../../lib/leakfinderExport'
+import { fixFor } from '../../lib/leakfinderFixes'
+import {
+  diffSnapshots,
+  loadState,
+  newSnapshotId,
+  saveState,
+  type Snapshot,
+} from '../../lib/leakfinderStorage'
+import {
+  BASELINE,
+  getPositionRange,
+  getStatTarget,
+  setTargetOverrides,
+  type Position,
+  type TargetOverrides,
+} from '../../lib/leakfinderTargets'
 
 const SEVERITY_STYLES: Record<Severity, { badge: string; border: string; label: string }> = {
   ok: { badge: 'bg-emerald-900/60 text-emerald-300', border: 'border-slate-800', label: 'OK' },
@@ -34,18 +48,6 @@ const SEVERITY_STYLES: Record<Severity, { badge: string; border: string; label: 
 
 const CATEGORY_ORDER: StatCategory[] = ['preflop', 'postflop', 'showdown']
 
-const SAMPLE_OVERALL = `VPIP: 31.2
-Raise First: 14.5
-3Bet PF: 4.1
-2Bet PF & Fold: 68
-Fold to Steal: 74
-CBet F IP (HU): 78
-Fold to F Cbet (HU): 61
-CBet T (HU): 42
-All-In Adj BB/100: -1.2`
-
-const SAMPLE_PT4 = PT4_SAMPLE_EXPORT
-
 const RELEVANCE_STYLES: Record<RelevanceLevel, string> = {
   insufficient: 'text-red-400',
   low: 'text-amber-400',
@@ -53,8 +55,27 @@ const RELEVANCE_STYLES: Record<RelevanceLevel, string> = {
   high: 'text-emerald-400',
 }
 
+const SAMPLE_OVERALL = `VPIP: 31.2
+PFR: 14.5
+3Bet PF: 4.1
+Fold to 3Bet: 68
+Attempt to Steal: 28
+WTSD: 33.5
+W$SD: 44.1
+WWSF: 39.2
+Aggression Factor: 1.4
+All-In Adj BB/100: -1.2`
+
+const SAMPLE_HM3 = `Position,Hands,VPIP,PFR,Attempt to Steal,WTSD,W$SD,WWSF,Agg Factor
+Early,42000,15.4,12.9,-,25.1,51.8,44.2,2.5
+Cutoff,38000,26.9,22.4,37.1,26.8,50.4,45.9,2.7
+Button,38000,45.2,38.6,42.8,28.4,49.1,47.2,3.0
+Small Blind,36000,34.1,26.2,31.4,29.9,47.6,42.1,2.2
+Big Blind,36000,41.7,11.8,-,31.2,46.9,40.3,1.9`
+
 type ValuesByPosition = Record<PositionKey, Record<string, string>>
-type HandsByPosition = Record<PositionKey, number | undefined>
+type HandsByPosition = Partial<Record<PositionKey, number>>
+type OppByPosition = Partial<Record<PositionKey, Record<string, number>>>
 
 function emptyValues(): ValuesByPosition {
   return Object.fromEntries(POSITION_KEYS.map((key) => [key, {}])) as ValuesByPosition
@@ -79,14 +100,62 @@ function scoreSummary(score: number, leakCount: number): string {
   return 'Significant leaks detected. Focus on the major issues first.'
 }
 
+function formatWhen(iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return iso
+  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+/** Fallback for browsers or contexts where the async clipboard is blocked. */
+function copyViaTextarea(text: string): boolean {
+  try {
+    const area = document.createElement('textarea')
+    area.value = text
+    area.setAttribute('readonly', '')
+    area.style.position = 'fixed'
+    area.style.opacity = '0'
+    document.body.appendChild(area)
+    area.select()
+    const ok = document.execCommand('copy')
+    document.body.removeChild(area)
+    return ok
+  } catch {
+    return false
+  }
+}
+
+function Panel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <section className={`rounded-lg border border-slate-800 bg-slate-900/60 p-4 space-y-3 ${className}`}>
+      {children}
+    </section>
+  )
+}
+
 export function LeakFinderPage() {
+  // Read once, lazily, so a stored session survives a refresh.
+  const [stored] = useState(loadState)
+
   const [rawText, setRawText] = useState('')
-  const [values, setValues] = useState<ValuesByPosition>(emptyValues)
-  const [hands, setHands] = useState<HandsByPosition>({} as HandsByPosition)
-  const [weightedOverallWinrate, setWeightedOverallWinrate] = useState(false)
+  const [values, setValues] = useState<ValuesByPosition>(() => {
+    const next = emptyValues()
+    for (const key of POSITION_KEYS) {
+      const bucket = stored.current.values[key]
+      if (!bucket) continue
+      for (const [id, value] of Object.entries(bucket)) next[key][id] = String(value)
+    }
+    return next
+  })
+  const [hands, setHands] = useState<HandsByPosition>(stored.current.hands)
+  const [opportunities, setOpportunities] = useState<OppByPosition>(stored.current.opportunities)
+  const [snapshots, setSnapshots] = useState<Snapshot[]>(stored.snapshots)
+  const [overrides, setOverrides] = useState<TargetOverrides>(stored.overrides)
+
   const [activeTab, setActiveTab] = useState<PositionKey>('overall')
-  const [analyzed, setAnalyzed] = useState(false)
   const [parseMessage, setParseMessage] = useState<string | null>(null)
+  const [editingTargets, setEditingTargets] = useState(false)
+  const [compareId, setCompareId] = useState<string>('')
+  const [copyNote, setCopyNote] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const numericValues = useMemo(() => {
@@ -102,23 +171,35 @@ export function LeakFinderPage() {
     return byPosition
   }, [values])
 
+  const analysis = useMemo(() => {
+    // The targets module holds the overrides, so push them before analysing.
+    setTargetOverrides(overrides)
+    return analyzeAll(numericValues, hands, opportunities)
+  }, [numericValues, hands, opportunities, overrides])
+
+  const hasData = analysis.positionsWithData.length > 0
+
+  useEffect(() => {
+    // A page with nothing in it must not overwrite a real session — otherwise
+    // opening the tool in a second tab wipes what the first tab saved.
+    const hasAnything =
+      hasData || snapshots.length > 0 || Object.keys(overrides).length > 0
+    if (!hasAnything) return
+    saveState({
+      current: { values: numericValues, hands, opportunities },
+      snapshots,
+      overrides,
+    })
+  }, [hasData, numericValues, hands, opportunities, snapshots, overrides])
+
   const tabCounts = useMemo(() => {
     const counts = {} as Record<PositionKey, number>
-    for (const key of POSITION_KEYS) {
-      counts[key] = Object.keys(numericValues[key]).length
-    }
+    for (const key of POSITION_KEYS) counts[key] = Object.keys(numericValues[key]).length
     return counts
   }, [numericValues])
 
-  const analysisContext = useMemo((): AnalysisContext => ({
-    hands: hands[activeTab],
-  }), [hands, activeTab])
-
-  const report = useMemo(() => {
-    if (!analyzed) return null
-    const position = activeTab === 'overall' ? undefined : activeTab
-    return analyzeStats(numericValues[activeTab], position, analysisContext)
-  }, [analyzed, numericValues, activeTab, analysisContext])
+  const report = analysis.byPosition[activeTab] ?? null
+  const activePosition = activeTab === 'overall' ? undefined : (activeTab as Position)
 
   const positionRelevance = useMemo(() => {
     const handCount = hands[activeTab]
@@ -129,56 +210,49 @@ export function LeakFinderPage() {
       }
     }
     const level = relevanceFromHands(handCount)
-    return {
-      level,
-      note: `${handCount.toLocaleString()} hands · ${relevanceLabel(level).toLowerCase()}`,
-    }
+    return { level, note: `${handCount.toLocaleString()} hands · ${relevanceLabel(level).toLowerCase()}` }
   }, [hands, activeTab])
 
   const applyParsedText = (text: string) => {
     const positional = parsePositionalReport(text)
     if (positional.isTable && positional.matched > 0) {
       const next = emptyValues()
-      const nextHands = {} as HandsByPosition
+      const nextHands: HandsByPosition = {}
       for (const key of POSITION_KEYS) {
         const stats = positional.positions[key]
-        if (!stats) continue
-        for (const [id, value] of Object.entries(stats)) {
-          next[key][id] = String(value)
+        if (stats) {
+          for (const [id, value] of Object.entries(stats)) next[key][id] = String(value)
         }
         if (positional.hands[key]) nextHands[key] = positional.hands[key]
       }
       setValues(next)
       setHands(nextHands)
-      setWeightedOverallWinrate(positional.weightedOverallWinrate)
+      setOpportunities(positional.opportunities)
       const positionsFound = POSITION_KEYS.filter((key) => positional.positions[key])
-      const firstTab = positionsFound.includes('overall') ? 'overall' : positionsFound[0] ?? 'overall'
-      setActiveTab(firstTab)
-      const totalHands = nextHands.overall ?? positionsFound.reduce((sum, key) => sum + (nextHands[key] ?? 0), 0)
+      setActiveTab(positionsFound.includes('overall') ? 'overall' : (positionsFound[0] ?? 'overall'))
+      const totalHands = nextHands.overall ?? 0
       const handsNote = totalHands > 0 ? ` · ${totalHands.toLocaleString()} total hands` : ''
-      const winrateNote = positional.weightedOverallWinrate ? ' · overall winrate weighted by hands' : ''
+      const seats = positionsFound.filter((k) => k !== 'overall')
       setParseMessage(
-        `Recognized ${positional.matched} values across ${positionsFound.length} position${positionsFound.length === 1 ? '' : 's'}: ${positionsFound.map((k) => POSITION_LABELS[k]).join(', ')}${handsNote}${winrateNote}.`,
+        `Recognized ${positional.matched} values across ${seats.length} seat${seats.length === 1 ? '' : 's'}: ${seats.map((k) => POSITION_LABELS[k]).join(', ')}${handsNote}. Overall is aggregated from the seats.`,
       )
-      setAnalyzed(true)
       return
     }
 
     const flat = parseStatsReport(text)
     if (flat.matched === 0) {
-      setParseMessage('No stats recognized. Paste a PT4 position export (CSV) or lines like "VPIP: 24.5".')
+      setParseMessage(
+        'No stats recognized. Paste a positional CSV export or lines like "VPIP: 24.5".',
+      )
       return
     }
     setValues((prev) => {
       const next = { ...prev, overall: { ...prev.overall } }
-      for (const [id, value] of Object.entries(flat.values)) {
-        next.overall[id] = String(value)
-      }
+      for (const [id, value] of Object.entries(flat.values)) next.overall[id] = String(value)
       return next
     })
     setActiveTab('overall')
     setParseMessage(`Recognized ${flat.matched} overall stat${flat.matched === 1 ? '' : 's'} from the report.`)
-    setAnalyzed(true)
   }
 
   const handleFile = async (file: File) => {
@@ -188,13 +262,99 @@ export function LeakFinderPage() {
   }
 
   const setStat = (id: string, value: string) => {
-    setValues((prev) => ({
-      ...prev,
-      [activeTab]: { ...prev[activeTab], [id]: value },
-    }))
+    setValues((prev) => ({ ...prev, [activeTab]: { ...prev[activeTab], [id]: value } }))
   }
 
-  const activePosition = activeTab === 'overall' ? undefined : activeTab
+  const setOverride = (statId: string, bound: 0 | 1, raw: string) => {
+    const key: Position | 'all' = activePosition ?? 'all'
+    setOverrides((prev) => {
+      const current =
+        prev[statId]?.[key]?.range ??
+        (activePosition ? getPositionRange(statId, activePosition) : null) ??
+        effectiveRange(statId, activePosition)
+      const next: [number, number] = [current[0], current[1]]
+      const n = Number(raw.replace(',', '.'))
+      if (raw.trim() !== '' && Number.isFinite(n)) next[bound] = n
+      return { ...prev, [statId]: { ...prev[statId], [key]: { range: next } } }
+    })
+  }
+
+  const clearOverrides = () => setOverrides({})
+
+  const saveSnapshot = () => {
+    const snapshot: Snapshot = {
+      id: newSnapshotId(),
+      label: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }),
+      savedAt: new Date().toISOString(),
+      values: numericValues,
+      hands,
+      opportunities,
+      score: analysis.overallScore,
+    }
+    setSnapshots((prev) => [snapshot, ...prev].slice(0, 20))
+  }
+
+  const deleteSnapshot = (id: string) => {
+    setSnapshots((prev) => prev.filter((s) => s.id !== id))
+    if (compareId === id) setCompareId('')
+  }
+
+  const loadSnapshot = (snapshot: Snapshot) => {
+    const next = emptyValues()
+    for (const key of POSITION_KEYS) {
+      const bucket = snapshot.values[key]
+      if (!bucket) continue
+      for (const [id, value] of Object.entries(bucket)) next[key][id] = String(value)
+    }
+    setValues(next)
+    setHands(snapshot.hands)
+    setOpportunities(snapshot.opportunities)
+    setParseMessage(`Loaded the snapshot from ${formatWhen(snapshot.savedAt)}.`)
+  }
+
+  const comparison = useMemo(() => {
+    if (!compareId) return null
+    const snapshot = snapshots.find((s) => s.id === compareId)
+    if (!snapshot) return null
+    return { snapshot, diff: diffSnapshots(snapshot, { values: numericValues }) }
+  }, [compareId, snapshots, numericValues])
+
+  const copyReport = async () => {
+    const markdown = reportToMarkdown(analysis)
+    try {
+      await navigator.clipboard.writeText(markdown)
+      setCopyNote('Report copied as Markdown.')
+      return
+    } catch {
+      // The async clipboard needs focus and a secure context; fall back to the
+      // old selection trick, which works in more places.
+    }
+    if (copyViaTextarea(markdown)) {
+      setCopyNote('Report copied as Markdown.')
+    } else {
+      setCopyNote('Could not reach the clipboard — use Download instead.')
+    }
+  }
+
+  const downloadReport = () => {
+    const blob = new Blob([reportToMarkdown(analysis)], { type: 'text/markdown' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `leak-finder-${new Date().toISOString().slice(0, 10)}.md`
+    link.click()
+    URL.revokeObjectURL(url)
+    setCopyNote('Report downloaded.')
+  }
+
+  const clearAll = () => {
+    setValues(emptyValues())
+    setHands({})
+    setOpportunities({})
+    setRawText('')
+    setParseMessage(null)
+  }
+
   const visibleStats = STAT_DEFINITIONS.filter((def) => statAppliesTo(def.id, activeTab))
   const filledCount = tabCounts[activeTab]
 
@@ -204,21 +364,29 @@ export function LeakFinderPage() {
         <BackToMenu className="mb-2" />
         <h1 className="text-2xl font-bold text-white mb-1">Leak Finder</h1>
         <p className="text-sm text-slate-400">
-          Import a positional report from PokerTracker 4 and compare stats to online MTT baselines.
+          Import a positional report from PokerTracker, Hold&rsquo;em Manager or Hand2Note and
+          compare every seat to healthy baselines.
         </p>
       </header>
 
       <div className="space-y-4">
-        <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+        <Panel>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-semibold text-white">1 · Import your report</h2>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
-                onClick={() => setRawText(SAMPLE_PT4)}
+                onClick={() => setRawText(PT4_SAMPLE_EXPORT)}
                 className="text-xs text-slate-400 hover:text-white transition-colors"
               >
-                Example: PT4 CSV export
+                Example: PT4 CSV
+              </button>
+              <button
+                type="button"
+                onClick={() => setRawText(SAMPLE_HM3)}
+                className="text-xs text-slate-400 hover:text-white transition-colors"
+              >
+                Example: HM3 / H2N
               </button>
               <button
                 type="button"
@@ -234,7 +402,9 @@ export function LeakFinderPage() {
             value={rawText}
             onChange={(e) => setRawText(e.target.value)}
             rows={8}
-            placeholder={'Paste a PT4 positional CSV export (quoted fields, SB/BB/EP/MP/CO/BTN rows)\nor flat stats like:\nVPIP: 24.5\nRaise First: 19.2\n3Bet PF: 8.1'}
+            placeholder={
+              'Paste a positional CSV export (one row per seat)\nor flat stats like:\nVPIP: 24.5\nPFR: 19.2\nWTSD: 27'
+            }
             className="w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 font-mono text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
           />
 
@@ -252,7 +422,7 @@ export function LeakFinderPage() {
               onClick={() => fileInputRef.current?.click()}
               className="rounded-lg border border-slate-600 bg-slate-800 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-700 transition-colors"
             >
-              Import PT4 file (.csv / .txt)
+              Import file (.csv / .txt)
             </button>
             <input
               ref={fileInputRef}
@@ -265,22 +435,114 @@ export function LeakFinderPage() {
                 e.target.value = ''
               }}
             />
+            {hasData && (
+              <button
+                type="button"
+                onClick={clearAll}
+                className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+              >
+                Clear
+              </button>
+            )}
             {parseMessage && <p className="text-sm text-slate-400">{parseMessage}</p>}
           </div>
           <p className="text-xs text-slate-500">
-            PT4: Reports → your stat report grouped by position → Export → CSV. Paste the full file
-            (header + position rows). Dash (-) blanks and Count columns are skipped automatically.
+            PT4: Reports → stat report grouped by position → Export → CSV. HM3 and Hand2Note: any
+            positional export with a header row. Count columns are read as sample sizes, dash (-)
+            blanks are skipped, and HM3&rsquo;s combined &ldquo;Late&rdquo; bucket is read as CO.
           </p>
-        </section>
+        </Panel>
 
-        <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+        {hasData && (
+          <>
+            <Panel>
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-6">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+                      Whole-game score
+                    </p>
+                    <p className={`text-5xl font-bold tabular-nums ${scoreColor(analysis.overallScore)}`}>
+                      {analysis.overallScore}
+                      <span className="text-xl text-slate-500"> / 100</span>
+                    </p>
+                  </div>
+                  <div className="min-w-[12rem]">
+                    <p className="text-sm text-slate-300">
+                      {scoreSummary(analysis.overallScore, analysis.ranked.length)}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {analysis.ranked.length} leak{analysis.ranked.length === 1 ? '' : 's'} across{' '}
+                      {analysis.positionsWithData.filter((k) => k !== 'overall').length} seats ·
+                      weighted by how much sample backs each stat
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void copyReport()}
+                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700 transition-colors"
+                  >
+                    Copy report
+                  </button>
+                  <button
+                    type="button"
+                    onClick={downloadReport}
+                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700 transition-colors"
+                  >
+                    Download .md
+                  </button>
+                  <button
+                    type="button"
+                    onClick={saveSnapshot}
+                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700 transition-colors"
+                  >
+                    Save snapshot
+                  </button>
+                </div>
+              </div>
+              {copyNote && <p className="text-xs text-emerald-400">{copyNote}</p>}
+            </Panel>
+
+            {analysis.ranked.length > 0 && (
+              <Panel>
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h2 className="text-sm font-semibold text-white">Fix these first</h2>
+                  <p className="text-xs text-slate-500">
+                    Ranked across every seat by how far off you are, discounted by sample size
+                  </p>
+                </div>
+                <ol className="space-y-2">
+                  {analysis.ranked.slice(0, 8).map((leak, index) => (
+                    <PriorityRow key={`${leak.positionKey}:${leak.def.id}`} leak={leak} index={index} />
+                  ))}
+                </ol>
+              </Panel>
+            )}
+          </>
+        )}
+
+        <Panel>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-semibold text-white">2 · Stats by position</h2>
-            <p className="text-xs text-slate-500">
-              {filledCount} stat{filledCount === 1 ? '' : 's'} for {POSITION_LABELS[activeTab]}
-              {formatHands(hands[activeTab]) ? ` · ${formatHands(hands[activeTab])}` : ''}
-              {activeTab === 'overall' && weightedOverallWinrate ? ' · winrate weighted by position hands' : ''}
-            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-xs text-slate-500">
+                {filledCount} stat{filledCount === 1 ? '' : 's'} for {POSITION_LABELS[activeTab]}
+                {formatHands(hands[activeTab]) ? ` · ${formatHands(hands[activeTab])}` : ''}
+              </p>
+              <button
+                type="button"
+                onClick={() => setEditingTargets((prev) => !prev)}
+                className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
+                  editingTargets
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                }`}
+              >
+                {editingTargets ? 'Done editing targets' : 'Edit targets'}
+              </button>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-1.5">
@@ -299,69 +561,95 @@ export function LeakFinderPage() {
               >
                 {POSITION_LABELS[key]}
                 {hands[key] ? (
-                  <span className="ml-1 rounded bg-black/25 px-1 text-[10px] tabular-nums text-slate-400">
-                    {(hands[key]! / 1000).toFixed(0)}k
-                  </span>
-                ) : tabCounts[key] > 0 ? (
-                  <span className="ml-1.5 rounded bg-black/25 px-1 text-[10px] tabular-nums">
-                    {tabCounts[key]}
+                  <span className="ml-1 text-[10px] opacity-70">
+                    {hands[key]! >= 1000 ? `${Math.round(hands[key]! / 1000)}k` : hands[key]}
                   </span>
                 ) : null}
               </button>
             ))}
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {visibleStats.map((def) => {
-              const target = getStatTarget(def.id, activePosition)
-              const [min, max] = getStatRange(def, activePosition)
-              const unit = formatStatUnit(def.unit)
-              return (
-                <label
-                  key={def.id}
-                  className="flex items-center justify-between gap-2 rounded-md border border-slate-800 bg-slate-950/40 px-3 py-2"
+          {editingTargets && (
+            <div className="rounded-md border border-indigo-900/60 bg-indigo-950/30 px-3 py-2 text-xs text-slate-300">
+              <p>
+                Editing the healthy band for <strong>{POSITION_LABELS[activeTab]}</strong>. These
+                are opinions, not solver output — {BASELINE.note}
+              </p>
+              {Object.keys(overrides).length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearOverrides}
+                  className="mt-1.5 text-[11px] text-indigo-300 hover:text-white transition-colors"
                 >
-                  <span className="text-sm text-slate-300">
+                  Reset all {Object.keys(overrides).length} edited target
+                  {Object.keys(overrides).length === 1 ? '' : 's'} to the bundled numbers
+                </button>
+              )}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+            {visibleStats.map((def) => {
+              const range = effectiveRange(def.id, activePosition)
+              const edited = overrides[def.id]?.[activePosition ?? 'all'] !== undefined
+              return (
+                <div key={def.id} className="flex items-center gap-2 rounded-md bg-slate-950/40 px-2 py-1.5">
+                  <label className="flex-1 text-xs text-slate-300" htmlFor={`stat-${def.id}`}>
                     {def.label}
-                    <span className="block text-[10px] text-slate-500">
-                      {target !== null ? `target ${target}${unit}` : `target ${min}–${max}${unit}`}
+                  </label>
+                  {editingTargets ? (
+                    <span className="flex items-center gap-1">
+                      <input
+                        aria-label={`${def.label} target minimum`}
+                        value={String(range[0])}
+                        onChange={(e) => setOverride(def.id, 0, e.target.value)}
+                        className={`w-12 rounded border bg-slate-950 px-1 py-0.5 text-right text-[11px] tabular-nums text-slate-200 ${
+                          edited ? 'border-indigo-500' : 'border-slate-700'
+                        }`}
+                      />
+                      <span className="text-[11px] text-slate-600">–</span>
+                      <input
+                        aria-label={`${def.label} target maximum`}
+                        value={String(range[1])}
+                        onChange={(e) => setOverride(def.id, 1, e.target.value)}
+                        className={`w-12 rounded border bg-slate-950 px-1 py-0.5 text-right text-[11px] tabular-nums text-slate-200 ${
+                          edited ? 'border-indigo-500' : 'border-slate-700'
+                        }`}
+                      />
                     </span>
-                  </span>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={values[activeTab][def.id] ?? ''}
-                    onChange={(e) => setStat(def.id, e.target.value)}
-                    placeholder="—"
-                    className="w-16 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-right text-sm text-white tabular-nums focus:outline-none focus:ring-1 focus:ring-indigo-500/60"
-                  />
-                </label>
+                  ) : (
+                    <>
+                      <input
+                        id={`stat-${def.id}`}
+                        value={values[activeTab][def.id] ?? ''}
+                        onChange={(e) => setStat(def.id, e.target.value)}
+                        placeholder="—"
+                        inputMode="decimal"
+                        className="w-16 rounded border border-slate-700 bg-slate-950 px-2 py-0.5 text-right text-xs tabular-nums text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500/60"
+                      />
+                      <span className="w-24 text-right text-[10px] tabular-nums text-slate-500">
+                        {range[0]}–{range[1]}
+                        {formatStatUnit(def.unit)}
+                      </span>
+                    </>
+                  )}
+                </div>
               )
             })}
           </div>
-
-          {!analyzed && filledCount > 0 && (
-            <button
-              type="button"
-              onClick={() => setAnalyzed(true)}
-              className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors"
-            >
-              Analyze stats
-            </button>
-          )}
-        </section>
+        </Panel>
 
         {report && report.results.length > 0 && (
           <>
-            <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-5">
+            <Panel>
               <div className="flex flex-wrap items-center gap-6">
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
-                    {POSITION_LABELS[activeTab]} leak score
+                    {POSITION_LABELS[activeTab]} score
                   </p>
-                  <p className={`text-5xl font-bold tabular-nums ${scoreColor(report.score)}`}>
+                  <p className={`text-4xl font-bold tabular-nums ${scoreColor(report.score)}`}>
                     {report.score}
-                    <span className="text-xl text-slate-500"> / 100</span>
+                    <span className="text-lg text-slate-500"> / 100</span>
                   </p>
                 </div>
                 <div className="flex-1 min-w-[12rem]">
@@ -370,12 +658,12 @@ export function LeakFinderPage() {
                     {positionRelevance.note}
                   </p>
                   <p className="text-xs text-slate-500 mt-1">
-                    {report.results.length} stats analyzed · {report.leaks.length} leak{report.leaks.length === 1 ? '' : 's'} found
-                    {activePosition ? ` · targets adjusted for ${POSITION_LABELS[activeTab]}` : ''}
+                    {report.results.length} stats analyzed · {report.leaks.length} leak
+                    {report.leaks.length === 1 ? '' : 's'} found
                   </p>
                 </div>
               </div>
-            </section>
+            </Panel>
 
             {CATEGORY_ORDER.map((category) => {
               const rows = report.results.filter((r) => r.def.category === category)
@@ -385,7 +673,7 @@ export function LeakFinderPage() {
                   <h3 className="text-sm font-semibold text-white mb-3">{CATEGORY_LABELS[category]}</h3>
                   <div className="space-y-2">
                     {rows.map((result) => (
-                      <StatRow key={result.def.id} result={result} position={activePosition} />
+                      <StatRow key={result.def.id} result={result} positionKey={activeTab} />
                     ))}
                   </div>
                 </section>
@@ -394,9 +682,111 @@ export function LeakFinderPage() {
           </>
         )}
 
-        {report && report.results.length === 0 && (
-          <p className="text-sm text-amber-400">
-            No stats for {POSITION_LABELS[activeTab]} yet — enter values above or pick another tab.
+        {snapshots.length > 0 && (
+          <Panel>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-sm font-semibold text-white">Progress</h2>
+              <p className="text-xs text-slate-500">
+                Saved reports stay in this browser. Compare one to what is loaded now.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              {snapshots.map((snapshot) => (
+                <div
+                  key={snapshot.id}
+                  className="flex flex-wrap items-center gap-3 rounded-md bg-slate-950/40 px-3 py-2 text-xs"
+                >
+                  <span className="text-slate-200">{formatWhen(snapshot.savedAt)}</span>
+                  {snapshot.score !== undefined && (
+                    <span className={`tabular-nums ${scoreColor(snapshot.score)}`}>
+                      {snapshot.score}/100
+                    </span>
+                  )}
+                  <span className="text-slate-500">
+                    {Object.values(snapshot.values).reduce(
+                      (sum, bucket) => sum + Object.keys(bucket ?? {}).length,
+                      0,
+                    )}{' '}
+                    values
+                  </span>
+                  <div className="ml-auto flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setCompareId(compareId === snapshot.id ? '' : snapshot.id)}
+                      className={`transition-colors ${
+                        compareId === snapshot.id
+                          ? 'text-indigo-300'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      {compareId === snapshot.id ? 'Hide changes' : 'Compare'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => loadSnapshot(snapshot)}
+                      className="text-slate-400 hover:text-white transition-colors"
+                    >
+                      Load
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteSnapshot(snapshot.id)}
+                      className="text-slate-600 hover:text-red-400 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {comparison && (
+              <div className="rounded-md border border-slate-800 bg-slate-950/40 p-3">
+                <p className="mb-2 text-xs text-slate-400">
+                  {comparison.diff.changed.length} stat
+                  {comparison.diff.changed.length === 1 ? '' : 's'} moved since{' '}
+                  {formatWhen(comparison.snapshot.savedAt)}
+                  {comparison.diff.added > 0 ? ` · ${comparison.diff.added} new` : ''}
+                </p>
+                <div className="space-y-1">
+                  {comparison.diff.changed.slice(0, 12).map((delta) => {
+                    const def = STAT_DEFINITIONS.find((d) => d.id === delta.statId)
+                    if (!def) return null
+                    const unit = formatStatUnit(def.unit)
+                    return (
+                      <div
+                        key={`${delta.positionKey}:${delta.statId}`}
+                        className="flex items-center gap-2 text-xs"
+                      >
+                        <span className="w-40 truncate text-slate-300">{def.label}</span>
+                        <span className="w-14 text-slate-500">{POSITION_LABELS[delta.positionKey]}</span>
+                        <span className="tabular-nums text-slate-500">
+                          {delta.before}
+                          {unit} → {delta.after}
+                          {unit}
+                        </span>
+                        <span
+                          className={`ml-auto tabular-nums ${
+                            delta.change > 0 ? 'text-sky-400' : 'text-amber-400'
+                          }`}
+                        >
+                          {delta.change > 0 ? '+' : ''}
+                          {delta.change}
+                          {unit}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </Panel>
+        )}
+
+        {!hasData && (
+          <p className="text-sm text-slate-500">
+            Paste a report above, or type values into the grid, to see your leaks.
           </p>
         )}
       </div>
@@ -405,21 +795,84 @@ export function LeakFinderPage() {
   )
 }
 
-function StatRow({ result, position }: { result: StatResult; position?: Position }) {
+/** The effective healthy band for a stat, overrides included. */
+function effectiveRange(statId: string, position?: Position): [number, number] {
+  const def = STAT_DEFINITIONS.find((d) => d.id === statId)
+  const explicit = getPositionRange(statId, position)
+  if (explicit) return explicit
+  const target = getStatTarget(statId, position)
+  if (target !== null && def) {
+    const tol = def.unit === 'bb100' ? 2 : def.unit === 'ratio' ? 0.4 : target === 0 ? 0.5 : 2
+    return [Math.max(0, Math.round((target - tol) * 100) / 100), Math.round((target + tol) * 100) / 100]
+  }
+  return def?.range ?? [0, 100]
+}
+
+function PriorityRow({ leak, index }: { leak: RankedLeak; index: number }) {
+  const styles = SEVERITY_STYLES[leak.severity]
+  const unit = formatStatUnit(leak.def.unit)
+  const fix = fixFor(leak.def.id, leak.positionKey)
+
+  return (
+    <li className={`rounded-md border bg-slate-950/40 px-3 py-2.5 ${styles.border}`}>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="w-5 text-sm tabular-nums text-slate-600">{index + 1}</span>
+        <span className="text-sm font-medium text-white">{leak.def.label}</span>
+        <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+          {POSITION_LABELS[leak.positionKey]}
+        </span>
+        <span className="text-sm tabular-nums text-slate-200">
+          {leak.value}
+          {unit}
+        </span>
+        <span className="text-xs tabular-nums text-slate-500">
+          target {leak.range[0]}–{leak.range[1]}
+          {unit}
+        </span>
+        <span className={`ml-auto rounded px-2 py-0.5 text-[11px] font-semibold ${styles.badge}`}>
+          {styles.label} · {leak.direction === 'low' ? 'too low' : 'too high'}
+        </span>
+      </div>
+      <p className="mt-1 text-xs leading-relaxed text-slate-400">{leak.advice}</p>
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px]">
+        {fix && (
+          <a href={fix.href} className="text-indigo-300 hover:text-indigo-200 transition-colors">
+            {fix.label} →
+          </a>
+        )}
+        {leak.relevanceNote && <span className="text-slate-600">{leak.relevanceNote}</span>}
+        {leak.capped && (
+          <span className="text-amber-500/80">
+            held at {styles.label.toLowerCase()} — too few spots to prove worse
+          </span>
+        )}
+      </div>
+    </li>
+  )
+}
+
+function StatRow({ result, positionKey }: { result: StatResult; positionKey: PositionKey }) {
   const styles = SEVERITY_STYLES[result.severity]
-  const target = getStatTarget(result.def.id, position)
   const unit = formatStatUnit(result.def.unit)
+  const fix = result.severity === 'ok' ? null : fixFor(result.def.id, positionKey)
 
   return (
     <div className={`rounded-md border bg-slate-950/40 px-3 py-2.5 ${styles.border}`}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="text-sm font-medium text-white w-36">{result.def.label}</span>
-        <span className="text-sm tabular-nums text-slate-200 w-16">
-          {result.value}{unit}
+        <span className="w-36 text-sm font-medium text-white">{result.def.label}</span>
+        <span className="w-16 text-sm tabular-nums text-slate-200">
+          {result.value}
+          {unit}
         </span>
-        <span className="text-xs tabular-nums text-slate-500 w-24">
-          target {target !== null ? target : `${result.range[0]}–${result.range[1]}`}{unit}
+        <span className="w-28 text-xs tabular-nums text-slate-500">
+          target {result.range[0]}–{result.range[1]}
+          {unit}
         </span>
+        {result.opportunities !== undefined && (
+          <span className={`text-[11px] tabular-nums ${RELEVANCE_STYLES[result.relevance]}`}>
+            {result.opportunities.toLocaleString()} spots
+          </span>
+        )}
         <span className={`ml-auto rounded px-2 py-0.5 text-[11px] font-semibold ${styles.badge}`}>
           {styles.label}
           {result.direction !== 'ok' && (result.direction === 'low' ? ' · too low' : ' · too high')}
@@ -427,6 +880,20 @@ function StatRow({ result, position }: { result: StatResult; position?: Position
       </div>
       {result.severity !== 'ok' && (
         <p className="mt-1 text-xs leading-relaxed text-slate-400">{result.advice}</p>
+      )}
+      {(fix || result.capped) && (
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px]">
+          {fix && (
+            <a href={fix.href} className="text-indigo-300 hover:text-indigo-200 transition-colors">
+              {fix.label} →
+            </a>
+          )}
+          {result.capped && (
+            <span className="text-amber-500/80">
+              too few spots to call this a {SEVERITY_STYLES[result.rawSeverity].label.toLowerCase()}
+            </span>
+          )}
+        </div>
       )}
     </div>
   )

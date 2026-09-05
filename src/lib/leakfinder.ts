@@ -5,6 +5,7 @@ import {
   getTargetTolerance,
   statAppliesToPosition,
   statHasTargets,
+  type Position,
 } from './leakfinderTargets'
 
 export type { StatCategory, StatDefinition }
@@ -17,43 +18,57 @@ export type RelevanceLevel = 'insufficient' | 'low' | 'medium' | 'high'
 /** @deprecated Use RelevanceLevel */
 export type ConfidenceLevel = RelevanceLevel
 
-export const POSITION_ONLY: Position[] = ['ep', 'mp', 'co', 'btn', 'sb', 'bb']
+export const POSITION_ONLY: Position[] = ['utg', 'utg1', 'lj', 'hj', 'co', 'btn', 'sb', 'bb']
 
-export type Position = 'ep' | 'mp' | 'co' | 'btn' | 'sb' | 'bb'
+export type { Position }
 
 export type PositionKey = 'overall' | Position
 
-export const POSITION_KEYS: PositionKey[] = ['overall', 'ep', 'mp', 'co', 'btn', 'sb', 'bb']
+export const POSITION_KEYS: PositionKey[] = ['overall', ...POSITION_ONLY]
 
 export const POSITION_LABELS: Record<PositionKey, string> = {
   overall: 'Overall',
-  ep: 'Early (UTG)',
-  mp: 'Middle (MP/HJ)',
-  co: 'Cutoff',
-  btn: 'Button',
-  sb: 'Small Blind',
-  bb: 'Big Blind',
+  utg: 'UTG',
+  utg1: 'UTG+1',
+  lj: 'LJ',
+  hj: 'HJ',
+  co: 'CO',
+  btn: 'BTN',
+  sb: 'SB',
+  bb: 'BB',
 }
 
+/**
+ * Tracker seat names vary by site and table size. A bare "MP" is the seat before
+ * the CO at a 6-max table, so it lands on HJ; "EP" at any table size is UTG.
+ */
 const POSITION_ALIASES: Record<PositionKey, string[]> = {
-  overall: ['all', 'allpositions', 'total', 'overall', 'summary'],
-  ep: ['utg', 'utg1', 'utg2', 'ep', 'ep1', 'ep2', 'early', 'earlyposition'],
-  mp: ['mp', 'mp1', 'mp2', 'mp3', 'hj', 'hijack', 'lj', 'lojack', 'middle', 'middleposition'],
+  overall: ['all', 'allpositions', 'total', 'totals', 'overall', 'summary'],
+  utg: ['utg', 'ep', 'ep1', 'early', 'earlyposition', 'utg0'],
+  utg1: ['utg1', 'utgplus1', 'utg2', 'utgplus2', 'ep2', 'ep3'],
+  lj: ['lj', 'lojack', 'mp1'],
+  hj: ['hj', 'hijack', 'mp', 'mp2', 'mp3', 'middle', 'middleposition'],
   co: ['co', 'cutoff'],
-  btn: ['btn', 'bu', 'button'],
+  btn: ['btn', 'bu', 'button', 'dealer'],
   sb: ['sb', 'smallblind'],
   bb: ['bb', 'bigblind'],
 }
 
 export { getPositionRange, getStatTarget, POSITION_RANGES, POSITION_TARGETS } from './leakfinderTargets'
 
+/**
+ * Which tabs a stat is graded on.
+ *
+ * A stat with targets for every seat has a meaningful blended Overall number,
+ * and a stat with no positional targets at all is global by nature. But a stat
+ * that only has a target at one or two seats — SB limping, BB defence — has no
+ * sensible Overall reading: averaging a 60% SB limp rate with five seats that
+ * never limp produces a number that is not a leak, it is arithmetic.
+ */
 export function statAppliesTo(defId: string, key: PositionKey): boolean {
-  if (statHasTargets(defId)) {
-    if (key === 'overall') return true
-    return statAppliesToPosition(defId, key)
-  }
-  // Winrate and other stats without position targets: overall only
-  return key === 'overall'
+  if (key !== 'overall') return statHasTargets(defId) ? statAppliesToPosition(defId, key) : false
+  if (!statHasTargets(defId)) return true
+  return POSITION_ONLY.every((position) => statAppliesToPosition(defId, position))
 }
 
 export function getStatRange(def: StatDefinition, position?: Position): [number, number] {
@@ -141,36 +156,80 @@ export const confidenceFromHands = relevanceFromHands
 /** @deprecated Use relevanceLabel */
 export const confidenceLabel = relevanceLabel
 
+/**
+ * Fill the Overall column from the per-position rows.
+ *
+ * A tracker's positional export has no "All" row, so without this every stat
+ * that only has an Overall target — donk bets, float turn, fold to 4bet — would
+ * be parsed and then never analysed. Each stat is averaged across the positions
+ * that reported it, weighted by that stat's own opportunity count where the
+ * export supplied one and by hands otherwise.
+ *
+ * Values already present in an explicit Overall row always win.
+ */
 export function enrichOverallFromPositions(
   positions: Partial<Record<PositionKey, Record<string, number>>>,
   hands: Partial<Record<PositionKey, number>>,
+  opportunities: Partial<Record<PositionKey, Record<string, number>>> = {},
 ): boolean {
-  let totalHands = 0
-  let weightedWinrate = 0
-  let hasWinrate = false
+  const explicitOverall = { ...(positions.overall ?? {}) }
+  const aggregated: Record<string, number> = {}
+  const aggregatedOpps: Record<string, number> = {}
+  let filledAny = false
 
-  for (const pos of POSITION_ONLY) {
-    const h = hands[pos]
-    const wr = positions[pos]?.allInAdjBb100
-    if (h && h > 0 && wr !== undefined) {
-      totalHands += h
-      weightedWinrate += h * wr
-      hasWinrate = true
+  for (const def of STAT_DEFINITIONS) {
+    if (explicitOverall[def.id] !== undefined) continue
+
+    let weightTotal = 0
+    let valueTotal = 0
+    let oppTotal = 0
+    let seen = 0
+
+    for (const pos of POSITION_ONLY) {
+      const value = positions[pos]?.[def.id]
+      if (value === undefined || !Number.isFinite(value)) continue
+      const opp = opportunities[pos]?.[def.id]
+      const weight = opp && opp > 0 ? opp : (hands[pos] ?? 0)
+      if (opp && opp > 0) oppTotal += opp
+      seen += 1
+      if (weight > 0) {
+        weightTotal += weight
+        valueTotal += weight * value
+      }
     }
-  }
 
-  if (!hasWinrate || totalHands <= 0) return false
+    if (seen === 0) continue
+
+    if (weightTotal > 0) {
+      aggregated[def.id] = Math.round((valueTotal / weightTotal) * 100) / 100
+    } else {
+      // No weights anywhere — fall back to a plain mean so the stat still shows.
+      let sum = 0
+      let count = 0
+      for (const pos of POSITION_ONLY) {
+        const value = positions[pos]?.[def.id]
+        if (value === undefined || !Number.isFinite(value)) continue
+        sum += value
+        count += 1
+      }
+      aggregated[def.id] = Math.round((sum / count) * 100) / 100
+    }
+    if (oppTotal > 0) aggregatedOpps[def.id] = oppTotal
+    filledAny = true
+  }
 
   if (!hands.overall) {
-    hands.overall = POSITION_ONLY.reduce((sum, pos) => sum + (hands[pos] ?? 0), 0)
+    const totalHands = POSITION_ONLY.reduce((sum, pos) => sum + (hands[pos] ?? 0), 0)
+    if (totalHands > 0) hands.overall = totalHands
   }
 
-  if (positions.overall?.allInAdjBb100 !== undefined) return false
-
-  positions.overall = {
-    ...positions.overall,
-    allInAdjBb100: Math.round((weightedWinrate / totalHands) * 100) / 100,
+  if (Object.keys(aggregatedOpps).length > 0) {
+    opportunities.overall = { ...aggregatedOpps, ...(opportunities.overall ?? {}) }
   }
+
+  if (!filledAny) return false
+
+  positions.overall = { ...aggregated, ...explicitOverall }
   return true
 }
 
@@ -373,7 +432,7 @@ export function parsePositionalReport(text: string): PositionalParse {
     if (Object.keys(values).length > 0) positions[key] = values
   }
 
-  const weightedOverallWinrate = enrichOverallFromPositions(positions, hands)
+  const weightedOverallWinrate = enrichOverallFromPositions(positions, hands, opportunities)
 
   return { positions, hands, opportunities, matched, isTable: true, weightedOverallWinrate }
 }
@@ -382,25 +441,91 @@ export interface StatResult {
   def: StatDefinition
   value: number
   range: [number, number]
+  /** Severity after the sample-size cap. This is what the UI grades on. */
   severity: Severity
+  /** Severity implied by the deviation alone, before any cap. */
+  rawSeverity: Severity
+  /** True when a thin sample held the severity below what the deviation implies. */
+  capped: boolean
+  /** False when the export carried no hand or opportunity count for this stat. */
+  sampleKnown: boolean
   direction: 'low' | 'high' | 'ok'
   advice: string
   relevance: RelevanceLevel
   hands?: number
+  /** Times this specific spot came up, when the export supplied a Count column. */
+  opportunities?: number
   relevanceNote?: string
 }
 
 export interface AnalysisContext {
   hands?: number
+  /** Per-stat opportunity counts, keyed by stat id. */
+  opportunities?: Record<string, number>
+}
+
+/**
+ * Opportunity thresholds sit far below the hand thresholds: you may have
+ * 250,000 hands but only a few hundred river cbet spots from the SB, and it is
+ * the latter that decides whether a river number means anything.
+ */
+export function relevanceFromOpportunities(opportunities: number): RelevanceLevel {
+  if (opportunities < 100) return 'insufficient'
+  if (opportunities < 400) return 'low'
+  if (opportunities < 1_500) return 'medium'
+  return 'high'
+}
+
+/** How much a result at this confidence counts toward the score. */
+export function relevanceWeight(level: RelevanceLevel, sampleKnown = true): number {
+  // An unknown sample is not evidence of a thin one — manual entry carries no
+  // hand counts at all, and discounting it would flatten every score to noise.
+  if (!sampleKnown) return 1
+  switch (level) {
+    case 'insufficient':
+      return 0.25
+    case 'low':
+      return 0.6
+    case 'medium':
+      return 0.85
+    case 'high':
+      return 1
+  }
+}
+
+/** A thin sample cannot prove a major leak, however far off the number looks. */
+function capSeverity(severity: Severity, relevance: RelevanceLevel): Severity {
+  const order: Severity[] = ['ok', 'minor', 'moderate', 'major']
+  const ceiling: Record<RelevanceLevel, Severity> = {
+    insufficient: 'minor',
+    low: 'moderate',
+    medium: 'major',
+    high: 'major',
+  }
+  return order.indexOf(severity) <= order.indexOf(ceiling[relevance]) ? severity : ceiling[relevance]
 }
 
 function buildRelevance(
+  def: StatDefinition,
   context?: AnalysisContext,
-): Pick<StatResult, 'relevance' | 'hands' | 'relevanceNote'> {
+): Pick<StatResult, 'relevance' | 'hands' | 'opportunities' | 'relevanceNote' | 'sampleKnown'> {
+  const opportunities = context?.opportunities?.[def.id]
+  if (opportunities !== undefined && opportunities > 0) {
+    const relevance = relevanceFromOpportunities(opportunities)
+    return {
+      relevance,
+      sampleKnown: true,
+      hands: context?.hands,
+      opportunities,
+      relevanceNote: `${opportunities.toLocaleString()} spots · ${relevanceLabel(relevance).toLowerCase()}`,
+    }
+  }
+
   const handCount = context?.hands ?? 0
   if (handCount <= 0) {
     return {
       relevance: 'insufficient',
+      sampleKnown: false,
       relevanceNote: 'Hand count unknown — treat as directional only.',
     }
   }
@@ -408,13 +533,14 @@ function buildRelevance(
   const relevance = relevanceFromHands(handCount)
   return {
     relevance,
+    sampleKnown: true,
     hands: handCount,
     relevanceNote: `${handCount.toLocaleString()} hands · ${relevanceLabel(relevance).toLowerCase()}`,
   }
 }
 
 function severityFromDeviation(def: StatDefinition, deviation: number): Severity {
-  const scale = def.unit === 'bb100' ? 2 : 1
+  const scale = def.unit === 'bb100' ? 2 : def.unit === 'ratio' ? 0.4 : 1
   if (deviation <= 0) return 'ok'
   if (deviation < 2 * scale) return 'minor'
   if (deviation < 5 * scale) return 'moderate'
@@ -429,40 +555,33 @@ export function evaluateStat(
 ): StatResult {
   const range = getStatRange(def, position)
   const [min, max] = range
-  const relevanceMeta = buildRelevance(context)
-  if (value < min) {
-    const severity = severityFromDeviation(def, min - value)
+  const relevanceMeta = buildRelevance(def, context)
+
+  const build = (
+    rawSeverity: Severity,
+    direction: 'low' | 'high' | 'ok',
+    advice: string,
+  ): StatResult => {
+    const severity =
+      direction === 'ok' || !relevanceMeta.sampleKnown
+        ? rawSeverity
+        : capSeverity(rawSeverity, relevanceMeta.relevance)
     return {
       def,
       value,
       range,
       severity,
-      direction: 'low',
-      advice: def.lowAdvice,
+      rawSeverity,
+      capped: severity !== rawSeverity,
+      direction,
+      advice,
       ...relevanceMeta,
     }
   }
-  if (value > max) {
-    const severity = severityFromDeviation(def, value - max)
-    return {
-      def,
-      value,
-      range,
-      severity,
-      direction: 'high',
-      advice: def.highAdvice,
-      ...relevanceMeta,
-    }
-  }
-  return {
-    def,
-    value,
-    range,
-    severity: 'ok',
-    direction: 'ok',
-    advice: 'Within the healthy range.',
-    ...relevanceMeta,
-  }
+
+  if (value < min) return build(severityFromDeviation(def, min - value), 'low', def.lowAdvice)
+  if (value > max) return build(severityFromDeviation(def, value - max), 'high', def.highAdvice)
+  return build('ok', 'ok', 'Within the healthy range.')
 }
 
 export interface LeakReport {
@@ -487,13 +606,101 @@ export function analyzeStats(
 
   const leaks = results
     .filter((r) => r.severity !== 'ok')
-    .sort((a, b) => severityWeight(b.severity) - severityWeight(a.severity))
+    .sort((a, b) => leakPriority(b) - leakPriority(a))
 
-  const penalty = results.reduce((sum, r) => sum + severityWeight(r.severity), 0)
-  const maxPenalty = results.length * 3
-  const score = results.length === 0 ? 0 : Math.round(100 - (penalty / maxPenalty) * 100)
+  // Each stat counts in proportion to how much sample backs it, so one noisy
+  // river number cannot drag the score down as hard as a proven preflop leak.
+  let penalty = 0
+  let maxPenalty = 0
+  for (const r of results) {
+    const weight = relevanceWeight(r.relevance, r.sampleKnown)
+    penalty += severityWeight(r.severity) * weight
+    maxPenalty += 3 * weight
+  }
+  const score = maxPenalty === 0 ? 0 : Math.round(100 - (penalty / maxPenalty) * 100)
 
   return { results, leaks, score }
+}
+
+/** How far outside the healthy band a value sits, in the stat's own unit. */
+export function deviation(result: StatResult): number {
+  const [min, max] = result.range
+  if (result.value < min) return Math.round((min - result.value) * 100) / 100
+  if (result.value > max) return Math.round((result.value - max) * 100) / 100
+  return 0
+}
+
+/** Ranking key for "what do I fix first" — size of the miss, discounted by sample. */
+export function leakPriority(result: StatResult): number {
+  return severityWeight(result.severity) * relevanceWeight(result.relevance, result.sampleKnown) * 10 + deviation(result)
+}
+
+export interface RankedLeak extends StatResult {
+  positionKey: PositionKey
+  priority: number
+}
+
+export interface FullAnalysis {
+  byPosition: Partial<Record<PositionKey, LeakReport>>
+  /** Every leak from every position, worst first. */
+  ranked: RankedLeak[]
+  /** Sample-weighted score across every position that has data. */
+  overallScore: number
+  positionsWithData: PositionKey[]
+}
+
+/**
+ * Analyse every position at once.
+ *
+ * Grading one tab at a time answers "how is my button?". This answers the
+ * question people actually open the tool with, which is what to fix first.
+ */
+export function analyzeAll(
+  valuesByPosition: Partial<Record<PositionKey, Record<string, number>>>,
+  handsByPosition: Partial<Record<PositionKey, number>> = {},
+  opportunitiesByPosition: Partial<Record<PositionKey, Record<string, number>>> = {},
+): FullAnalysis {
+  const byPosition: Partial<Record<PositionKey, LeakReport>> = {}
+  const ranked: RankedLeak[] = []
+  const positionsWithData: PositionKey[] = []
+
+  let penalty = 0
+  let maxPenalty = 0
+
+  for (const key of POSITION_KEYS) {
+    const values = valuesByPosition[key]
+    if (!values || Object.keys(values).length === 0) continue
+    const report = analyzeStats(values, key === 'overall' ? undefined : key, {
+      hands: handsByPosition[key],
+      opportunities: opportunitiesByPosition[key],
+    })
+    if (report.results.length === 0) continue
+
+    byPosition[key] = report
+    positionsWithData.push(key)
+
+    for (const leak of report.leaks) {
+      ranked.push({ ...leak, positionKey: key, priority: leakPriority(leak) })
+    }
+
+    // Overall restates the positional rows, so it must not be scored twice.
+    if (key === 'overall') continue
+    for (const r of report.results) {
+      const weight = relevanceWeight(r.relevance, r.sampleKnown)
+      penalty += severityWeight(r.severity) * weight
+      maxPenalty += 3 * weight
+    }
+  }
+
+  ranked.sort((a, b) => b.priority - a.priority)
+
+  // Nothing but an Overall column (a flat paste) — score that instead.
+  const overallScore =
+    maxPenalty === 0
+      ? (byPosition.overall?.score ?? 0)
+      : Math.round(100 - (penalty / maxPenalty) * 100)
+
+  return { byPosition, ranked, overallScore, positionsWithData }
 }
 
 export function severityWeight(severity: Severity): number {

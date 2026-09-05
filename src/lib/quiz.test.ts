@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import bundled from '../content/quizDecks.json'
+import { ALL_CELLS } from './matrix'
 import {
   collectTags,
   mergeDecks,
@@ -211,5 +212,73 @@ describe('bundled deck file', () => {
     const { decks } = parseQuizFile(JSON.stringify(bundled))
     const ids = selectCards(decks).map((card) => card.id)
     expect(new Set(ids).size).toBe(ids.length)
+  })
+})
+
+describe('combo maths deck', () => {
+  const { decks } = parseQuizFile(JSON.stringify(bundled))
+  const deck = decks.find((d) => d.id === 'combo-maths')!
+  const cards = deck.cards
+
+  /** Recompute the real figures from the matrix rather than trusting the deck. */
+  const actual = (() => {
+    let pairs = 0
+    let suited = 0
+    let offsuit = 0
+    for (const cell of ALL_CELLS) {
+      if (cell.type === 'pair') pairs += cell.combos
+      else if (cell.type === 'suited') suited += cell.combos
+      else offsuit += cell.combos
+    }
+    const total = pairs + suited + offsuit
+    const pct = (n: number) => `${((n / total) * 100).toFixed(1)}%`
+    return { total, pairs, suited, offsuit, pct }
+  })()
+
+  const choiceFor = (needle: string) =>
+    cards.find((c) => c.type === 'choice' && c.question.includes(needle)) as ChoiceCard | undefined
+
+  it('exists with all three card types', () => {
+    expect(deck).toBeDefined()
+    expect(new Set(cards.map((c) => c.type))).toEqual(new Set(['heuristic', 'flashcard', 'choice']))
+  })
+
+  it('states the right total number of combos', () => {
+    expect(actual.total).toBe(1326)
+    const card = choiceFor('How many hand combinations')!
+    expect(card.options[card.answer]).toBe('1,326')
+  })
+
+  it('states the right share for each hand type', () => {
+    expect(actual.pct(actual.pairs)).toBe('5.9%')
+    expect(actual.pct(actual.suited)).toBe('23.5%')
+    expect(actual.pct(actual.offsuit)).toBe('70.6%')
+
+    const pairs = choiceFor('pocket pairs?')!
+    const suited = choiceFor('suited hands?')!
+    const offsuit = choiceFor('offsuit hands?')!
+    expect(pairs.options[pairs.answer]).toBe(actual.pct(actual.pairs))
+    expect(suited.options[suited.answer]).toBe(actual.pct(actual.suited))
+    expect(offsuit.options[offsuit.answer]).toBe(actual.pct(actual.offsuit))
+  })
+
+  it('offers the grid-share figure as a wrong answer, since that is the real trap', () => {
+    // 13/169 and 78/169 are what people reach for by eye.
+    expect(choiceFor('pocket pairs?')!.options).toContain('7.7%')
+    expect(choiceFor('suited hands?')!.options).toContain('46.2%')
+  })
+
+  it('keeps every choice answer inside its own options', () => {
+    for (const card of cards) {
+      if (card.type !== 'choice') continue
+      expect(card.answer).toBeGreaterThanOrEqual(0)
+      expect(card.answer).toBeLessThan(card.options.length)
+      expect(new Set(card.options).size).toBe(card.options.length)
+    }
+  })
+
+  it('covers blockers as well as raw counting', () => {
+    const blockers = cards.filter((c) => c.tags.includes('blockers'))
+    expect(blockers.length).toBeGreaterThanOrEqual(2)
   })
 })

@@ -6,7 +6,7 @@ export interface StatDefinition {
   /** Longest aliases first so e.g. "Fold to 3Bet" wins over "3Bet". */
   aliases: string[]
   category: StatCategory
-  unit: '%' | 'bb100'
+  unit: '%' | 'bb100' | 'ratio'
   /** Fallback range when no position target exists (e.g. winrate). */
   range: [number, number]
   lowAdvice: string
@@ -98,7 +98,7 @@ export const STAT_DEFINITIONS: StatDefinition[] = [
   {
     id: 'foldToSteal',
     label: 'Fold to Steal',
-    aliases: ['Fold BB to Steal', 'BB Fold to Steal', 'Fold to Steal'],
+    aliases: ['Fold BB to Steal', 'BB Fold to Steal', 'Fold BB vs Steal', 'Fold to Steal'],
     category: 'preflop',
     unit: '%',
     range: [60, 76],
@@ -118,7 +118,7 @@ export const STAT_DEFINITIONS: StatDefinition[] = [
   {
     id: 'threeBetPf',
     label: '3Bet PF',
-    aliases: ['3Bet PF', '3-Bet PF', '3-Bet Preflop', '3Bet', '3-Bet'],
+    aliases: ['3Bet PF', '3-Bet PF', '3-Bet Preflop', 'PF 3Bet', 'Three Bet', '3Bet%', '3Bet', '3-Bet'],
     category: 'preflop',
     unit: '%',
     range: [4.5, 8.5],
@@ -148,7 +148,7 @@ export const STAT_DEFINITIONS: StatDefinition[] = [
   {
     id: 'twoBetPfAndFold',
     label: '2Bet PF & Fold',
-    aliases: ['2Bet PF & Fold', '2-Bet PF & Fold', 'Fold to 3Bet', 'Fold to 3-Bet'],
+    aliases: ['2Bet PF & Fold', '2-Bet PF & Fold', 'Fold to 3Bet PF', 'Fold to 3Bet', 'Fold to 3-Bet'],
     category: 'preflop',
     unit: '%',
     range: [52, 68],
@@ -161,7 +161,8 @@ export const STAT_DEFINITIONS: StatDefinition[] = [
     aliases: ['Raise & 4Bet+ PF', 'Raise & 4Bet+ PF ', '4Bet PF', '4-Bet PF'],
     category: 'preflop',
     unit: '%',
-    range: [1.5, 4],
+    // Conditional on having opened and faced a 3-bet, not a global 4-bet%.
+    range: [12, 22],
     lowAdvice: 'You almost never 4-bet. Add value 4-bets with QQ+/AK and some A5s bluffs.',
     highAdvice: 'You 4-bet very often. Make sure you are not stacking off light preflop.',
   },
@@ -192,7 +193,7 @@ export const STAT_DEFINITIONS: StatDefinition[] = [
   {
     id: 'pfSqueeze',
     label: 'PF Squeeze',
-    aliases: ['PF Squeeze', 'Preflop Squeeze', 'Squeeze'],
+    aliases: ['PF Squeeze', 'Preflop Squeeze', 'Squeeze%', 'Squeeze'],
     category: 'preflop',
     unit: '%',
     range: [4, 10],
@@ -325,7 +326,8 @@ export const STAT_DEFINITIONS: StatDefinition[] = [
     aliases: ['Float T', 'Float Turn'],
     category: 'postflop',
     unit: '%',
-    range: [12, 26],
+    // Conditional on having called the flop and been checked to.
+    range: [40, 55],
     lowAdvice: 'You float the turn too rarely. Call more with position when you have equity to realize.',
     highAdvice: 'You float the turn too often. Fold more marginal hands without river plan.',
   },
@@ -422,11 +424,76 @@ export const STAT_DEFINITIONS: StatDefinition[] = [
   {
     id: 'vpip',
     label: 'VPIP',
-    aliases: ['VP$IP', 'VPIP'],
+    aliases: ['Voluntarily Put $ In Pot', 'VP$IP', 'VPIP', 'VPIP%'],
     category: 'preflop',
     unit: '%',
     range: [18, 24],
     lowAdvice: 'You are playing too tight preflop. Add suited connectors, suited aces, and late-position opens.',
     highAdvice: 'You are playing too many hands. Tighten up in early position and stop calling with weak offsuit hands.',
+  },
+  // ---------------------------------------------------------------------------
+  // Columns that Hold'em Manager and Hand2Note export by default. PT4's
+  // positional report does not include most of them, so they are graded on the
+  // aggregated Overall column rather than seat by seat.
+  // ---------------------------------------------------------------------------
+  {
+    id: 'pfr',
+    label: 'PFR',
+    aliases: ['PFR', 'PF Raise', 'Preflop Raise', 'Raise Preflop', 'PFR%'],
+    category: 'preflop',
+    unit: '%',
+    range: [17, 24],
+    lowAdvice: 'You raise too few pots preflop. Open wider in late position and 3-bet more instead of flatting.',
+    highAdvice: 'You raise a lot preflop. Make sure the extra volume is late-position steals, not loose early opens.',
+  },
+  {
+    id: 'attemptToSteal',
+    label: 'Att. to Steal',
+    aliases: ['Attempt to Steal', 'Att To Steal', 'ATS', 'Steal Attempt', 'Attempt Steal'],
+    category: 'preflop',
+    unit: '%',
+    range: [35, 45],
+    lowAdvice: 'You pass up too many steal spots. Open more from CO, BTN and SB when it folds to you.',
+    highAdvice: 'You steal very often. Fine vs tight blinds, but expect to get 3-bet if the table is paying attention.',
+  },
+  {
+    id: 'wtsd',
+    label: 'WTSD',
+    aliases: ['WTSD', 'Went to Showdown', 'Went To SD', 'WTSD%'],
+    category: 'showdown',
+    unit: '%',
+    range: [24, 30],
+    lowAdvice: 'You reach showdown rarely — you are folding too many rivers or barrelling into folds.',
+    highAdvice: 'You reach showdown too often. You are calling down too wide; fold more weak bluff-catchers.',
+  },
+  {
+    id: 'wsd',
+    label: 'W$SD',
+    aliases: ['W$SD', 'WSD', 'Won $ at Showdown', 'Won Money at Showdown', 'W$SD%'],
+    category: 'showdown',
+    unit: '%',
+    range: [48, 56],
+    lowAdvice: 'You lose most showdowns you reach. Your calling range is too weak — fold the bottom of it.',
+    highAdvice: 'You win a lot at showdown, which usually means you only get there with the nuts. Call down wider.',
+  },
+  {
+    id: 'wwsf',
+    label: 'WWSF',
+    aliases: ['WWSF', 'Won When Saw Flop', 'Won $ When Saw Flop', 'WWSF%'],
+    category: 'postflop',
+    unit: '%',
+    range: [43, 50],
+    lowAdvice: 'You win too few of the pots you see a flop in. Barrel more and give up less on later streets.',
+    highAdvice: 'You win a lot of flops, often by betting. Watch that you are not folding out worse and value-betting thin.',
+  },
+  {
+    id: 'aggressionFactor',
+    label: 'Aggression Factor',
+    aliases: ['Aggression Factor', 'Agg Factor', 'AF', 'Total AF'],
+    category: 'postflop',
+    unit: 'ratio',
+    range: [2, 3.5],
+    lowAdvice: 'You check and call more than you bet and raise. Take the betting lead more often postflop.',
+    highAdvice: 'Very aggressive postflop. Make sure the extra bets are value and blockers, not pure spew.',
   },
 ]

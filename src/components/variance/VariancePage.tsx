@@ -23,14 +23,14 @@ interface FormState {
 }
 
 const DEFAULTS: FormState = {
-  buyIn: '100',
-  fee: '10',
+  buyIn: '25',
+  fee: '8',
   fieldSize: '1000',
   itmPct: '15',
   roiPct: '20',
   tournaments: '1000',
   samples: '1000',
-  bankroll: '',
+  bankroll: '5000',
   seed: '1',
 }
 

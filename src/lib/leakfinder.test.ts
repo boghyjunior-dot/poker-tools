@@ -71,15 +71,15 @@ describe('parseNumber', () => {
 
 describe('evaluateStat', () => {
   it('flags values below range as low', () => {
-    const result = evaluateStat(def('vpip'), 7, 'ep')
+    const result = evaluateStat(def('vpip'), 7, 'utg')
     expect(result.direction).toBe('low')
     expect(result.severity).toBe('major')
   })
 
   it('flags values above range with graded severity', () => {
-    expect(evaluateStat(def('vpip'), 18, 'ep').severity).toBe('minor')
-    expect(evaluateStat(def('vpip'), 20, 'ep').severity).toBe('moderate')
-    expect(evaluateStat(def('vpip'), 23, 'ep').severity).toBe('major')
+    expect(evaluateStat(def('vpip'), 18, 'utg').severity).toBe('minor')
+    expect(evaluateStat(def('vpip'), 20, 'utg').severity).toBe('moderate')
+    expect(evaluateStat(def('vpip'), 23, 'utg').severity).toBe('major')
   })
 
   it('passes values within range', () => {
@@ -132,18 +132,18 @@ describe('analyzeStats', () => {
   })
 
   it('skips stats that do not apply to the position', () => {
-    const report = analyzeStats({ foldToSteal: 60, vpip: 18 }, 'ep')
+    const report = analyzeStats({ foldToSteal: 60, vpip: 18 }, 'utg')
     expect(report.results.map((r) => r.def.id)).toEqual(['vpip'])
     expect(statAppliesTo('raiseFirst', 'bb')).toBe(false)
     expect(statAppliesTo('foldBbVsSb', 'bb')).toBe(true)
-    expect(statAppliesTo('limpRaise', 'ep')).toBe(false)
+    expect(statAppliesTo('limpRaise', 'utg')).toBe(false)
   })
 })
 
 describe('positional support', () => {
   it('maps position aliases to position groups', () => {
-    expect(matchPosition('UTG+1')).toBe('ep')
-    expect(matchPosition('Hijack')).toBe('mp')
+    expect(matchPosition('UTG+1')).toBe('utg1')
+    expect(matchPosition('Hijack')).toBe('hj')
     expect(matchPosition('BU')).toBe('btn')
     expect(matchPosition('Big Blind')).toBe('bb')
     expect(matchPosition('All')).toBe('overall')
@@ -154,7 +154,7 @@ describe('positional support', () => {
     const vpip = def('vpip')
     expect(getStatRange(vpip, 'btn')).toEqual([44, 48])
     expect(getStatTarget('vpip', 'btn')).toBe(46)
-    expect(getStatRange(vpip, 'ep')).toEqual([13, 17])
+    expect(getStatRange(vpip, 'utg')).toEqual([13, 17])
     const cbetR = def('cbetR')
     expect(getStatRange(cbetR, 'btn')).toEqual([44, 48])
   })
@@ -165,7 +165,7 @@ describe('positional support', () => {
     expect(values.threeBetPf).toBe(6)
     expect(getStatTarget('raiseFirst', 'btn')).toBeNull()
     expect(getStatRange(def('raiseFirst'), 'btn')).toEqual([47, 55])
-    expect(getStatRange(def('raiseFirst'), 'ep')).toEqual([16, 20])
+    expect(getStatRange(def('raiseFirst'), 'utg')).toEqual([16, 20])
     expect(statAppliesTo('raiseFirst', 'bb')).toBe(false)
     expect(statAppliesTo('raiseFirst', 'btn')).toBe(true)
   })
@@ -194,10 +194,10 @@ BB,1230,-0.5,0,7.6,53,62,58,60,38.5`
     const { positions, matched, isTable } = parsePositionalReport(csv)
     expect(isTable).toBe(true)
     expect(matched).toBe(32)
-    expect(positions.ep?.vpip).toBe(18.2)
+    expect(positions.utg?.vpip).toBe(18.2)
     expect(positions.btn?.raiseFirst).toBe(36.5)
     expect(positions.bb?.threeBetPf).toBe(7.6)
-    expect(positions.ep && 'hands' in positions.ep).toBe(false)
+    expect(positions.utg && 'hands' in positions.utg).toBe(false)
   })
 
   it('ignores Count columns from PT4 exports', () => {
@@ -218,10 +218,13 @@ BTN,1000,35,120,8,40`
   })
 
   it('averages rows that map to the same position group', () => {
-    const text = 'Position,VPIP,Raise First\nUTG,16,12\nUTG+1,20,14\nBTN,44,36'
+    // MP2 and MP3 both land on the hijack; UTG and UTG+1 are their own seats.
+    const text = 'Position,VPIP,Raise First\nMP2,16,12\nMP3,20,14\nUTG,15,11\nUTG+1,17,13\nBTN,44,36'
     const { positions } = parsePositionalReport(text)
-    expect(positions.ep?.vpip).toBe(18)
-    expect(positions.ep?.raiseFirst).toBe(13)
+    expect(positions.hj?.vpip).toBe(18)
+    expect(positions.hj?.raiseFirst).toBe(13)
+    expect(positions.utg?.vpip).toBe(15)
+    expect(positions.utg1?.vpip).toBe(17)
     expect(positions.btn?.vpip).toBe(44)
   })
 
@@ -262,15 +265,15 @@ BTN,1000,35,120,8,40`
     expect(positions.btn?.floatFHu).toBe(53.99)
   })
 
-  it('parses a full PT4 positional export with all six positions', () => {
+  it('parses a full PT4 positional export with every position it carries', () => {
     const { positions, hands, matched, isTable, weightedOverallWinrate } = parsePositionalReport(PT4_SAMPLE_EXPORT)
     expect(isTable).toBe(true)
     expect(matched).toBe(211)
     expect(Object.keys(positions)).toHaveLength(7)
     expect(weightedOverallWinrate).toBe(true)
-    expect(positions.ep?.vpip).toBe(15.91)
-    expect(positions.ep?.raiseFirst).toBe(16.16)
-    expect(positions.mp?.threeBetPf).toBe(5.84)
+    expect(positions.utg?.vpip).toBe(15.91)
+    expect(positions.utg?.raiseFirst).toBe(16.16)
+    expect(positions.hj?.threeBetPf).toBe(5.84)
     expect(positions.co?.cbetFIpHu).toBe(68.26)
     expect(positions.bb?.foldBbVsSb).toBe(54.9)
     expect(positions.bb?.foldToSteal).toBe(48.48)

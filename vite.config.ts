@@ -19,6 +19,7 @@ export default defineConfig({
         quiz: path.resolve(__dirname, 'quiz.html'),
         variance: path.resolve(__dirname, 'variance.html'),
         bounty: path.resolve(__dirname, 'bounty.html'),
+        charts: path.resolve(__dirname, 'charts.html'),
         randomizer: path.resolve(__dirname, 'randomizer.html'),
       },
     },
