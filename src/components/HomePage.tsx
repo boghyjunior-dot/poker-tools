@@ -75,6 +75,17 @@ function ChartsIcon() {
   )
 }
 
+function BankrollIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+      <ellipse cx="12" cy="6" rx="7" ry="2.5" />
+      <path d="M5 6v4c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V6" />
+      <path d="M5 10v4c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-4" />
+      <path d="M5 14v4c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-4" />
+    </svg>
+  )
+}
+
 function BountyIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
@@ -243,6 +254,15 @@ const SECTIONS: { name: string; blurb: string; tools: Tool[] }[] = [
           'Work out what an average bounty is worth in cash and in big blinds, and how much wider it lets you call.',
         accent: 'border-fuchsia-800/60 hover:border-fuchsia-600/80',
         status: 'in-review',
+      },
+      {
+        href: 'bankroll.html',
+        icon: <BankrollIcon />,
+        title: 'Bankroll',
+        description:
+          'What buy-ins your roll actually supports, from your ROI and field size, at three levels of risk.',
+        accent: 'border-lime-800/60 hover:border-lime-600/80',
+        status: 'done',
       },
       {
         href: 'variance.html',
