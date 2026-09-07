@@ -1,4 +1,5 @@
 import { formatCompact } from '../../lib/formatNumber'
+import { useT } from '../../lib/i18n'
 import type { HistogramBin, VarianceBand, VarianceResult } from '../../lib/mttVariance'
 
 const CHART_W = 760
@@ -23,6 +24,7 @@ function niceStep(span: number, targetTicks: number): number {
  * EV line, and a handful of individual runs drawn on top.
  */
 export function FanChart({ result }: { result: VarianceResult }) {
+  const t = useT()
   const { checkpoints, band, samplePaths } = result
 
   let min = 0
@@ -112,7 +114,7 @@ export function FanChart({ result }: { result: VarianceResult }) {
       <path d={line(band.ev)} fill="none" stroke="#f59e0b" strokeWidth="1.75" strokeDasharray="5 4" />
 
       <text x={PAD.left + PLOT_W / 2} y={CHART_H - 8} textAnchor="middle" className="fill-slate-600" fontSize="11">
-        tournaments played
+        {t('tournaments played')}
       </text>
     </svg>
   )
@@ -120,6 +122,7 @@ export function FanChart({ result }: { result: VarianceResult }) {
 
 /** Distribution of final results across every simulated run. */
 export function ResultHistogram({ bins, breakEvenLabel }: { bins: HistogramBin[]; breakEvenLabel?: string }) {
+  const t = useT()
   if (bins.length === 0) return null
 
   const maxCount = Math.max(...bins.map((bin) => bin.count))
@@ -172,7 +175,7 @@ export function ResultHistogram({ bins, breakEvenLabel }: { bins: HistogramBin[]
             strokeDasharray="4 3"
           />
           <text x={x(0)} y={PAD.top - 4} textAnchor="middle" className="fill-slate-400" fontSize="11">
-            {breakEvenLabel ?? 'break even'}
+            {breakEvenLabel ?? t('break even')}
           </text>
         </>
       )}
@@ -191,7 +194,7 @@ export function ResultHistogram({ bins, breakEvenLabel }: { bins: HistogramBin[]
       ))}
 
       <text x={PAD.left + PLOT_W / 2} y={CHART_H - 8} textAnchor="middle" className="fill-slate-600" fontSize="11">
-        final profit
+        {t('final profit')}
       </text>
     </svg>
   )

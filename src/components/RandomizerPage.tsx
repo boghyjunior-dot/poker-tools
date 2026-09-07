@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { BackToMenu } from './BackToMenu'
 import { Footer } from './Footer'
+import { useT } from '../lib/i18n'
 
 const AUTO_INTERVAL_MS = 15_000
 
@@ -55,6 +56,7 @@ function CountdownRing({ progress }: { progress: number }) {
 }
 
 export function RandomizerPage() {
+  const t = useT()
   const [value, setValue] = useState(() => random1to100())
   const [auto, setAuto] = useState(false)
   const [countdown, setCountdown] = useState(AUTO_INTERVAL_MS)
@@ -120,7 +122,7 @@ export function RandomizerPage() {
           size === 'full' ? 'px-3 py-1.5 text-xs' : 'px-2 py-1 text-[11px]'
         } ${!auto ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
       >
-        Manual
+        {t('Manual')}
       </button>
       <button
         type="button"
@@ -133,7 +135,7 @@ export function RandomizerPage() {
           size === 'full' ? 'px-3 py-1.5 text-xs' : 'px-2 py-1 text-[11px]'
         } ${auto ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
       >
-        Auto / 15s
+        {t('Auto / 15s')}
       </button>
     </div>
   )
@@ -158,7 +160,7 @@ export function RandomizerPage() {
           onClick={handleManualRoll}
           className="w-full rounded-lg bg-indigo-600 py-2 text-xs font-semibold text-white transition-all hover:bg-indigo-500 active:scale-95"
         >
-          Roll
+          {t('Roll')}
         </button>
 
         <p className="h-3 text-[10px] leading-3 text-slate-500">
@@ -196,7 +198,7 @@ export function RandomizerPage() {
         onClick={handleManualRoll}
         className="w-48 py-2.5 rounded-lg text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-500 active:scale-95 transition-all"
       >
-        Roll
+        {t('Roll')}
       </button>
 
       {auto && (
@@ -216,11 +218,11 @@ export function RandomizerPage() {
             <path d="M14 2 7.5 8.5" />
             <path d="M12 9.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.5" />
           </svg>
-          Pop out to a corner window
+          {t('Pop out to a corner window')}
         </button>
         {popupBlocked && (
           <p className="max-w-xs text-center text-[11px] text-amber-400">
-            Your browser blocked the pop-up. Allow pop-ups for this site and try again.
+            {t('Your browser blocked the pop-up. Allow pop-ups for this site and try again.')}
           </p>
         )}
       </div>

@@ -3,6 +3,7 @@ import { BackToMenu } from '../BackToMenu'
 import { Footer } from '../Footer'
 import { FanChart, ResultHistogram } from './VarianceCharts'
 import { formatMoney } from '../../lib/formatNumber'
+import { useT } from '../../lib/i18n'
 import {
   MAX_SAMPLES,
   MAX_TOURNAMENTS,
@@ -111,11 +112,12 @@ function Stat({
 }
 
 function Legend() {
+  const t = useT()
   const items = [
-    { color: '#e2e8f0', label: 'Median', dash: false },
-    { color: '#f59e0b', label: 'Expected value', dash: true },
-    { color: '#6366f1', label: '25–75% / 5–95% of runs', dash: false, block: true },
-    { color: '#94a3b8', label: '20 individual runs', dash: false },
+    { color: '#e2e8f0', label: t('Median'), dash: false },
+    { color: '#f59e0b', label: t('Expected value'), dash: true },
+    { color: '#6366f1', label: t('25–75% / 5–95% of runs'), dash: false, block: true },
+    { color: '#94a3b8', label: t('20 individual runs'), dash: false },
   ]
   return (
     <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1.5 text-[11px] text-slate-500">
@@ -142,6 +144,7 @@ function Legend() {
 }
 
 export function VariancePage() {
+  const t = useT()
   const [form, setForm] = useState<FormState>(DEFAULTS)
   const [result, setResult] = useState<VarianceResult | null>(null)
   const [running, setRunning] = useState(false)
@@ -206,35 +209,35 @@ export function VariancePage() {
         <BackToMenu className="mb-3" />
         <h1 className="text-3xl font-bold text-white">MTT Variance</h1>
         <p className="mb-6 text-sm text-slate-400">
-          Simulate a tournament sample: downswings, confidence bands and risk of ruin.
+          {t('Simulate a tournament sample: downswings, confidence bands and risk of ruin.')}
         </p>
 
         <div className="flex flex-col gap-4">
           <Panel>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <Field label="Buy-in" emoji="💵" value={form.buyIn} onChange={set('buyIn')} hint="Prize-pool portion" />
-              <Field label="Fee / rake" emoji="🧾" value={form.fee} onChange={set('fee')} hint="Added on top" />
-              <Field label="Field size" emoji="👥" value={form.fieldSize} onChange={set('fieldSize')} hint="Average entrants" />
-              <Field label="Paid places" emoji="🏆" value={form.itmPct} onChange={set('itmPct')} suffix="%" hint="Top % of field" />
-              <Field label="Your ROI" emoji="📈" value={form.roiPct} onChange={set('roiPct')} suffix="%" hint="Return on total cost" />
+              <Field label={t('Buy-in')} emoji="💵" value={form.buyIn} onChange={set('buyIn')} hint={t('Prize-pool portion')} />
+              <Field label={t('Fee / rake')} emoji="🧾" value={form.fee} onChange={set('fee')} hint={t('Added on top')} />
+              <Field label={t('Field size')} emoji="👥" value={form.fieldSize} onChange={set('fieldSize')} hint={t('Average entrants')} />
+              <Field label={t('Paid places')} emoji="🏆" value={form.itmPct} onChange={set('itmPct')} suffix="%" hint={t('Top % of field')} />
+              <Field label={t('Your ROI')} emoji="📈" value={form.roiPct} onChange={set('roiPct')} suffix="%" hint={t('Return on total cost')} />
               <Field
-                label="Tournaments" emoji="🎟️"
+                label={t('Tournaments')} emoji="🎟️"
                 value={form.tournaments}
                 onChange={set('tournaments')}
-                hint={`Sample size · max ${MAX_TOURNAMENTS.toLocaleString('en-US')}`}
+                hint={t('Sample size · max {n}', { n: MAX_TOURNAMENTS.toLocaleString('en-US') })}
               />
               <Field
-                label="Simulations" emoji="🔁"
+                label={t('Simulations')} emoji="🔁"
                 value={form.samples}
                 onChange={set('samples')}
-                hint={`Runs to average · max ${MAX_SAMPLES.toLocaleString('en-US')}`}
+                hint={t('Runs to average · max {n}', { n: MAX_SAMPLES.toLocaleString('en-US') })}
               />
               <Field
-                label="Bankroll" emoji="🏦"
+                label={t('Bankroll')} emoji="🏦"
                 value={form.bankroll}
                 onChange={set('bankroll')}
                 placeholder="optional"
-                hint="For risk of ruin"
+                hint={t('For risk of ruin')}
               />
             </div>
 
@@ -245,18 +248,18 @@ export function VariancePage() {
                 disabled={running}
                 className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-700"
               >
-                {running ? 'Simulating…' : 'Run simulation'}
+                {running ? t('Simulating…') : t('Run simulation')}
               </button>
               <label className="flex items-center gap-2 text-xs text-slate-500">
                 <span aria-hidden="true">🌱</span>
-                Seed
+                {t('Seed')}
                 <input
                   type="number"
                   value={form.seed}
                   onChange={(e) => set('seed')(e.target.value)}
                   className="w-20 rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                 />
-                <span>same seed → same run</span>
+                <span>{t('same seed → same run')}</span>
               </label>
             </div>
 
@@ -270,7 +273,7 @@ export function VariancePage() {
           {!result && !running && (
             <Panel>
               <p className="py-8 text-center text-sm text-slate-500">
-                Set your numbers and run a simulation to see the spread of outcomes.
+                {t('Set your numbers and run a simulation to see the spread of outcomes.')}
               </p>
             </Panel>
           )}
@@ -280,45 +283,45 @@ export function VariancePage() {
               <Panel>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   <Stat
-                    label="Expected profit"
+                    label={t('Expected profit')}
                     value={formatMoney(stats.expectedProfit)}
                     sub={inBuyIns(stats.expectedProfit)}
                     tone={stats.expectedProfit >= 0 ? 'good' : 'bad'}
                   />
                   <Stat
-                    label="Std deviation"
+                    label={t('Std deviation')}
                     value={formatMoney(stats.stdDevFinal)}
                     sub={inBuyIns(stats.stdDevFinal)}
                   />
                   <Stat
-                    label="Chance of loss"
+                    label={t('Chance of loss')}
                     value={`${(stats.probLoss * 100).toFixed(1)}%`}
                     sub={`after ${Number(form.tournaments).toLocaleString('en-US')} MTTs`}
                     tone={stats.probLoss > 0.5 ? 'bad' : 'neutral'}
                   />
                   <Stat
-                    label="ITM"
+                    label={t('ITM')}
                     value={`${(stats.itmProbability * 100).toFixed(1)}%`}
                     sub={`${stats.paidPlaces.toLocaleString('en-US')} places paid`}
                   />
                   <Stat
-                    label="Typical downswing"
+                    label={t('Typical downswing')}
                     value={formatMoney(stats.avgMaxDrawdown)}
                     sub={inBuyIns(stats.avgMaxDrawdown)}
                   />
                   <Stat
-                    label="Worst downswing"
+                    label={t('Worst downswing')}
                     value={formatMoney(stats.worstMaxDrawdown)}
                     sub={inBuyIns(stats.worstMaxDrawdown)}
                     tone="bad"
                   />
                   <Stat
-                    label="5th–95th percentile"
+                    label={t('5th–95th percentile')}
                     value={`${formatMoney(stats.percentiles.p5)} … ${formatMoney(stats.percentiles.p95)}`}
                     sub="90% of runs land here"
                   />
                   <Stat
-                    label="Risk of ruin"
+                    label={t('Risk of ruin')}
                     value={stats.riskOfRuin === null ? '—' : `${(stats.riskOfRuin * 100).toFixed(1)}%`}
                     sub={stats.riskOfRuin === null ? 'enter a bankroll' : 'busted at some point'}
                     tone={stats.riskOfRuin !== null && stats.riskOfRuin > 0.05 ? 'bad' : 'neutral'}
@@ -327,27 +330,32 @@ export function VariancePage() {
               </Panel>
 
               <Panel>
-                <h2 className="text-sm font-semibold text-white">Bankroll over time</h2>
+                <h2 className="text-sm font-semibold text-white">{t('Bankroll over time')}</h2>
                 <p className="mb-2 text-xs text-slate-500">
-                  {Number(form.samples).toLocaleString('en-US')} simulated runs of{' '}
-                  {Number(form.tournaments).toLocaleString('en-US')} tournaments.
+                  {t('{runs} simulated runs of {tournaments} tournaments.', {
+                    runs: Number(form.samples).toLocaleString('en-US'),
+                    tournaments: Number(form.tournaments).toLocaleString('en-US'),
+                  })}
                 </p>
                 <FanChart result={result} />
                 <Legend />
               </Panel>
 
               <Panel>
-                <h2 className="text-sm font-semibold text-white">Where the runs finished</h2>
+                <h2 className="text-sm font-semibold text-white">{t('Where the runs finished')}</h2>
                 <p className="mb-2 text-xs text-slate-500">
-                  Final profit of every run. Red bars finished below break even.
+                  {t('Final profit of every run. Red bars finished below break even.')}
                 </p>
                 <ResultHistogram bins={result.histogram} />
                 <p className="mt-2 text-xs text-slate-500">
-                  Median run finished at{' '}
-                  <span className="text-slate-300">{formatMoney(stats.percentiles.p50)}</span> · a quarter
-                  finished below{' '}
-                  <span className="text-slate-300">{formatMoney(stats.percentiles.p25)}</span> and a quarter
-                  above <span className="text-slate-300">{formatMoney(stats.percentiles.p75)}</span>.
+                  {t(
+                    'Median run finished at {median} · a quarter finished below {low} and a quarter above {high}.',
+                    {
+                      median: formatMoney(stats.percentiles.p50),
+                      low: formatMoney(stats.percentiles.p25),
+                      high: formatMoney(stats.percentiles.p75),
+                    },
+                  )}
                 </p>
               </Panel>
             </>
@@ -356,25 +364,26 @@ export function VariancePage() {
           <Panel>
             <details>
               <summary className="cursor-pointer text-xs text-slate-500 hover:text-slate-300">
-                How the model works
+                {t('How the model works')}
               </summary>
               <div className="mt-3 space-y-2 text-xs leading-relaxed text-slate-400">
                 <p>
-                  <span className="text-slate-300">Payouts.</span> The top slice of the field is paid, with
-                  the prize for place <em>i</em> proportional to 1/<em>i</em> across the pool. That curve
-                  tracks real MTT structures closely: the winner takes about 30% of the pool in a 100-runner
-                  event, 18% at 1,000 entrants and 13% at 10,000, with a min-cash near one buy-in.
+                  <span className="text-slate-300">{t('Payouts.')}</span>{' '}
+                  {t(
+                    'The top slice of the field is paid, with the prize for place i proportional to 1/i across the pool. That curve tracks real MTT structures closely: the winner takes about 30% of the pool in a 100-runner event, 18% at 1,000 entrants and 13% at 10,000, with a min-cash near one buy-in.',
+                  )}
                 </p>
                 <p>
-                  <span className="text-slate-300">Finishes.</span> Each tournament draws a finishing
-                  position. A break-even player finishes uniformly across the field; a winning player's
-                  finishes are skewed toward the top. The skew is solved numerically so the long-run result
-                  matches the ROI you entered.
+                  <span className="text-slate-300">{t('Finishes.')}</span>{' '}
+                  {t(
+                    "Each tournament draws a finishing position. A break-even player finishes uniformly across the field; a winning player's finishes are skewed toward the top. The skew is solved numerically so the long-run result matches the ROI you entered.",
+                  )}
                 </p>
                 <p>
-                  <span className="text-slate-300">Caveat.</span> This assumes a fixed field size, a fixed
-                  ROI and no re-entries, and it says nothing about whether your ROI estimate is right. Treat
-                  the spread as indicative, not a forecast.
+                  <span className="text-slate-300">{t('Caveat.')}</span>{' '}
+                  {t(
+                    'This assumes a fixed field size, a fixed ROI and no re-entries, and it says nothing about whether your ROI estimate is right. Treat the spread as indicative, not a forecast.',
+                  )}
                 </p>
               </div>
             </details>

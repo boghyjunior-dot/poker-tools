@@ -1,4 +1,6 @@
 import { FEATURE_PRACTICE_ENABLED } from '../lib/featureFlags'
+import { useT } from '../lib/i18n'
+import { LanguageSwitcher } from './LanguageSwitcher'
 import { Footer } from './Footer'
 
 type ToolStatus = 'done' | 'in-progress' | 'in-review' | 'coming-soon'
@@ -139,6 +141,7 @@ function ToolCard({
   disabled?: boolean
   status: ToolStatus
 }) {
+  const t = useT()
   const statusStyle = STATUS_STYLES[status]
   const content = (
     <>
@@ -153,7 +156,7 @@ function ToolCard({
           {icon}
         </span>
         <h3 className={`text-lg font-semibold ${disabled ? 'text-slate-500' : 'text-white'}`}>
-          {title}
+          {t(title)}
         </h3>
         {external ? (
           <svg className="ml-auto w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -163,12 +166,12 @@ function ToolCard({
           </svg>
         ) : (
           <span className={`ml-auto shrink-0 whitespace-nowrap rounded px-2 py-0.5 text-xs font-medium uppercase tracking-wide ${statusStyle.badge}`}>
-            {statusStyle.label}
+            {t(statusStyle.label)}
           </span>
         )}
       </div>
       <p className={`text-sm leading-relaxed ${disabled ? 'text-slate-600' : 'text-slate-400'}`}>
-        {description}
+        {t(description)}
       </p>
     </>
   )
@@ -326,12 +329,17 @@ const SECTIONS: { name: string; blurb: string; tools: Tool[] }[] = [
 ]
 
 export function HomePage() {
+  const t = useT()
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-4xl">
         <header className="mb-10 text-center">
+          <div className="mb-2 flex justify-end">
+            <LanguageSwitcher />
+          </div>
           <h1 className="text-3xl font-bold text-white mb-2">Poker Tools</h1>
-          <p className="text-slate-400 text-sm">Choose a tool to get started</p>
+          <p className="text-slate-400 text-sm">{t('Choose a tool to get started')}</p>
         </header>
 
         <div className="flex flex-col gap-9">
@@ -339,9 +347,9 @@ export function HomePage() {
             <section key={section.name}>
               <div className="mb-3 flex items-baseline gap-3 border-b border-slate-800 pb-2">
                 <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-300">
-                  {section.name}
+                  {t(section.name)}
                 </h2>
-                <p className="text-xs text-slate-500">{section.blurb}</p>
+                <p className="text-xs text-slate-500">{t(section.blurb)}</p>
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {section.tools.map((tool) => (

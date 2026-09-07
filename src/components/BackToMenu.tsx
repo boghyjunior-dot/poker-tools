@@ -1,4 +1,8 @@
+import { useT } from '../lib/i18n'
+
 export function BackToMenu({ className = '' }: { className?: string }) {
+  const t = useT()
+
   return (
     <a
       href="./"
@@ -7,7 +11,7 @@ export function BackToMenu({ className = '' }: { className?: string }) {
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" className="h-3 w-3" aria-hidden>
         <path d="M10 12 6 8l4-4" />
       </svg>
-      Main menu
+      {t('Main menu')}
     </a>
   )
 }
