@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
 import { Footer } from '../Footer'
 import { PT4_SAMPLE_EXPORT } from '../../lib/pt4SampleExport'
+import { useT } from '../../lib/i18n'
 import {
   analyzeAll,
   CATEGORY_LABELS,
@@ -134,6 +135,7 @@ function Panel({ children, className = '' }: { children: React.ReactNode; classN
 
 export function LeakFinderPage() {
   // Read once, lazily, so a stored session survives a refresh.
+  const t = useT()
   const [stored] = useState(loadState)
 
   const [rawText, setRawText] = useState('')
@@ -210,8 +212,14 @@ export function LeakFinderPage() {
       }
     }
     const level = relevanceFromHands(handCount)
-    return { level, note: `${handCount.toLocaleString()} hands · ${relevanceLabel(level).toLowerCase()}` }
-  }, [hands, activeTab])
+    return {
+      level,
+      note: t('{hands} hands · {relevance}', {
+        hands: handCount.toLocaleString(),
+        relevance: t(relevanceLabel(level)).toLowerCase(),
+      }),
+    }
+  }, [hands, activeTab, t])
 
   const applyParsedText = (text: string) => {
     const positional = parsePositionalReport(text)
@@ -364,36 +372,35 @@ export function LeakFinderPage() {
         <BackToMenu className="mb-2" />
         <h1 className="text-2xl font-bold text-white mb-1">Leak Finder</h1>
         <p className="text-sm text-slate-400">
-          Import a positional report from PokerTracker, Hold&rsquo;em Manager or Hand2Note and
-          compare every seat to healthy baselines.
+          {t('Import a positional report from PokerTracker, Hold’em Manager or Hand2Note and compare every seat to healthy baselines.')}
         </p>
       </header>
 
       <div className="space-y-4">
         <Panel>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-sm font-semibold text-white">1 · Import your report</h2>
+            <h2 className="text-sm font-semibold text-white">{t('1 · Import your report')}</h2>
             <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 onClick={() => setRawText(PT4_SAMPLE_EXPORT)}
                 className="text-xs text-slate-400 hover:text-white transition-colors"
               >
-                Example: PT4 CSV
+                {t('Example: PT4 CSV')}
               </button>
               <button
                 type="button"
                 onClick={() => setRawText(SAMPLE_HM3)}
                 className="text-xs text-slate-400 hover:text-white transition-colors"
               >
-                Example: HM3 / H2N
+                {t('Example: HM3 / H2N')}
               </button>
               <button
                 type="button"
                 onClick={() => setRawText(SAMPLE_OVERALL)}
                 className="text-xs text-slate-400 hover:text-white transition-colors"
               >
-                Example: overall
+                {t('Example: overall')}
               </button>
             </div>
           </div>
@@ -415,14 +422,14 @@ export function LeakFinderPage() {
               disabled={rawText.trim() === ''}
               className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              Analyze report
+              {t('Analyze report')}
             </button>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
               className="rounded-lg border border-slate-600 bg-slate-800 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-700 transition-colors"
             >
-              Import file (.csv / .txt)
+              {t('Import file (.csv / .txt)')}
             </button>
             <input
               ref={fileInputRef}
@@ -441,15 +448,13 @@ export function LeakFinderPage() {
                 onClick={clearAll}
                 className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
               >
-                Clear
+                {t('Clear')}
               </button>
             )}
-            {parseMessage && <p className="text-sm text-slate-400">{parseMessage}</p>}
+            {parseMessage && <p className="text-sm text-slate-400">{t(parseMessage)}</p>}
           </div>
           <p className="text-xs text-slate-500">
-            PT4: Reports → stat report grouped by position → Export → CSV. HM3 and Hand2Note: any
-            positional export with a header row. Count columns are read as sample sizes, dash (-)
-            blanks are skipped, and HM3&rsquo;s combined &ldquo;Late&rdquo; bucket is read as CO.
+            {t('PT4: Reports → stat report grouped by position → Export → CSV. HM3 and Hand2Note: any positional export with a header row. Count columns are read as sample sizes, dash (-) blanks are skipped, and HM3’s combined “Late” bucket is read as CO.')}
           </p>
         </Panel>
 
@@ -460,7 +465,7 @@ export function LeakFinderPage() {
                 <div className="flex flex-wrap items-center gap-6">
                   <div>
                     <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
-                      Whole-game score
+                      {t('Whole-game score')}
                     </p>
                     <p className={`text-5xl font-bold tabular-nums ${scoreColor(analysis.overallScore)}`}>
                       {analysis.overallScore}
@@ -469,12 +474,13 @@ export function LeakFinderPage() {
                   </div>
                   <div className="min-w-[12rem]">
                     <p className="text-sm text-slate-300">
-                      {scoreSummary(analysis.overallScore, analysis.ranked.length)}
+                      {t(scoreSummary(analysis.overallScore, analysis.ranked.length))}
                     </p>
                     <p className="text-xs text-slate-500 mt-1">
-                      {analysis.ranked.length} leak{analysis.ranked.length === 1 ? '' : 's'} across{' '}
-                      {analysis.positionsWithData.filter((k) => k !== 'overall').length} seats ·
-                      weighted by how much sample backs each stat
+                      {t('{leaks} leaks across {seats} seats · weighted by how much sample backs each stat', {
+                        leaks: analysis.ranked.length,
+                        seats: analysis.positionsWithData.filter((k) => k !== 'overall').length,
+                      })}
                     </p>
                   </div>
                 </div>
@@ -484,33 +490,33 @@ export function LeakFinderPage() {
                     onClick={() => void copyReport()}
                     className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700 transition-colors"
                   >
-                    Copy report
+                    {t('Copy report')}
                   </button>
                   <button
                     type="button"
                     onClick={downloadReport}
                     className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700 transition-colors"
                   >
-                    Download .md
+                    {t('Download .md')}
                   </button>
                   <button
                     type="button"
                     onClick={saveSnapshot}
                     className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700 transition-colors"
                   >
-                    Save snapshot
+                    {t('Save snapshot')}
                   </button>
                 </div>
               </div>
-              {copyNote && <p className="text-xs text-emerald-400">{copyNote}</p>}
+              {copyNote && <p className="text-xs text-emerald-400">{t(copyNote)}</p>}
             </Panel>
 
             {analysis.ranked.length > 0 && (
               <Panel>
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h2 className="text-sm font-semibold text-white">Fix these first</h2>
+                  <h2 className="text-sm font-semibold text-white">{t('Fix these first')}</h2>
                   <p className="text-xs text-slate-500">
-                    Ranked across every seat by how far off you are, discounted by sample size
+                    {t('Ranked across every seat by how far off you are, discounted by sample size')}
                   </p>
                 </div>
                 <ol className="space-y-2">
@@ -525,7 +531,7 @@ export function LeakFinderPage() {
 
         <Panel>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-sm font-semibold text-white">2 · Stats by position</h2>
+            <h2 className="text-sm font-semibold text-white">{t('2 · Stats by position')}</h2>
             <div className="flex flex-wrap items-center gap-3">
               <p className="text-xs text-slate-500">
                 {filledCount} stat{filledCount === 1 ? '' : 's'} for {POSITION_LABELS[activeTab]}
@@ -540,7 +546,7 @@ export function LeakFinderPage() {
                     : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                 }`}
               >
-                {editingTargets ? 'Done editing targets' : 'Edit targets'}
+                {editingTargets ? t('Done editing targets') : t('Edit targets')}
               </button>
             </div>
           </div>
@@ -653,13 +659,15 @@ export function LeakFinderPage() {
                   </p>
                 </div>
                 <div className="flex-1 min-w-[12rem]">
-                  <p className="text-sm text-slate-300">{scoreSummary(report.score, report.leaks.length)}</p>
+                  <p className="text-sm text-slate-300">{t(scoreSummary(report.score, report.leaks.length))}</p>
                   <p className={`text-xs mt-1 ${RELEVANCE_STYLES[positionRelevance.level]}`}>
                     {positionRelevance.note}
                   </p>
                   <p className="text-xs text-slate-500 mt-1">
-                    {report.results.length} stats analyzed · {report.leaks.length} leak
-                    {report.leaks.length === 1 ? '' : 's'} found
+                    {t('{stats} stats analyzed · {leaks} leaks found', {
+                      stats: report.results.length,
+                      leaks: report.leaks.length,
+                    })}
                   </p>
                 </div>
               </div>
@@ -670,7 +678,7 @@ export function LeakFinderPage() {
               if (rows.length === 0) return null
               return (
                 <section key={category} className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
-                  <h3 className="text-sm font-semibold text-white mb-3">{CATEGORY_LABELS[category]}</h3>
+                  <h3 className="text-sm font-semibold text-white mb-3">{t(CATEGORY_LABELS[category])}</h3>
                   <div className="space-y-2">
                     {rows.map((result) => (
                       <StatRow key={result.def.id} result={result} positionKey={activeTab} />
@@ -685,9 +693,9 @@ export function LeakFinderPage() {
         {snapshots.length > 0 && (
           <Panel>
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-sm font-semibold text-white">Progress</h2>
+              <h2 className="text-sm font-semibold text-white">{t('Progress')}</h2>
               <p className="text-xs text-slate-500">
-                Saved reports stay in this browser. Compare one to what is loaded now.
+                {t('Saved reports stay in this browser. Compare one to what is loaded now.')}
               </p>
             </div>
 
@@ -720,21 +728,21 @@ export function LeakFinderPage() {
                           : 'text-slate-400 hover:text-white'
                       }`}
                     >
-                      {compareId === snapshot.id ? 'Hide changes' : 'Compare'}
+                      {compareId === snapshot.id ? t('Hide changes') : t('Compare')}
                     </button>
                     <button
                       type="button"
                       onClick={() => loadSnapshot(snapshot)}
                       className="text-slate-400 hover:text-white transition-colors"
                     >
-                      Load
+                      {t('Load')}
                     </button>
                     <button
                       type="button"
                       onClick={() => deleteSnapshot(snapshot.id)}
                       className="text-slate-600 hover:text-red-400 transition-colors"
                     >
-                      Delete
+                      {t('Delete')}
                     </button>
                   </div>
                 </div>
@@ -786,7 +794,7 @@ export function LeakFinderPage() {
 
         {!hasData && (
           <p className="text-sm text-slate-500">
-            Paste a report above, or type values into the grid, to see your leaks.
+            {t('Paste a report above, or type values into the grid, to see your leaks.')}
           </p>
         )}
       </div>
@@ -809,6 +817,7 @@ function effectiveRange(statId: string, position?: Position): [number, number] {
 }
 
 function PriorityRow({ leak, index }: { leak: RankedLeak; index: number }) {
+  const t = useT()
   const styles = SEVERITY_STYLES[leak.severity]
   const unit = formatStatUnit(leak.def.unit)
   const fix = fixFor(leak.def.id, leak.positionKey)
@@ -830,14 +839,14 @@ function PriorityRow({ leak, index }: { leak: RankedLeak; index: number }) {
           {unit}
         </span>
         <span className={`ml-auto rounded px-2 py-0.5 text-[11px] font-semibold ${styles.badge}`}>
-          {styles.label} · {leak.direction === 'low' ? 'too low' : 'too high'}
+          {t(styles.label)} · {leak.direction === 'low' ? t('too low') : t('too high')}
         </span>
       </div>
-      <p className="mt-1 text-xs leading-relaxed text-slate-400">{leak.advice}</p>
+      <p className="mt-1 text-xs leading-relaxed text-slate-400">{t(leak.advice)}</p>
       <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px]">
         {fix && (
           <a href={fix.href} className="text-indigo-300 hover:text-indigo-200 transition-colors">
-            {fix.label} →
+            {fix.seat ? t('{verb} — {seat} charts', { verb: t(fix.verb), seat: fix.seat }) : t(fix.verb)} →
           </a>
         )}
         {leak.relevanceNote && <span className="text-slate-600">{leak.relevanceNote}</span>}
@@ -852,6 +861,7 @@ function PriorityRow({ leak, index }: { leak: RankedLeak; index: number }) {
 }
 
 function StatRow({ result, positionKey }: { result: StatResult; positionKey: PositionKey }) {
+  const t = useT()
   const styles = SEVERITY_STYLES[result.severity]
   const unit = formatStatUnit(result.def.unit)
   const fix = result.severity === 'ok' ? null : fixFor(result.def.id, positionKey)
@@ -874,18 +884,19 @@ function StatRow({ result, positionKey }: { result: StatResult; positionKey: Pos
           </span>
         )}
         <span className={`ml-auto rounded px-2 py-0.5 text-[11px] font-semibold ${styles.badge}`}>
-          {styles.label}
-          {result.direction !== 'ok' && (result.direction === 'low' ? ' · too low' : ' · too high')}
+          {t(styles.label)}
+          {result.direction !== 'ok' &&
+            (result.direction === 'low' ? ` · ${t('too low')}` : ` · ${t('too high')}`)}
         </span>
       </div>
       {result.severity !== 'ok' && (
-        <p className="mt-1 text-xs leading-relaxed text-slate-400">{result.advice}</p>
+        <p className="mt-1 text-xs leading-relaxed text-slate-400">{t(result.advice)}</p>
       )}
       {(fix || result.capped) && (
         <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px]">
           {fix && (
             <a href={fix.href} className="text-indigo-300 hover:text-indigo-200 transition-colors">
-              {fix.label} →
+              {fix.seat ? t('{verb} — {seat} charts', { verb: t(fix.verb), seat: fix.seat }) : t(fix.verb)} →
             </a>
           )}
           {result.capped && (

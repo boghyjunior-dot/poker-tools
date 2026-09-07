@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
 import { Footer } from '../Footer'
 import { ChartLegend, ChartMatrix } from './ChartMatrix'
+import { useT } from '../../lib/i18n'
 import starterFile from '../../content/preflopCharts.json'
 import { formatRange, parseRangeString } from '../../lib/rangeParser'
 import {
@@ -119,6 +120,7 @@ const blankChart = (): PreflopChart => ({
 })
 
 export function PreflopChartsPage() {
+  const t = useT()
   const [charts, setCharts] = useState<PreflopChart[]>(() => loadCharts())
   const [mode, setMode] = useState<Mode>('library')
   const [formatFilter, setFormatFilter] = useState<ChartFormat[]>([])
@@ -233,25 +235,25 @@ export function PreflopChartsPage() {
         <BackToMenu className="mb-3" />
         <h1 className="text-3xl font-bold text-white">Preflop Charts</h1>
         <p className="mb-6 text-sm text-slate-400">
-          MTT ranges by position and stack depth. Type a range, then drill yourself on it.
+          {t('MTT ranges by position and stack depth. Type a range, then drill yourself on it.')}
         </p>
 
         <div className="flex flex-col gap-4">
           <Panel>
             <div className="mb-4 flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-sm text-slate-400">Mode:</span>
+              <span className="mr-1 text-sm text-slate-400">{t('Mode:')}</span>
               <Chip active={mode === 'library'} onClick={() => setMode('library')}>
-                📚 Library
+                📚 {t('Library')}
               </Chip>
               <Chip active={mode === 'drill'} onClick={() => setMode('drill')}>
-                🎯 Drill
+                🎯 {t('Drill')}
               </Chip>
             </div>
 
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <span className="mr-1 text-sm text-slate-400">Model:</span>
               <Chip active={formatFilter.length === 0} onClick={() => setFormatFilter([])}>
-                Both
+                {t('Both')}
               </Chip>
               {FORMATS.map((format) => (
                 <Chip
@@ -267,7 +269,7 @@ export function PreflopChartsPage() {
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <span className="mr-1 text-sm text-slate-400">Position:</span>
               <Chip active={positionFilter.length === 0} onClick={() => setPositionFilter([])}>
-                All
+                {t('All')}
               </Chip>
               {POSITIONS.map((position) => (
                 <Chip
@@ -283,7 +285,7 @@ export function PreflopChartsPage() {
             <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-sm text-slate-400">Stack:</span>
               <Chip active={stackFilter.length === 0} onClick={() => setStackFilter([])}>
-                Any
+                {t('Any')}
               </Chip>
               {stacks.map((stack) => (
                 <Chip
@@ -297,8 +299,11 @@ export function PreflopChartsPage() {
             </div>
 
             <p className="mt-3 text-xs text-slate-500">
-              {visible.length} of {charts.length} chart{charts.length === 1 ? '' : 's'} in scope
-              {mode === 'drill' && ' — the drill deals from these'}
+              {t('{shown} of {total} charts in scope', {
+                shown: visible.length,
+                total: charts.length,
+              })}
+              {mode === 'drill' && ` ${t('— the drill deals from these')}`}
             </p>
           </Panel>
 
@@ -322,42 +327,42 @@ export function PreflopChartsPage() {
                     onClick={() => setDraft(blankChart())}
                     className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-500"
                   >
-                    New chart
+                    {t('New chart')}
                   </button>
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     className="rounded-md border border-slate-600 bg-slate-800 px-3 py-1.5 text-sm text-slate-200 transition-colors hover:bg-slate-700"
                   >
-                    Import JSON
+                    {t('Import JSON')}
                   </button>
                   <button
                     type="button"
                     onClick={restoreBundled}
-                    title="Re-sync the charts that ship with the app, keeping any you added"
+                    title={t('Re-sync the charts that ship with the app, keeping any you added')}
                     className="rounded-md border border-slate-600 bg-slate-800 px-3 py-1.5 text-sm text-slate-200 transition-colors hover:bg-slate-700"
                   >
-                    Restore bundled
+                    {t('Restore bundled')}
                   </button>
                   <button
                     type="button"
                     onClick={resetToBundled}
                     onBlur={() => setResetArmed(false)}
-                    title="Discard every saved chart and load only the bundled set"
+                    title={t('Discard every saved chart and load only the bundled set')}
                     className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
                       resetArmed
                         ? 'border-rose-600 bg-rose-950/60 text-rose-200 hover:bg-rose-900/60'
                         : 'border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700'
                     }`}
                   >
-                    {resetArmed ? 'Click again to wipe' : 'Reset all'}
+                    {resetArmed ? t('Click again to wipe') : t('Reset all')}
                   </button>
                   <button
                     type="button"
                     onClick={exportCharts}
                     className="rounded-md border border-slate-600 bg-slate-800 px-3 py-1.5 text-sm text-slate-200 transition-colors hover:bg-slate-700"
                   >
-                    Export JSON
+                    {t('Export JSON')}
                   </button>
                   <input
                     ref={fileInputRef}
@@ -383,7 +388,7 @@ export function PreflopChartsPage() {
 
                 {visible.length === 0 ? (
                   <p className="py-8 text-center text-sm text-slate-500">
-                    No charts match these filters. Widen them, or add a chart.
+                    {t('No charts match these filters. Widen them, or add a chart.')}
                   </p>
                 ) : (
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -404,7 +409,7 @@ export function PreflopChartsPage() {
           <Panel>
             <details>
               <summary className="cursor-pointer text-xs text-slate-500 hover:text-slate-300">
-                Range notation
+                {t('Range notation')}
               </summary>
               <div className="mt-3 grid gap-x-6 gap-y-1.5 text-xs text-slate-400 sm:grid-cols-2">
                 {[
@@ -419,12 +424,11 @@ export function PreflopChartsPage() {
                 ].map(([token, meaning]) => (
                   <p key={token}>
                     <code className="text-slate-200">{token}</code>
-                    <span className="text-slate-500"> — {meaning}</span>
+                    <span className="text-slate-500"> — {t(meaning)}</span>
                   </p>
                 ))}
                 <p className="sm:col-span-2 text-slate-500">
-                  Separate with commas, spaces or new lines. Layers are checked top to bottom, so a hand in
-                  two ranges belongs to the upper one.
+                  {t('Separate with commas, spaces or new lines. Layers are checked top to bottom, so a hand in two ranges belongs to the upper one.')}
                 </p>
               </div>
             </details>
@@ -446,6 +450,7 @@ function ChartCard({
   onEdit: () => void
   onDelete: () => void
 }) {
+  const t = useT()
   const resolved = useMemo(() => resolveChart(chart), [chart])
 
   return (
@@ -488,14 +493,14 @@ function ChartCard({
           onClick={onEdit}
           className="flex-1 rounded-md bg-slate-800 py-1 text-xs text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
         >
-          Edit
+          {t('Edit')}
         </button>
         <button
           type="button"
           onClick={onDelete}
           className="rounded-md px-2 py-1 text-xs text-slate-600 transition-colors hover:text-rose-400"
         >
-          Delete
+          {t('Delete')}
         </button>
       </div>
     </div>
@@ -513,6 +518,7 @@ function ChartEditor({
   onSave: () => void
   onCancel: () => void
 }) {
+  const t = useT()
   const resolved = useMemo(() => resolveChart(draft), [draft])
   // Layers whose colour the user picked by hand — naming them stops re-colouring.
   const [pinnedColors, setPinnedColors] = useState<Set<string>>(new Set())
@@ -565,7 +571,7 @@ function ChartEditor({
                 <span aria-hidden="true" className="mr-1">
                   🪑
                 </span>
-                Position
+                {t('Position')}
               </span>
               <select
                 value={draft.position}
@@ -585,7 +591,7 @@ function ChartEditor({
                 <span aria-hidden="true" className="mr-1">
                   ⚖️
                 </span>
-                Model
+                {t('Model')}
               </span>
               <select
                 value={draft.format}
@@ -605,7 +611,7 @@ function ChartEditor({
                 <span aria-hidden="true" className="mr-1">
                   🪙
                 </span>
-                Stack
+                {t('Stack')}
               </span>
               <span className="relative">
                 <input
@@ -625,13 +631,13 @@ function ChartEditor({
                 <span aria-hidden="true" className="mr-1">
                   🎬
                 </span>
-                Action
+                {t('Action')}
               </span>
               <input
                 type="text"
                 value={draft.action}
                 onChange={(e) => onChange({ ...draft, action: e.target.value })}
-                placeholder="RFI, vs BTN open…"
+                placeholder={t('RFI, vs BTN open…')}
                 className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600"
               />
             </label>
@@ -665,14 +671,14 @@ function ChartEditor({
               disabled={!canSave}
               className="rounded-md bg-indigo-600 px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-700"
             >
-              Save chart
+              {t('Save chart')}
             </button>
             <button
               type="button"
               onClick={onCancel}
               className="text-xs text-slate-500 transition-colors hover:text-slate-300"
             >
-              Cancel
+              {t('Cancel')}
             </button>
           </div>
 
@@ -709,6 +715,7 @@ function LayerEditor({
   onPickColor: (color: LayerColor) => void
   onRemove: () => void
 }) {
+  const t = useT()
   const parsed = useMemo(() => parseRangeString(layer.tokens), [layer.tokens])
   const combos = comboCount(parsed.labels)
   const canonical = useMemo(() => formatRange(parsed.labels), [parsed.labels])
@@ -743,7 +750,7 @@ function LayerEditor({
             onClick={onRemove}
             className="ml-auto text-xs text-slate-600 transition-colors hover:text-rose-400"
           >
-            Remove
+            {t('Remove')}
           </button>
         )}
       </div>
@@ -758,7 +765,10 @@ function LayerEditor({
 
       <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 text-[11px]">
         <span className="tabular-nums text-slate-400">
-          {combos} combos · {((combos / 1326) * 100).toFixed(1)}%
+          {t('{n} combos · {pct}%', {
+            n: combos,
+            pct: ((combos / 1326) * 100).toFixed(1),
+          })}
         </span>
         {canonical && <span className="font-mono text-slate-600">{canonical}</span>}
       </div>
@@ -771,6 +781,7 @@ function LayerEditor({
 }
 
 function DrillPanel({ charts }: { charts: PreflopChart[] }) {
+  const t = useT()
   const [question, setQuestion] = useState<DrillQuestion | null>(() => nextQuestion(charts))
   const [answer, setAnswer] = useState<string | null>(null)
   const [right, setRight] = useState(0)
@@ -795,7 +806,7 @@ function DrillPanel({ charts }: { charts: PreflopChart[] }) {
     return (
       <Panel>
         <p className="py-8 text-center text-sm text-slate-500">
-          No charts in scope. Widen the filters above to drill.
+          {t('No charts in scope. Widen the filters above to drill.')}
         </p>
       </Panel>
     )
@@ -910,9 +921,15 @@ function DrillPanel({ charts }: { charts: PreflopChart[] }) {
                 <p className={`text-sm font-semibold ${correct ? 'text-emerald-400' : 'text-rose-400'}`}>
                   {correct
                     ? question.accepted.length > 1
-                      ? `Correct — ${question.hand.label} is a mix, either answer is fine`
-                      : 'Correct'
-                    : `${question.hand.label} is a ${question.expected === FOLD_ANSWER ? 'fold' : question.expected} here`}
+                      ? t('Correct — {hand} is a mix, either answer is fine', {
+                          hand: question.hand.label,
+                        })
+                      : t('Correct')
+                    : t('{hand} is a {action} here', {
+                        hand: question.hand.label,
+                        action:
+                          question.expected === FOLD_ANSWER ? t('fold') : question.expected,
+                      })}
                 </p>
                 <button
                   type="button"
@@ -920,7 +937,7 @@ function DrillPanel({ charts }: { charts: PreflopChart[] }) {
                   autoFocus
                   className="mt-3 w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500"
                 >
-                  Next hand
+                  {t('Next hand')}
                 </button>
               </div>
             )}
@@ -935,7 +952,7 @@ function DrillPanel({ charts }: { charts: PreflopChart[] }) {
             </>
           ) : (
             <div className="flex h-full min-h-[200px] items-center justify-center rounded-lg border border-dashed border-slate-800 p-4 text-center text-xs text-slate-600">
-              The chart appears once you answer.
+              {t('The chart appears once you answer.')}
             </div>
           )}
         </div>

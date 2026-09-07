@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
 import { Footer } from '../Footer'
 import { formatMoney } from '../../lib/formatNumber'
+import { useT } from '../../lib/i18n'
 import {
   calculateMysteryBounty,
   calculateRemainingBounties,
@@ -157,6 +158,7 @@ function tiersToRows(tiers: BountyTier[]): TierRow[] {
 
 export function MysteryBountyPage() {
   // Read once, lazily, so an event in progress survives a refresh.
+  const t = useT()
   const [stored] = useState(loadState)
 
   const [form, setForm] = useState<FormState>(() => ({
@@ -425,19 +427,19 @@ export function MysteryBountyPage() {
         <BackToMenu className="mb-3" />
         <h1 className="text-3xl font-bold text-white">Mystery Bounty</h1>
         <p className="mb-6 text-sm text-slate-400">
-          What a knockout is really worth — at the start of the phase, and right now.
+          {t('What a knockout is really worth — at the start of the phase, and right now.')}
         </p>
 
         <div className="flex flex-col gap-4">
           <Panel>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-sm font-semibold text-white">Tournament</h2>
+              <h2 className="text-sm font-semibold text-white">{t('Tournament')}</h2>
               <div className="flex flex-wrap items-center gap-2">
                 <input
-                  aria-label="Event name"
+                  aria-label={t('Event name')}
                   value={form.eventName}
                   onChange={(e) => set('eventName')(e.target.value)}
-                  placeholder="Event name"
+                  placeholder={t('Event name')}
                   className="w-40 rounded-md border border-slate-700 bg-slate-950/60 px-3 py-1.5 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                 />
                 <button
@@ -445,53 +447,53 @@ export function MysteryBountyPage() {
                   onClick={saveTournament}
                   className="rounded-md border border-slate-600 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-slate-700"
                 >
-                  Save event
+                  {t('Save event')}
                 </button>
                 <button
                   type="button"
                   onClick={() => void copyReport()}
                   className="rounded-md border border-slate-600 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-slate-700"
                 >
-                  Copy report
+                  {t('Copy report')}
                 </button>
               </div>
             </div>
             {copyNote && <p className="mb-3 text-xs text-emerald-400">{copyNote}</p>}
 
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <Field label="Entries" emoji="👥" value={form.entrants} onChange={set('entrants')} hint="Including re-entries" />
+              <Field label={t('Entries')} emoji="👥" value={form.entrants} onChange={set('entrants')} hint={t('Including re-entries')} />
               <Field
-                label="Prize pool / entry" emoji="🏆"
+                label={t('Prize pool / entry')} emoji="🏆"
                 value={form.prizePoolPerEntry}
                 onChange={set('prizePoolPerEntry')}
-                hint="Buy-in share that plays"
+                hint={t('Buy-in share that plays')}
               />
               <Field
-                label="Bounty / entry" emoji="🎯"
+                label={t('Bounty / entry')} emoji="🎯"
                 value={form.bountyPerEntry}
                 onChange={set('bountyPerEntry')}
-                hint="Buy-in share for bounties"
+                hint={t('Buy-in share for bounties')}
               />
-              <Field label="Fee / entry" emoji="🧾" value={form.feePerEntry} onChange={set('feePerEntry')} hint="Rake" />
+              <Field label={t('Fee / entry')} emoji="🧾" value={form.feePerEntry} onChange={set('feePerEntry')} hint={t('Rake')} />
               <Field
-                label="Bounty phase starts" emoji="🚩"
+                label={t('Bounty phase starts')} emoji="🚩"
                 value={form.bountyStartPlayers}
                 onChange={set('bountyStartPlayers')}
-                hint="Players left when envelopes begin"
+                hint={t('Players left when envelopes begin')}
               />
               <Field
-                label="Starting stack" emoji="🪙"
+                label={t('Starting stack')} emoji="🪙"
                 value={form.startingStack}
                 onChange={set('startingStack')}
-                hint="Chips"
+                hint={t('Chips')}
               />
-              <Field label="Current big blind" emoji="🔼" value={form.bigBlind} onChange={set('bigBlind')} hint="Chips" />
+              <Field label={t('Current big blind')} emoji="🔼" value={form.bigBlind} onChange={set('bigBlind')} hint={t('Chips')} />
               <Field
-                label="Top prize" emoji="💎"
+                label={t('Top prize')} emoji="💎"
                 value={form.topPrize}
                 onChange={set('topPrize')}
-                placeholder="optional"
-                hint="Value of each top envelope"
+                placeholder={t('optional')}
+                hint={t('Value of each top envelope')}
               />
             </div>
 
@@ -504,7 +506,7 @@ export function MysteryBountyPage() {
 
           {saved.length > 0 && (
             <Panel>
-              <h2 className="mb-2 text-sm font-semibold text-white">Saved events</h2>
+              <h2 className="mb-2 text-sm font-semibold text-white">{t('Saved events')}</h2>
               <div className="space-y-1.5">
                 {saved.map((entry) => (
                   <div
@@ -522,14 +524,14 @@ export function MysteryBountyPage() {
                         onClick={() => loadTournament(entry)}
                         className="text-slate-400 transition-colors hover:text-white"
                       >
-                        Load
+                        {t('Load')}
                       </button>
                       <button
                         type="button"
                         onClick={() => deleteTournament(entry.id)}
                         className="text-slate-600 transition-colors hover:text-rose-400"
                       >
-                        Delete
+                        {t('Delete')}
                       </button>
                     </div>
                   </div>
@@ -541,11 +543,9 @@ export function MysteryBountyPage() {
           <Panel>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="text-sm font-semibold text-white">The drum</h2>
+                <h2 className="text-sm font-semibold text-white">{t('The drum')}</h2>
                 <p className="mt-0.5 text-xs text-slate-500">
-                  Part-way through the phase the start-of-phase average is a fiction. Enter the
-                  envelopes still in the drum and every number below switches to what a knockout is
-                  worth right now.
+                  {t('Part-way through the phase the start-of-phase average is a fiction. Enter the envelopes still in the drum and every number below switches to what a knockout is worth right now.')}
                 </p>
               </div>
               <button
@@ -558,7 +558,7 @@ export function MysteryBountyPage() {
                     : 'border border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700'
                 }`}
               >
-                {useRemaining ? 'Using the drum' : 'Use the drum'}
+                {useRemaining ? t('Using the drum') : t('Use the drum')}
               </button>
             </div>
 
@@ -581,7 +581,7 @@ export function MysteryBountyPage() {
                     onClick={() => setPasteOpen((prev) => !prev)}
                     className="rounded-md border border-slate-700 bg-slate-800/60 px-2.5 py-1 text-xs text-slate-300 transition-colors hover:bg-slate-700"
                   >
-                    Paste a table
+                    {t('Paste a table')}
                   </button>
                 </div>
 
@@ -599,7 +599,7 @@ export function MysteryBountyPage() {
                       onClick={applyPaste}
                       className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-500"
                     >
-                      Read the table
+                      {t('Read the table')}
                     </button>
                   </div>
                 )}
@@ -615,7 +615,7 @@ export function MysteryBountyPage() {
                   <div key={tier.id} className="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
                     <input
                       type="number"
-                      aria-label="Envelope value"
+                      aria-label={t('Envelope value')}
                       value={tier.value}
                       onChange={(e) => setTier(tier.id, 'value')(e.target.value)}
                       placeholder="5000"
@@ -623,7 +623,7 @@ export function MysteryBountyPage() {
                     />
                     <input
                       type="number"
-                      aria-label="How many left"
+                      aria-label={t('How many left')}
                       value={tier.count}
                       onChange={(e) => setTier(tier.id, 'count')(e.target.value)}
                       placeholder="10"
@@ -633,7 +633,7 @@ export function MysteryBountyPage() {
                       type="button"
                       onClick={() => removeTier(tier.id)}
                       disabled={tiers.length === 1}
-                      aria-label="Remove this rung"
+                      aria-label={t('Remove this rung')}
                       className="w-8 rounded-md border border-slate-700 py-2 text-sm text-slate-500 transition-colors hover:border-rose-800 hover:text-rose-400 disabled:cursor-not-allowed disabled:opacity-30"
                     >
                       ×
@@ -646,7 +646,7 @@ export function MysteryBountyPage() {
                   onClick={addTier}
                   className="rounded-md border border-slate-600 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-slate-700"
                 >
-                  Add a rung
+                  {t('Add a rung')}
                 </button>
 
                 {drumOverfull !== null && result && (
@@ -661,7 +661,7 @@ export function MysteryBountyPage() {
 
                 {useRemaining && remaining === null && (
                   <p className="rounded-md border border-amber-900/60 bg-amber-950/30 p-3 text-xs text-amber-300">
-                    Enter at least one rung with a value and a count.
+                    {t('Enter at least one rung with a value and a count.')}
                   </p>
                 )}
               </div>
@@ -674,7 +674,7 @@ export function MysteryBountyPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="rounded-lg border border-indigo-800/60 bg-indigo-950/30 p-4">
                     <p className="text-[11px] uppercase tracking-wide text-indigo-300">
-                      Average bounty left
+                      {t('Average bounty left')}
                     </p>
                     <p className="mt-1 text-3xl font-bold text-white">
                       {formatMoney(remaining.averageBounty)}
@@ -683,15 +683,17 @@ export function MysteryBountyPage() {
                       {remaining.averageBountyBb.toFixed(1)} big blinds
                     </p>
                     <p className="mt-2 text-xs text-slate-400">
-                      {Math.round(remaining.averageBountyChips).toLocaleString('en-US')} chips ·{' '}
-                      {Math.round(remaining.envelopes).toLocaleString('en-US')} envelopes ·{' '}
-                      {formatMoney(remaining.pool)} still in the drum
+                      {t('{chips} chips · {envelopes} envelopes · {pool} still in the drum', {
+                        chips: Math.round(remaining.averageBountyChips).toLocaleString('en-US'),
+                        envelopes: Math.round(remaining.envelopes).toLocaleString('en-US'),
+                        pool: formatMoney(remaining.pool),
+                      })}
                     </p>
                   </div>
 
                   <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-4">
                     <p className="text-[11px] uppercase tracking-wide text-slate-500">
-                      What you will most likely draw
+                      {t('What you will most likely draw')}
                     </p>
                     <p className="mt-1 text-3xl font-bold text-white">
                       {remaining.mostLikely === null ? '—' : formatMoney(remaining.mostLikely.value)}
@@ -699,11 +701,14 @@ export function MysteryBountyPage() {
                     <p className="mt-1 text-sm text-slate-400">
                       {remaining.mostLikely === null
                         ? ''
-                        : `${(remaining.mostLikely.chance * 100).toFixed(0)}% of the envelopes left`}
+                        : t('{pct}% of the envelopes left', {
+                            pct: (remaining.mostLikely.chance * 100).toFixed(0),
+                          })}
                     </p>
                     <p className="mt-2 text-xs text-slate-500">
-                      Median draw {formatMoney(remaining.medianBounty)}. A few big envelopes pull
-                      the average well above what a normal knockout pays.
+                      {t('Median draw {amount}. A few big envelopes pull the average well above what a normal knockout pays.', {
+                        amount: formatMoney(remaining.medianBounty),
+                      })}
                     </p>
                   </div>
                 </div>
@@ -719,30 +724,38 @@ export function MysteryBountyPage() {
                     }`}
                   >
                     {richness === 'rich' &&
-                      `The drum is still rich: a knockout now is worth ${remaining.richnessVsStart.toFixed(2)}× the untouched average of ${formatMoney(startingAverage)}. The big envelopes are still live.`}
+                      t('The drum is still rich: a knockout now is worth {ratio}× the untouched average of {average}. The big envelopes are still live.', {
+                        ratio: remaining.richnessVsStart.toFixed(2),
+                        average: formatMoney(startingAverage),
+                      })}
                     {richness === 'poor' &&
-                      `The drum has been picked over: a knockout now is worth ${remaining.richnessVsStart.toFixed(2)}× the untouched average of ${formatMoney(startingAverage)}. Bust someone for the chips, not the envelope.`}
+                      t('The drum has been picked over: a knockout now is worth {ratio}× the untouched average of {average}. Bust someone for the chips, not the envelope.', {
+                        ratio: remaining.richnessVsStart.toFixed(2),
+                        average: formatMoney(startingAverage),
+                      })}
                     {richness === 'level' &&
-                      `A knockout is worth about what it always was — ${formatMoney(remaining.averageBounty)} against an untouched average of ${formatMoney(startingAverage)}.`}
+                      t('A knockout is worth about what it always was — {now} against an untouched average of {average}.', {
+                        now: formatMoney(remaining.averageBounty),
+                        average: formatMoney(startingAverage),
+                      })}
                   </p>
                 )}
 
               </Panel>
 
               <Panel>
-                <h2 className="text-sm font-semibold text-white">What is in the drum</h2>
+                <h2 className="text-sm font-semibold text-white">{t('What is in the drum')}</h2>
                 <p className="mb-3 text-xs text-slate-500">
-                  What each rung is worth to a single knockout, and how much of the remaining money
-                  it holds.
+                  {t('What each rung is worth to a single knockout, and how much of the remaining money it holds.')}
                 </p>
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[480px] text-sm">
                     <thead>
                       <tr className="border-b border-slate-800 text-left text-[11px] uppercase tracking-wide text-slate-500">
-                        <th className="pb-2 font-medium">Envelope</th>
-                        <th className="pb-2 font-medium">Left</th>
-                        <th className="pb-2 font-medium">Chance per KO</th>
-                        <th className="pb-2 font-medium">Share of the money</th>
+                        <th className="pb-2 font-medium">{t('Envelope')}</th>
+                        <th className="pb-2 font-medium">{t('Left')}</th>
+                        <th className="pb-2 font-medium">{t('Chance per KO')}</th>
+                        <th className="pb-2 font-medium">{t('Share of the money')}</th>
                       </tr>
                     </thead>
                     <tbody className="text-slate-300">
@@ -772,20 +785,17 @@ export function MysteryBountyPage() {
 
               {depletion.length > 0 && (
                 <Panel>
-                  <h2 className="text-sm font-semibold text-white">Will the big one still be there?</h2>
+                  <h2 className="text-sm font-semibold text-white">{t('Will the big one still be there?')}</h2>
                   <p className="mb-3 text-xs text-slate-500">
-                    Every bust draws an envelope, so the drum and the player count run down
-                    together. Drawing envelopes does not make the drum poorer on average — every
-                    rung shrinks by the same fraction — but it does make it likelier the big ones
-                    are gone.
+                    {t('Every bust draws an envelope, so the drum and the player count run down together. Drawing envelopes does not make the drum poorer on average — every rung shrinks by the same fraction — but it does make it likelier the big ones are gone.')}
                   </p>
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[380px] text-sm">
                       <thead>
                         <tr className="border-b border-slate-800 text-left text-[11px] uppercase tracking-wide text-slate-500">
-                          <th className="pb-2 font-medium">Players left</th>
-                          <th className="pb-2 font-medium">Drawn from here</th>
-                          <th className="pb-2 font-medium">Top rung still live</th>
+                          <th className="pb-2 font-medium">{t('Players left')}</th>
+                          <th className="pb-2 font-medium">{t('Drawn from here')}</th>
+                          <th className="pb-2 font-medium">{t('Top rung still live')}</th>
                         </tr>
                       </thead>
                       <tbody className="text-slate-300">
@@ -816,7 +826,7 @@ export function MysteryBountyPage() {
             <Panel>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-lg border border-indigo-800/60 bg-indigo-950/30 p-4">
-                  <p className="text-[11px] uppercase tracking-wide text-indigo-300">Average bounty</p>
+                  <p className="text-[11px] uppercase tracking-wide text-indigo-300">{t('Average bounty')}</p>
                   <p className="mt-1 text-3xl font-bold text-white">{formatMoney(result.averageBounty)}</p>
                   <p className="mt-1 text-sm text-indigo-200">
                     {result.averageBountyBb.toFixed(1)} big blinds
@@ -838,7 +848,7 @@ export function MysteryBountyPage() {
                   </p>
                   <p className="mt-1 text-sm text-slate-400">
                     {result.typicalBountyBb === null
-                      ? 'Average excluding the top envelopes'
+                      ? t('Average excluding the top envelopes')
                       : `${result.typicalBountyBb.toFixed(1)} big blinds`}
                   </p>
                   <p className={`mt-2 text-xs ${tierTooBig ? 'text-amber-400' : 'text-slate-500'}`}>
@@ -849,14 +859,14 @@ export function MysteryBountyPage() {
 
               <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {[
-                  { label: 'Bounty pool', value: formatMoney(result.bountyPool) },
-                  { label: 'Envelopes drawn', value: result.draws.toLocaleString('en-US') },
+                  { label: t('Bounty pool'), value: formatMoney(result.bountyPool) },
+                  { label: t('Envelopes drawn'), value: result.draws.toLocaleString('en-US') },
                   {
-                    label: 'vs your contribution',
+                    label: t('vs your contribution'),
                     value: `${result.multipleOfEntryBounty.toFixed(1)}×`,
                     sub: `each entry put in ${formatMoney(bountyPerEntry)}`,
                   },
-                  { label: 'Regular prize pool', value: formatMoney(result.prizePool) },
+                  { label: t('Regular prize pool'), value: formatMoney(result.prizePool) },
                 ].map((item) => (
                   <div key={item.label} className="rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2.5">
                     <p className="text-[11px] uppercase tracking-wide text-slate-500">{item.label}</p>
@@ -871,17 +881,17 @@ export function MysteryBountyPage() {
           {result && (
             <>
               <Panel>
-                <h2 className="text-sm font-semibold text-white">As the blinds grow</h2>
+                <h2 className="text-sm font-semibold text-white">{t('As the blinds grow')}</h2>
                 <p className="mb-3 text-xs text-slate-500">
-                  The bounty is a fixed amount of cash, so it buys fewer big blinds every level.
+                  {t('The bounty is a fixed amount of cash, so it buys fewer big blinds every level.')}
                 </p>
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[420px] text-sm">
                     <thead>
                       <tr className="border-b border-slate-800 text-left text-[11px] uppercase tracking-wide text-slate-500">
-                        <th className="pb-2 font-medium">Big blind</th>
-                        <th className="pb-2 font-medium">Average bounty</th>
-                        <th className="pb-2 font-medium">Worth to a 30bb stack</th>
+                        <th className="pb-2 font-medium">{t('Big blind')}</th>
+                        <th className="pb-2 font-medium">{t('Average bounty')}</th>
+                        <th className="pb-2 font-medium">{t('Worth to a 30bb stack')}</th>
                       </tr>
                     </thead>
                     <tbody className="text-slate-300">
@@ -903,49 +913,48 @@ export function MysteryBountyPage() {
 
               {call && (
                 <Panel>
-                  <h2 className="text-sm font-semibold text-white">What it does to a call</h2>
+                  <h2 className="text-sm font-semibold text-white">{t('What it does to a call')}</h2>
                   <p className="mb-3 text-xs text-slate-500">
-                    Someone jams and you are deciding whether to call. You only win a bounty by
-                    knocking a player out, so anyone who has you covered brings none.
+                    {t('Someone jams and you are deciding whether to call. You only win a bounty by knocking a player out, so anyone who has you covered brings none.')}
                   </p>
 
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-                    <Field label="Your stack" emoji="🧍" value={form.yourStackBb} onChange={set('yourStackBb')} suffix="bb" />
-                    <Field label="Their shove" emoji="💥" value={form.shoveBb} onChange={set('shoveBb')} suffix="bb" />
+                    <Field label={t('Your stack')} emoji="🧍" value={form.yourStackBb} onChange={set('yourStackBb')} suffix="bb" />
+                    <Field label={t('Their shove')} emoji="💥" value={form.shoveBb} onChange={set('shoveBb')} suffix="bb" />
                     <Field
-                      label="Second jam" emoji="💥"
+                      label={t('Second jam')} emoji="💥"
                       value={form.shove2Bb}
                       onChange={set('shove2Bb')}
                       suffix="bb"
-                      placeholder="none"
-                      hint="Multiway"
+                      placeholder={t('none')}
+                      hint={t('Multiway')}
                     />
-                    <Field label="Dead money" emoji="💵" value={form.deadBb} onChange={set('deadBb')} suffix="bb" />
+                    <Field label={t('Dead money')} emoji="💵" value={form.deadBb} onChange={set('deadBb')} suffix="bb" />
                     <Field
-                      label="Bubble factor" emoji="🫧"
+                      label={t('Bubble factor')} emoji="🫧"
                       value={form.bubbleFactor}
                       onChange={set('bubbleFactor')}
-                      hint="1 = chip EV"
+                      hint={t('1 = chip EV')}
                     />
                   </div>
 
                   <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <div className="rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2.5">
-                      <p className="text-[11px] uppercase tracking-wide text-slate-500">Without bounty</p>
+                      <p className="text-[11px] uppercase tracking-wide text-slate-500">{t('Without bounty')}</p>
                       <p className="mt-0.5 text-lg font-semibold text-slate-300">{pct(call.without)}</p>
                     </div>
                     <div className="rounded-lg border border-emerald-900/60 bg-emerald-950/30 px-3 py-2.5">
-                      <p className="text-[11px] uppercase tracking-wide text-emerald-400">With bounty</p>
+                      <p className="text-[11px] uppercase tracking-wide text-emerald-400">{t('With bounty')}</p>
                       <p className="mt-0.5 text-lg font-semibold text-emerald-300">{pct(call.with)}</p>
                     </div>
                     <div className="rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2.5">
-                      <p className="text-[11px] uppercase tracking-wide text-slate-500">Equity saved</p>
+                      <p className="text-[11px] uppercase tracking-wide text-slate-500">{t('Equity saved')}</p>
                       <p className="mt-0.5 text-lg font-semibold text-white">
                         {(call.saved * 100).toFixed(1)} pts
                       </p>
                     </div>
                     <div className="rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2.5">
-                      <p className="text-[11px] uppercase tracking-wide text-slate-500">Risking</p>
+                      <p className="text-[11px] uppercase tracking-wide text-slate-500">{t('Risking')}</p>
                       <p className="mt-0.5 text-lg font-semibold text-white">
                         {call.callBb.toFixed(1)} bb
                       </p>
@@ -972,9 +981,9 @@ export function MysteryBountyPage() {
                   )}
 
                   <p className="mt-3 text-xs text-slate-500">
-                    The bounty adds{' '}
-                    <span className="text-slate-300">{call.bountyInPlayBb.toFixed(1)} bb</span> of
-                    collectable dead money to the pot whenever you knock them out.
+                    {t('The bounty adds {amount} bb of collectable dead money to the pot whenever you knock them out.', {
+                      amount: call.bountyInPlayBb.toFixed(1),
+                    })}
                   </p>
 
                   <div className="mt-4 border-t border-slate-800 pt-4">
@@ -984,7 +993,7 @@ export function MysteryBountyPage() {
                           <span aria-hidden="true" className="mr-1">
                             🃏
                           </span>
-                          They are jamming
+                          {t('They are jamming')}
                         </span>
                         <select
                           value={form.jamRangeId}
@@ -1019,9 +1028,9 @@ export function MysteryBountyPage() {
                           <table className="w-full min-w-[360px] text-sm">
                             <thead>
                               <tr className="border-b border-slate-800 text-left text-[11px] uppercase tracking-wide text-slate-500">
-                                <th className="pb-2 font-medium">Calling range</th>
-                                <th className="pb-2 font-medium">Equity vs the jam</th>
-                                <th className="pb-2 font-medium">Verdict</th>
+                                <th className="pb-2 font-medium">{t('Calling range')}</th>
+                                <th className="pb-2 font-medium">{t('Equity vs the jam')}</th>
+                                <th className="pb-2 font-medium">{t('Verdict')}</th>
                               </tr>
                             </thead>
                             <tbody className="text-slate-300">
@@ -1037,7 +1046,7 @@ export function MysteryBountyPage() {
                                   <td
                                     className={`py-2 ${width.clears ? 'text-emerald-400' : 'text-slate-500'}`}
                                   >
-                                    {width.clears ? 'call' : 'fold'}
+                                    {width.clears ? t('call') : t('fold')}
                                   </td>
                                 </tr>
                               ))}
@@ -1060,45 +1069,38 @@ export function MysteryBountyPage() {
           <Panel>
             <details>
               <summary className="cursor-pointer text-xs text-slate-500 hover:text-slate-300">
-                How this is worked out
+                {t('How this is worked out')}
               </summary>
               <div className="mt-3 space-y-2 text-xs leading-relaxed text-slate-400">
                 <p>
-                  <span className="text-slate-300">Why the average is so big.</span> Every entry funds the
-                  bounty pool, but envelopes are only drawn during the bounty phase. With 1,000 entries and
-                  the phase starting at 150 players, 1,000 contributions are shared over 149 knockouts — so
-                  the average bounty is about 6.7× what each player put in. The later the phase starts, the
-                  bigger the average.
+                  <span className="text-slate-300">{t("Why the average is so big.")}</span>{' '}
+                  {t(
+                    "Every entry funds the bounty pool, but envelopes are only drawn during the bounty phase. With 1,000 entries and the phase starting at 150 players, 1,000 contributions are shared over 149 knockouts — so the average bounty is about 6.7× what each player put in. The later the phase starts, the bigger the average.",
+                  )}
                 </p>
                 <p>
-                  <span className="text-slate-300">Chips per unit of cash.</span> Big-blind values convert
-                  through the prize-pool share of the buy-in, not the total. Every chip in play is eventually
-                  paid out of the regular prize pool, so a 20,000 stack bought by the $500 that reaches it is
-                  worth 40 chips per dollar. Using the full buy-in would understate the bounty by the size of
-                  the bounty split.
+                  <span className="text-slate-300">{t("Chips per unit of cash.")}</span>{' '}
+                  {t(
+                    "Big-blind values convert through the prize-pool share of the buy-in, not the total. Every chip in play is eventually paid out of the regular prize pool, so a 20,000 stack bought by the $500 that reaches it is worth 40 chips per dollar. Using the full buy-in would understate the bounty by the size of the bounty split.",
+                  )}
                 </p>
                 <p>
-                  <span className="text-slate-300">Average vs typical.</span> Mystery structures are
-                  top-heavy: a handful of envelopes can hold a large slice of the pool. The average is the
-                  right number for EV over many knockouts, but the draw you actually make is usually nearer
-                  the typical figure. Enter the announced top prize and how many envelopes are worth it to
-                  see both, along with your odds of hitting one. Splitting the same money across more top
-                  envelopes leaves the average untouched and pulls the typical draw down.
+                  <span className="text-slate-300">{t("Average vs typical.")}</span>{' '}
+                  {t(
+                    "Mystery structures are top-heavy: a handful of envelopes can hold a large slice of the pool. The average is the right number for EV over many knockouts, but the draw you actually make is usually nearer the typical figure. Enter the announced top prize and how many envelopes are worth it to see both, along with your odds of hitting one. Splitting the same money across more top envelopes leaves the average untouched and pulls the typical draw down.",
+                  )}
                 </p>
                 <p>
-                  <span className="text-slate-300">Drawing envelopes does not empty the drum of value.</span>{' '}
-                  If you do not know which envelopes have gone, every rung shrinks by the same
-                  expected fraction, so the average knockout is worth exactly what it was. What
-                  changes is the chance the big ones are still in there, which is what the
-                  depletion table tracks. Update the counts as envelopes are announced and the
-                  average moves for real.
+                  <span className="text-slate-300">{t("Drawing envelopes does not empty the drum of value.")}</span>{' '}
+                  {t(
+                    "If you do not know which envelopes have gone, every rung shrinks by the same expected fraction, so the average knockout is worth exactly what it was. What changes is the chance the big ones are still in there, which is what the depletion table tracks. Update the counts as envelopes are announced and the average moves for real.",
+                  )}
                 </p>
                 <p>
-                  <span className="text-slate-300">Coverage and ICM.</span> A bounty is only winnable if
-                  you can eliminate the player holding it, so anyone who covers you contributes nothing
-                  to the call and is stripped out. The bubble factor scales only the chips you risk: the
-                  bounty is cash that pays regardless of where you finish, so it is not discounted by
-                  ICM. That asymmetry is the whole reason bounties loosen bubble play.
+                  <span className="text-slate-300">{t("Coverage and ICM.")}</span>{' '}
+                  {t(
+                    "A bounty is only winnable if you can eliminate the player holding it, so anyone who covers you contributes nothing to the call and is stripped out. The bubble factor scales only the chips you risk: the bounty is cash that pays regardless of where you finish, so it is not discounted by ICM. That asymmetry is the whole reason bounties loosen bubble play.",
+                  )}
                 </p>
               </div>
             </details>

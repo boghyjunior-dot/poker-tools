@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { RANKS, SUITS, SUIT_FOUR_COLOR, type BoardCard, type RankIndex, type SuitId } from '../../types/poker'
 import { boardCardId } from '../../lib/board'
 import { cardFromRankSuit, PlayingCard } from '../PlayingCard'
+import { useT } from '../../lib/i18n'
 
 interface HoleCardPickerProps {
   cards: [BoardCard | null, BoardCard | null]
@@ -10,6 +11,7 @@ interface HoleCardPickerProps {
 }
 
 export function HoleCardPicker({ cards, onChange, takenCards = [] }: HoleCardPickerProps) {
+  const t = useT()
   const [activeSlot, setActiveSlot] = useState<0 | 1 | null>(null)
   const takenIds = useMemo(() => new Set(takenCards.map(boardCardId)), [takenCards])
 
@@ -74,7 +76,7 @@ export function HoleCardPicker({ cards, onChange, takenCards = [] }: HoleCardPic
                 onClick={() => setActiveSlot(slot)}
                 className="min-w-[3.5rem] rounded-lg border-2 border-dashed border-slate-600 bg-slate-800/40 px-4 py-3 text-center transition-all hover:border-slate-500 sm:min-w-[5.5rem] sm:h-[5rem]"
               >
-                <span className="text-base font-medium text-slate-500">Card {slot + 1}</span>
+                <span className="text-base font-medium text-slate-500">{t('Card {n}', { n: slot + 1 })}</span>
               </button>
             )
           })}
@@ -93,7 +95,7 @@ export function HoleCardPicker({ cards, onChange, takenCards = [] }: HoleCardPic
         </div>
 
         {!cards[0] && !cards[1] && (
-          <p className="text-sm text-slate-500">Tap a card slot to open the picker.</p>
+          <p className="text-sm text-slate-500">{t('Tap a card slot to open the picker.')}</p>
         )}
       </div>
 

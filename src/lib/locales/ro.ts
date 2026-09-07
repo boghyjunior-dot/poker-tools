@@ -121,6 +121,18 @@ export const ro: Dictionary = {
   'Added on top': 'Adăugat peste',
   'Average entrants': 'Număr mediu de înscrieri',
   Tournaments: 'Turnee',
+  "25–75% / 5–95% of runs":
+    "25–75% / 5–95% dintre rulări",
+  "20 individual runs":
+    "20 de rulări individuale",
+  "Sample size · max {n}":
+    "Mărimea eșantionului · maximum {n}",
+  "Runs to average · max {n}":
+    "Rulări de mediat · maximum {n}",
+  "{runs} simulated runs of {tournaments} tournaments.":
+    "{runs} rulări simulate a câte {tournaments} turnee.",
+  "Median run finished at {median} · a quarter finished below {low} and a quarter above {high}.":
+    "Rularea mediană s-a terminat la {median} · un sfert s-au terminat sub {low} și un sfert peste {high}.",
   'Sample size · max 20,000': 'Mărimea eșantionului · maximum 20.000',
   'Runs to average · max 5,000': 'Rulări de mediat · maximum 5.000',
   'For risk of ruin': 'Pentru risk of ruin',
@@ -212,22 +224,743 @@ export const ro: Dictionary = {
   "Your browser blocked the pop-up. Allow pop-ups for this site and try again.":
     "Browserul a blocat fereastra. Permite pop-up-urile pentru acest site și încearcă din nou.",
 
+  "What a knockout is really worth — at the start of the phase, and right now.":
+    "Cât valorează cu adevărat un knockout — la începutul fazei, și chiar acum.",
+  "Tournament":
+    "Turneu",
+  "Event name":
+    "Numele evenimentului",
+  "Save event":
+    "Salvează evenimentul",
+  "Copy report":
+    "Copiază raportul",
+  "Entries":
+    "Înscrieri",
+  "Including re-entries":
+    "Inclusiv re-entry-urile",
+  "Prize pool / entry":
+    "Prize pool / înscriere",
+  "Buy-in share that plays":
+    "Partea din buy-in care intră în joc",
+  "Bounty / entry":
+    "Bounty / înscriere",
+  "Buy-in share for bounties":
+    "Partea din buy-in pentru bounty-uri",
+  "Fee / entry":
+    "Fee / înscriere",
+  "Rake":
+    "Rake",
+  "Bounty phase starts":
+    "Faza de bounty începe la",
+  "Players left when envelopes begin":
+    "Jucători rămași când încep plicurile",
+  "Starting stack":
+    "Stack de start",
+  "Chips":
+    "Jetoane",
+  "Current big blind":
+    "Big blind curent",
+  "Top prize":
+    "Premiul cel mare",
+  "optional":
+    "opțional",
+  "Value of each top envelope":
+    "Valoarea fiecărui plic mare",
+  "Saved events":
+    "Evenimente salvate",
+  "The drum":
+    "Urna",
+  "Part-way through the phase the start-of-phase average is a fiction. Enter the envelopes still in the drum and every number below switches to what a knockout is worth right now.":
+    "La mijlocul fazei, media de la început e o ficțiune. Introdu plicurile rămase în urnă și toate cifrele de mai jos trec la cât valorează un knockout chiar acum.",
+  "Using the drum":
+    "Se folosește urna",
+  "Use the drum":
+    "Folosește urna",
+  "Paste a table":
+    "Lipește un tabel",
+  "Read the table":
+    "Citește tabelul",
+  "Envelope value":
+    "Valoarea plicului",
+  "How many left":
+    "Câte au rămas",
+  "Remove this rung":
+    "Șterge această treaptă",
+  "Enter at least one rung with a value and a count.":
+    "Introdu cel puțin o treaptă cu o valoare și un număr.",
+  "Average bounty left":
+    "Bounty mediu rămas",
+  "What you will most likely draw":
+    "Ce vei extrage cel mai probabil",
+  "What is in the drum":
+    "Ce e în urnă",
+  "What each rung is worth to a single knockout, and how much of the remaining money it holds.":
+    "Cât valorează fiecare treaptă pentru un singur knockout și ce parte din banii rămași conține.",
+  "Envelope":
+    "Plic",
+  "Left":
+    "Rămase",
+  "Chance per KO":
+    "Șansă per KO",
+  "Share of the money":
+    "Cotă din bani",
+  "Will the big one still be there?":
+    "Va mai fi acolo cel mare?",
+  "Every bust draws an envelope, so the drum and the player count run down together. Drawing envelopes does not make the drum poorer on average — every rung shrinks by the same fraction — but it does make it likelier the big ones are gone.":
+    "Fiecare eliminare extrage un plic, deci urna și numărul de jucători scad împreună. Extragerea plicurilor nu sărăcește urna în medie — fiecare treaptă se micșorează cu aceeași fracțiune — dar face tot mai probabil ca cele mari să fi ieșit deja.",
+  "Players left":
+    "Jucători rămași",
+  "Drawn from here":
+    "Extrase de aici încolo",
+  "Top rung still live":
+    "Treapta de sus încă în joc",
+  "Average bounty":
+    "Bounty mediu",
+  "Average excluding the top envelopes":
+    "Media fără plicurile mari",
+  "Bounty pool":
+    "Fondul de bounty",
+  "Envelopes drawn":
+    "Plicuri extrase",
+  "vs your contribution":
+    "față de contribuția ta",
+  "Regular prize pool":
+    "Prize pool obișnuit",
+  "As the blinds grow":
+    "Pe măsură ce cresc blindurile",
+  "The bounty is a fixed amount of cash, so it buys fewer big blinds every level.":
+    "Bounty-ul e o sumă fixă de bani, deci cumpără tot mai puține big blinds la fiecare nivel.",
+  "Big blind":
+    "Big blind",
+  "Worth to a 30bb stack":
+    "Cât valorează pentru un stack de 30bb",
+  "What it does to a call":
+    "Ce face pentru un call",
+  "Someone jams and you are deciding whether to call. You only win a bounty by knocking a player out, so anyone who has you covered brings none.":
+    "Cineva dă all-in și tu decizi dacă dai call. Un bounty se câștigă doar eliminând un jucător, deci oricine te acoperă nu aduce niciunul.",
+  "Your stack":
+    "Stack-ul tău",
+  "Their shove":
+    "Shove-ul lui",
+  "Second jam":
+    "Al doilea all-in",
+  "none":
+    "niciunul",
+  "Multiway":
+    "Multiway",
+  "Dead money":
+    "Bani morți",
+  "Bubble factor":
+    "Bubble factor",
+  "1 = chip EV":
+    "1 = chip EV",
+  "Without bounty":
+    "Fără bounty",
+  "With bounty":
+    "Cu bounty",
+  "Equity saved":
+    "Equity economisit",
+  "Risking":
+    "Riști",
+  "They are jamming":
+    "El dă all-in cu",
+  "Calling range":
+    "Range de call",
+  "Equity vs the jam":
+    "Equity vs all-in",
+  "call":
+    "call",
+  "fold":
+    "fold",
+  "MTT ranges by position and stack depth. Type a range, then drill yourself on it.":
+    "Range-uri de MTT după poziție și adâncimea stack-ului. Scrie un range, apoi exersează-l.",
+  "Mode:":
+    "Mod:",
+  "Library":
+    "Bibliotecă",
+  "Drill":
+    "Exercițiu",
+  "Both":
+    "Ambele",
+  "All":
+    "Toate",
+  "Any":
+    "Oricare",
+  "{shown} of {total} charts in scope":
+    "{shown} din {total} chart-uri în selecție",
+  "— the drill deals from these":
+    "— exercițiul împarte din acestea",
+  "New chart":
+    "Chart nou",
+  "Import JSON":
+    "Importă JSON",
+  "Re-sync the charts that ship with the app, keeping any you added":
+    "Resincronizează chart-urile livrate cu aplicația, păstrându-le pe cele adăugate de tine",
+  "Restore bundled":
+    "Restaurează cele incluse",
+  "Discard every saved chart and load only the bundled set":
+    "Șterge toate chart-urile salvate și încarcă doar setul inclus",
+  "Click again to wipe":
+    "Apasă din nou ca să ștergi",
+  "Reset all":
+    "Resetează tot",
+  "Export JSON":
+    "Exportă JSON",
+  "No charts match these filters. Widen them, or add a chart.":
+    "Niciun chart nu se potrivește cu aceste filtre. Lărgește-le sau adaugă un chart.",
+  "Range notation":
+    "Notația range-urilor",
+  "Edit":
+    "Editează",
+  "Model":
+    "Model",
+  "Stack":
+    "Stack",
+  "Action":
+    "Acțiune",
+  "RFI, vs BTN open…":
+    "RFI, vs BTN open…",
+  "Save chart":
+    "Salvează chart-ul",
+  "{n} combos · {pct}%":
+    "{n} combos · {pct}%",
+  "No charts in scope. Widen the filters above to drill.":
+    "Niciun chart în selecție. Lărgește filtrele de mai sus ca să exersezi.",
+  "Correct — {hand} is a mix, either answer is fine":
+    "Corect — {hand} e un mix, oricare răspuns e bun",
+  "Correct":
+    "Corect",
+  "{hand} is a {action} here":
+    "Aici {hand} e {action}",
+  "Next hand":
+    "Mâna următoare",
+  "The chart appears once you answer.":
+    "Chart-ul apare după ce răspunzi.",
+  "Preflop equity via Monte Carlo — hand vs range, stacks, and PKO bounties.":
+    "Equity preflop prin Monte Carlo — mână vs range, stack-uri și bounty-uri PKO.",
+  "Hero stack":
+    "Stack-ul tău",
+  "Tournament buy-in used to convert bounties to chips":
+    "Buy-in-ul folosit ca să convertească bounty-urile în jetoane",
+  "Starting chips at buy-in":
+    "Jetoane de start la buy-in",
+  "Existing pot":
+    "Pot existent",
+  "Antes + blinds already in the middle":
+    "Ante + blinduri deja în mijloc",
+  "Call amount":
+    "Suma de call",
+  "Showdown pot":
+    "Pot la showdown",
+  "Iterations":
+    "Iterații",
+  "Calculating…":
+    "Se calculează…",
+  "Calculate equity":
+    "Calculează equity",
+  "Specific hand":
+    "Mână anume",
+  "Range":
+    "Range",
+  "Call":
+    "Call",
+  "Fold":
+    "Fold",
+  "Calling is":
+    "Call-ul e",
+  "{ev} chips EV":
+    "{ev} jetoane EV",
+  "for a {amount} chip call":
+    "pentru un call de {amount} jetoane",
+  "Chip EV {ev} chips":
+    "Chip EV {ev} jetoane",
+  "— fold is higher EV than calling.":
+    "— fold-ul are EV mai mare decât call-ul.",
+  "Bounty amount in buy-in currency":
+    "Valoarea bounty-ului în moneda buy-in-ului",
+  "not covered":
+    "nu îl acoperi",
+  "Import a positional report from PokerTracker, Hold’em Manager or Hand2Note and compare every seat to healthy baselines.":
+    "Importă un raport pe poziții din PokerTracker, Hold’em Manager sau Hand2Note și compară fiecare poziție cu repere sănătoase.",
+  "1 · Import your report":
+    "1 · Importă raportul",
+  "Example: PT4 CSV":
+    "Exemplu: CSV din PT4",
+  "Example: HM3 / H2N":
+    "Exemplu: HM3 / H2N",
+  "Example: overall":
+    "Exemplu: general",
+  "Analyze report":
+    "Analizează raportul",
+  "Import file (.csv / .txt)":
+    "Importă fișier (.csv / .txt)",
+  "Clear":
+    "Golește",
+  "Whole-game score":
+    "Scor pe tot jocul",
+  "Download .md":
+    "Descarcă .md",
+  "Save snapshot":
+    "Salvează un instantaneu",
+  "Fix these first":
+    "Repară-le pe astea întâi",
+  "Ranked across every seat by how far off you are, discounted by sample size":
+    "Clasate pe toate pozițiile după cât de departe ești, ponderat cu mărimea eșantionului",
+  "2 · Stats by position":
+    "2 · Statistici pe poziții",
+  "Done editing targets":
+    "Gata cu editarea reperelor",
+  "Edit targets":
+    "Editează reperele",
+  "Progress":
+    "Progres",
+  "Saved reports stay in this browser. Compare one to what is loaded now.":
+    "Rapoartele salvate rămân în acest browser. Compară unul cu ce e încărcat acum.",
+  "Hide changes":
+    "Ascunde modificările",
+  "Compare":
+    "Compară",
+  "Paste a report above, or type values into the grid, to see your leaks.":
+    "Lipește un raport mai sus, sau scrie valorile în grilă, ca să îți vezi leak-urile.",
+  "Defend a preset range on flop, turn, and river vs random bet sizes.":
+    "Apără un range presetat pe flop, turn și river împotriva unor bet size-uri aleatorii.",
+  "Score":
+    "Scor",
+  "New session":
+    "Sesiune nouă",
+  "You will face three streets. Tag combos as fold or call to match the MDF target each time.":
+    "Vei juca trei străzi. Marchează combo-urile ca fold sau call ca să atingi ținta MDF de fiecare dată.",
+  "Random preset range":
+    "Range presetat aleatoriu",
+  "Start practice":
+    "Începe exercițiul",
+  "Street":
+    "Stradă",
+  "Board":
+    "Board",
+  "Villain bet":
+    "Pariul adversarului",
+  "Combo detail":
+    "Detalii combo",
+  "Submit {street} defense":
+    "Trimite apărarea pe {street}",
+  "Continue to {street}":
+    "Continuă la {street}",
+  "See final score":
+    "Vezi scorul final",
+  "Session complete":
+    "Sesiune încheiată",
+  "Play again":
+    "Joacă din nou",
+  "Heuristics, flashcards and questions. Study the bundled decks or import your own file.":
+    "Reguli practice, flashcard-uri și întrebări. Studiază pachetele incluse sau importă-ți propriul fișier.",
+  "Decks:":
+    "Pachete:",
+  "Tags:":
+    "Etichete:",
+  "{n} right":
+    "{n} corecte",
+  "{n} wrong":
+    "{n} greșite",
+  "Restart":
+    "Reia",
+  "Nothing to study with these filters. Widen the deck or tag selection, or import a deck below.":
+    "Nimic de studiat cu aceste filtre. Lărgește selecția de pachete sau etichete, ori importă un pachet mai jos.",
+  "{right} right · {wrong} wrong":
+    "{right} corecte · {wrong} greșite",
+  " · {n} replayed":
+    " · {n} reluate",
+  "Go again":
+    "Încă o dată",
+  "Import a deck":
+    "Importă un pachet",
+  "Pick a .json or .md deck file. It is stored in this browser only — to add cards for everyone, edit src/content/quizDecks.json in the repo.":
+    "Alege un fișier .json sau .md. Se salvează doar în acest browser — ca să adaugi cărți pentru toată lumea, editează src/content/quizDecks.json în repo.",
+  "Choose deck file…":
+    "Alege fișierul…",
+  "Deck file format":
+    "Formatul fișierului",
+  "Click to reveal":
+    "Apasă ca să vezi răspunsul",
+  "Again":
+    "Din nou",
+  "Got it":
+    "Am știut",
+  "Next":
+    "Următoarea",
+  "Load":
+    "Încarcă",
+  "Delete":
+    "Șterge",
+  "Cancel":
+    "Anulează",
+  "Remove":
+    "Șterge",
+  "Position":
+    "Poziție",
+  "ITM":
+    "ITM",
+
+  "{chips} chips · {envelopes} envelopes · {pool} still in the drum":
+    "{chips} jetoane · {envelopes} plicuri · {pool} încă în urnă",
+  "{pct}% of the envelopes left":
+    "{pct}% din plicurile rămase",
+  "Median draw {amount}. A few big envelopes pull the average well above what a normal knockout pays.":
+    "Extragerea mediană {amount}. Câteva plicuri mari trag media mult peste cât plătește un knockout obișnuit.",
+  "The drum is still rich: a knockout now is worth {ratio}× the untouched average of {average}. The big envelopes are still live.":
+    "Urna e încă bogată: un knockout acum valorează {ratio}× media inițială de {average}. Plicurile mari sunt încă în joc.",
+  "The drum has been picked over: a knockout now is worth {ratio}× the untouched average of {average}. Bust someone for the chips, not the envelope.":
+    "Urna a fost răscolită: un knockout acum valorează {ratio}× media inițială de {average}. Elimină pe cineva pentru jetoane, nu pentru plic.",
+  "A knockout is worth about what it always was — {now} against an untouched average of {average}.":
+    "Un knockout valorează cam cât a valorat mereu — {now} față de o medie inițială de {average}.",
+
+  "The bounty adds {amount} bb of collectable dead money to the pot whenever you knock them out.":
+    "Bounty-ul adaugă {amount} bb de bani morți pe care îi poți încasa de fiecare dată când elimini adversarul.",
+  "Why the average is so big.":
+    "De ce e media atât de mare.",
+  "Every entry funds the bounty pool, but envelopes are only drawn during the bounty phase. With 1,000 entries and the phase starting at 150 players, 1,000 contributions are shared over 149 knockouts — so the average bounty is about 6.7× what each player put in. The later the phase starts, the bigger the average.":
+    "Fiecare înscriere alimentează fondul de bounty, dar plicurile se extrag doar în faza de bounty. Cu 1.000 de înscrieri și faza pornind la 150 de jucători, 1.000 de contribuții se împart la 149 de knockout-uri — deci bounty-ul mediu e cam de 6,7× cât a pus fiecare jucător. Cu cât începe mai târziu faza, cu atât media e mai mare.",
+  "Chips per unit of cash.":
+    "Jetoane per unitate de bani.",
+  "Big-blind values convert through the prize-pool share of the buy-in, not the total. Every chip in play is eventually paid out of the regular prize pool, so a 20,000 stack bought by the $500 that reaches it is worth 40 chips per dollar. Using the full buy-in would understate the bounty by the size of the bounty split.":
+    "Valorile în big blinds se convertesc prin partea din buy-in care merge în prize pool, nu prin total. Fiecare jeton din joc e plătit până la urmă din prize pool-ul obișnuit, deci un stack de 20.000 cumpărat cu cei $500 care ajung acolo valorează 40 de jetoane pe dolar. Folosirea buy-in-ului întreg ar subestima bounty-ul cu exact partea de bounty.",
+  "Average vs typical.":
+    "Medie față de tipic.",
+  "Mystery structures are top-heavy: a handful of envelopes can hold a large slice of the pool. The average is the right number for EV over many knockouts, but the draw you actually make is usually nearer the typical figure. Enter the announced top prize and how many envelopes are worth it to see both, along with your odds of hitting one. Splitting the same money across more top envelopes leaves the average untouched and pulls the typical draw down.":
+    "Structurile mystery sunt concentrate în vârf: câteva plicuri pot conține o felie mare din fond. Media e cifra corectă pentru EV pe multe knockout-uri, dar extragerea pe care o faci efectiv e de obicei mai aproape de valoarea tipică. Introdu premiul cel mare anunțat și câte plicuri au acea valoare ca să le vezi pe amândouă, împreună cu șansele să nimerești unul. Împărțirea acelorași bani în mai multe plicuri mari lasă media neschimbată și trage extragerea tipică în jos.",
+  "Drawing envelopes does not empty the drum of value.":
+    "Extragerea plicurilor nu golește urna de valoare.",
+  "If you do not know which envelopes have gone, every rung shrinks by the same expected fraction, so the average knockout is worth exactly what it was. What changes is the chance the big ones are still in there, which is what the depletion table tracks. Update the counts as envelopes are announced and the average moves for real.":
+    "Dacă nu știi care plicuri au ieșit, fiecare treaptă se micșorează cu aceeași fracțiune așteptată, deci knockout-ul mediu valorează exact cât valora. Ce se schimbă e șansa ca cele mari să mai fie acolo, iar asta urmărește tabelul de epuizare. Actualizează numerele pe măsură ce plicurile sunt anunțate și media se mișcă cu adevărat.",
+  "Coverage and ICM.":
+    "Acoperire și ICM.",
+  "A bounty is only winnable if you can eliminate the player holding it, so anyone who covers you contributes nothing to the call and is stripped out. The bubble factor scales only the chips you risk: the bounty is cash that pays regardless of where you finish, so it is not discounted by ICM. That asymmetry is the whole reason bounties loosen bubble play.":
+    "Un bounty se poate câștiga doar dacă poți elimina jucătorul care îl are, deci oricine te acoperă nu contribuie cu nimic la call și e scos din calcul. Bubble factor-ul scalează doar jetoanele pe care le riști: bounty-ul e bani care se plătesc indiferent unde termini, deci nu e depreciat de ICM. Asimetria asta e exact motivul pentru care bounty-urile relaxează jocul pe bulă.",
+
+  "every pair from 22 up":
+    "toate perechile de la 22 în sus",
+  "a run of pairs":
+    "un interval de perechi",
+  "one exact hand":
+    "o mână exactă",
+  "K6s through KQs — high card fixed, kicker climbs":
+    "de la K6s la KQs — cartea mare fixă, kicker-ul urcă",
+  "a run of kickers under one high card":
+    "un interval de kickeri sub aceeași carte mare",
+  "no suffix means suited and offsuit":
+    "fără sufix înseamnă și suited, și offsuit",
+  "every hand with an ace on top, AA included":
+    "toate mâinile cu as, inclusiv AA",
+  "just the suited or offsuit half":
+    "doar jumătatea suited sau offsuit",
+  "Separate with commas, spaces or new lines. Layers are checked top to bottom, so a hand in two ranges belongs to the upper one.":
+    "Separă cu virgule, spații sau linii noi. Straturile se verifică de sus în jos, deci o mână aflată în două range-uri aparține celui de sus.",
+
+  "Card {n}":
+    "Cartea {n}",
+  "Tap a card slot to open the picker.":
+    "Apasă pe un slot ca să deschizi selectorul.",
+  "{existing} existing + {players} from players":
+    "{existing} existente + {players} de la jucători",
+  "Showdown pot = existing pot + sum of all-in contributions (matched to effective stack).":
+    "Pot la showdown = pot existent + suma contribuțiilor all-in (limitate la effective stack).",
+
+  "Winrate is below break-even. Review your biggest leaks before moving up.":
+    "Winrate-ul e sub pragul de rentabilitate. Uită-te la cele mai mari leak-uri înainte să urci la limite mai mari.",
+  "Strong winrate — make sure you are not running above EV; keep studying spots that still cost you bb/100.":
+    "Winrate bun — asigură-te că nu alergi peste EV; continuă să studiezi situațiile care încă te costă bb/100.",
+  "You open too few pots when folded to you. Raise first-in more, especially from late position.":
+    "Deschizi prea puține pot-uri când se dă fold până la tine. Dă raise first-in mai des, mai ales din poziție târzie.",
+  "You open very wide when folded to you. Trim the weakest opens from early and middle position.":
+    "Deschizi foarte larg când se dă fold până la tine. Taie cele mai slabe deschideri din poziție timpurie și de mijloc.",
+  "Very tight limping — fine if you are not limping at all.":
+    "Limp foarte strâns — e în regulă dacă nu dai limp deloc.",
+  "You limp open too often. Default to raising; limping invites multiway pots and loses initiative.":
+    "Dai limp prea des. Implicit dă raise; limp-ul atrage pot-uri multiway și pierde inițiativa.",
+  "Low limp-raise frequency is normal unless you use it as a deliberate strategy.":
+    "O frecvență mică de limp-raise e normală, dacă nu îl folosești ca strategie deliberată.",
+  "You limp-raise too often. This line is easily exploited — tighten your limp-raise range.":
+    "Dai limp-raise prea des. Linia asta e ușor de exploatat — strânge range-ul de limp-raise.",
+  "Low limp-call frequency is fine.":
+    "O frecvență mică de limp-call e în regulă.",
+  "You limp-call too much. Either raise your limps or fold dominated hands to raises.":
+    "Dai limp-call prea mult. Ori dai raise în loc de limp, ori dai fold la mâinile dominate când vine un raise.",
+  "Low limp-fold is normal.":
+    "Un limp-fold mic e normal.",
+  "You limp and fold too often — dead money. Stop limping weak hands you will not defend.":
+    "Dai limp și apoi fold prea des — bani aruncați. Nu mai da limp cu mâini slabe pe care nu le aperi.",
+  "You complete the SB too often vs limpers. Raise more to isolate weak limps.":
+    "Completezi din SB prea des împotriva limperilor. Dă raise mai mult ca să izolezi limp-urile slabe.",
+  "You raise every limp from the SB. Mix in some completes with playable hands.":
+    "Dai raise la fiecare limp din SB. Mai completează uneori cu mâini jucabile.",
+  "You defend too wide vs SB opens. Fold more offsuit junk.":
+    "Aperi prea larg împotriva deschiderilor din SB. Dă fold la mai mult gunoi offsuit.",
+  "You fold too much vs SB opens. Defend more suited hands and broadways.":
+    "Dai fold prea mult împotriva deschiderilor din SB. Apără mai multe mâini suited și broadway.",
+  "You defend the big blind too wide vs steals. Fold more junk offsuit hands.":
+    "Aperi big blind-ul prea larg împotriva steal-urilor. Dă fold la mai multe mâini offsuit slabe.",
+  "You surrender your big blind too often. Defend more suited hands and broadways vs late opens.":
+    "Îți cedezi big blind-ul prea des. Apără mai multe mâini suited și broadway împotriva deschiderilor târzii.",
+  "You flat too few opens. Add some suited connectors and pairs in position.":
+    "Dai call la prea puține deschideri. Adaugă niște suited connectors și perechi când ești în poziție.",
+  "You flat opens too often. 3-bet or fold more — avoid calling dominated offsuit hands.":
+    "Dai call la deschideri prea des. Dă mai mult 3-bet sau fold — evită call-ul cu mâini offsuit dominate.",
+  "You 3-bet too little. Add light 3-bets vs late-position opens instead of flatting.":
+    "Dai prea puțin 3-bet. Adaugă 3-bet-uri light împotriva deschiderilor din poziție târzie în loc de call.",
+  "You 3-bet very aggressively. Ensure your range is not too bluff-heavy out of position.":
+    "Dai 3-bet foarte agresiv. Asigură-te că range-ul tău nu are prea mult bluff când ești în afara poziției.",
+  "You rarely 3-bet vs steals. Add light 3-bets from the blinds vs wide late opens.":
+    "Dai rar 3-bet împotriva steal-urilor. Adaugă 3-bet-uri light din blinduri împotriva deschiderilor largi.",
+  "You 3-bet steals very often. Balance with more calls or you become easy to 4-bet.":
+    "Dai 3-bet la steal-uri foarte des. Echilibrează cu mai multe call-uri, altfel devii ușor de 4-bet-uit.",
+  "Low non-all-in 3-bet frequency — add more small 3-bets in position.":
+    "Frecvență mică de 3-bet fără all-in — adaugă mai multe 3-bet-uri mici din poziție.",
+  "Very high non-all-in 3-bet rate. Make sure sizing and ranges are balanced.":
+    "Rată foarte mare de 3-bet fără all-in. Asigură-te că sizing-ul și range-urile sunt echilibrate.",
+  "You defend too many opens vs 3-bets. Fold more dominated hands (KJo, ATo).":
+    "Aperi prea multe deschideri împotriva 3-bet-urilor. Dă fold la mai multe mâini dominate (KJo, ATo).",
+  "You fold too much after opening — exploitable. Continue with suited hands and 4-bet bluff occasionally.":
+    "Dai fold prea mult după ce ai deschis — exploatabil. Continuă cu mâini suited și mai dă din când în când 4-bet ca bluff.",
+  "You almost never 4-bet. Add value 4-bets with QQ+/AK and some A5s bluffs.":
+    "Aproape că nu dai 4-bet. Adaugă 4-bet-uri de valoare cu QQ+/AK și niște bluff-uri cu A5s.",
+  "You 4-bet very often. Make sure you are not stacking off light preflop.":
+    "Dai 4-bet foarte des. Asigură-te că nu îți bagi tot stack-ul preflop cu mâini slabe.",
+  "You fold too few 3-bets vs 4-bets — stacking off light.":
+    "Dai fold la prea puține 3-bet-uri când vine 4-bet — îți bagi stack-ul prea ușor.",
+  "You fold too many 3-bets vs 4-bets. Continue with strong hands and add 5-bet bluffs.":
+    "Dai fold la prea multe 3-bet-uri când vine 4-bet. Continuă cu mâini puternice și adaugă bluff-uri de 5-bet.",
+  "You call 4-bets too wide after 3-betting. Fold more bluff-catchers.":
+    "Dai call la 4-bet-uri prea larg după ce ai dat 3-bet. Dă fold la mai multe bluff-catchere.",
+  "You fold too much to 4-bets after 3-betting — opponents can 4-bet you light.":
+    "Dai fold prea mult la 4-bet-uri după ce ai dat 3-bet — adversarii te pot 4-bet-ui cu orice.",
+  "You squeeze too rarely. Add squeezes with strong hands and suited blockers vs limp-calls.":
+    "Dai squeeze prea rar. Adaugă squeeze-uri cu mâini puternice și blockeri suited împotriva limp-call-urilor.",
+  "You squeeze very often. Tighten your squeeze range out of position.":
+    "Dai squeeze foarte des. Strânge range-ul de squeeze când ești în afara poziției.",
+  "You c-bet too little out of position heads-up. Bet more on boards that favor your range.":
+    "Dai prea puțin c-bet în afara poziției heads-up. Pariază mai mult pe board-uri care îți favorizează range-ul.",
+  "You c-bet too often OOP. Check more on low, connected boards that favor the caller.":
+    "Dai c-bet prea des OOP. Dă check mai mult pe board-uri joase și conectate care favorizează cel care a dat call.",
+  "You c-bet too little in position. Leverage position with more flop bets on favorable boards.":
+    "Dai prea puțin c-bet din poziție. Profită de poziție cu mai multe pariuri pe flop pe board-uri favorabile.",
+  "You c-bet too often IP. Check back more on boards that hit the caller range.":
+    "Dai c-bet prea des IP. Dă check back mai mult pe board-uri care lovesc range-ul celui care a dat call.",
+  "You float too rarely in position. Call more c-bets with backdoor equity and plan to take the pot later.":
+    "Dai float prea rar din poziție. Dă call la mai multe c-bet-uri cu backdoor equity și plănuiește să iei pot-ul mai târziu.",
+  "You float too many flop c-bets. Fold more weak hands without a plan for the turn.":
+    "Dai float la prea multe c-bet-uri pe flop. Dă fold la mai multe mâini slabe fără plan pentru turn.",
+  "You call flop c-bets too wide. Fold more weak hands with no backdoor equity.":
+    "Dai call la c-bet-urile de pe flop prea larg. Dă fold la mai multe mâini slabe fără backdoor equity.",
+  "You fold too much to flop c-bets — one bet wins your stack. Float more with position and equity.":
+    "Dai fold prea mult la c-bet-urile de pe flop — un singur pariu îți ia stack-ul. Dă float mai mult când ai poziție și equity.",
+  "You defend too wide vs c-bets in 3-bet pots. Fold more air and weak pairs.":
+    "Aperi prea larg împotriva c-bet-urilor în pot-uri de 3-bet. Dă fold la mai mult aer și perechi slabe.",
+  "You fold too much to c-bets in 3-bet pots — opponents can barrel you off equity.":
+    "Dai fold prea mult la c-bet-uri în pot-uri de 3-bet — adversarii te pot da afară din mâini cu equity.",
+  "You fight floats too often — check-raise or barrel more when floated.":
+    "Te lupți cu float-urile prea des — dă mai mult check-raise sau mai barelează când ești floatat.",
+  "You fold too much when floated. Bet the turn more with your strong hands and bluffs.":
+    "Dai fold prea mult când ești floatat. Pariază turn-ul mai mult cu mâinile puternice și cu bluff-urile.",
+  "You give up too rarely after c-betting — fine if you barrel well.":
+    "Renunți prea rar după ce dai c-bet — e în regulă dacă barelezi bine.",
+  "You c-bet and fold too often. Either check more flops or defend more vs raises.":
+    "Dai c-bet și apoi fold prea des. Ori dai check pe mai multe flop-uri, ori aperi mai mult împotriva raise-urilor.",
+  "You raise flop c-bets too rarely. Add check-raises with strong hands and draws.":
+    "Dai raise la c-bet-urile de pe flop prea rar. Adaugă check-raise-uri cu mâini puternice și draw-uri.",
+  "You raise flop c-bets too often. Tighten your raising range to value and strong draws.":
+    "Dai raise la c-bet-urile de pe flop prea des. Strânge range-ul de raise la valoare și draw-uri puternice.",
+  "You check-raise the flop too rarely OOP. Add XR with strong hands and combo draws.":
+    "Dai check-raise pe flop prea rar OOP. Adaugă XR cu mâini puternice și combo draw-uri.",
+  "You check-raise the flop very often. Balance with more checks and calls.":
+    "Dai check-raise pe flop foarte des. Echilibrează cu mai multe check-uri și call-uri.",
+  "You rarely raise c-bets in 3-bet pots. Add XR/raises with top pair+ and strong draws.":
+    "Dai rar raise la c-bet-uri în pot-uri de 3-bet. Adaugă XR/raise-uri cu top pair+ și draw-uri puternice.",
+  "You raise flop c-bets too often in 3-bet pots. Narrow to nutted hands and best draws.":
+    "Dai raise la c-bet-urile de pe flop prea des în pot-uri de 3-bet. Restrânge la mâini de nuts și cele mai bune draw-uri.",
+  "Low donk-bet turn frequency is normal.":
+    "O frecvență mică de donk bet pe turn e normală.",
+  "You donk the turn too often. Leading turn is usually a leak — prefer check-call or check-raise.":
+    "Dai donk pe turn prea des. Să conduci pe turn e de obicei un leak — preferă check-call sau check-raise.",
+  "You give up on the turn too often after c-betting. Double barrel more on good turn cards.":
+    "Renunți pe turn prea des după ce ai dat c-bet. Dă double barrel mai mult pe cărți de turn bune.",
+  "You barrel the turn very often. Ensure second barrels land on cards that favor your range.":
+    "Barelezi turn-ul foarte des. Asigură-te că al doilea barrel cade pe cărți care îți favorizează range-ul.",
+  "You float the turn too rarely. Call more with position when you have equity to realize.":
+    "Dai float pe turn prea rar. Dă call mai mult din poziție când ai equity de realizat.",
+  "You float the turn too often. Fold more marginal hands without river plan.":
+    "Dai float pe turn prea des. Dă fold la mai multe mâini marginale fără plan pentru river.",
+  "You probe the turn too rarely after checking flop. Bet more when checked to and you have equity.":
+    "Dai probe pe turn prea rar după ce ai dat check pe flop. Pariază mai mult când se dă check spre tine și ai equity.",
+  "You probe the turn too often. Be selective on cards that favor your range.":
+    "Dai probe pe turn prea des. Fii selectiv, pe cărți care îți favorizează range-ul.",
+  "You rarely follow turn probes with river bets. Add river barrels when turn card improves your range.":
+    "Rar continui probe-urile de pe turn cu pariuri pe river. Adaugă barrel-uri pe river când cartea de turn îți îmbunătățește range-ul.",
+  "You probe turn and barrel river too often. Give up more when the river bricks.":
+    "Dai probe pe turn și barrel pe river prea des. Renunță mai des când river-ul e o carte moartă.",
+  "You call turn barrels too wide. Fold more weak pairs and draws without odds.":
+    "Dai call la barrel-urile de pe turn prea larg. Dă fold la mai multe perechi slabe și draw-uri fără cote.",
+  "You fold too much to turn barrels. Continue with more pairs and draws that beat bluffs.":
+    "Dai fold prea mult la barrel-urile de pe turn. Continuă cu mai multe perechi și draw-uri care bat bluff-urile.",
+  "You call turn probes too wide. Fold more weak showdown value.":
+    "Dai call la probe-urile de pe turn prea larg. Dă fold la mai multă valoare slabă de showdown.",
+  "You fold too much to turn probes. Defend more with pairs and backdoor equity.":
+    "Dai fold prea mult la probe-urile de pe turn. Apără mai mult cu perechi și backdoor equity.",
+  "You raise turn bets too rarely. Add raises with nutted hands and strong draws.":
+    "Dai raise la pariurile de pe turn prea rar. Adaugă raise-uri cu mâini de nuts și draw-uri puternice.",
+  "You raise turn bets too often. Most turn raises should be for value or strong combo draws.":
+    "Dai raise la pariurile de pe turn prea des. Majoritatea raise-urilor pe turn ar trebui să fie pentru valoare sau combo draw-uri puternice.",
+  "You rarely raise turn probes. Add raises with strong hands to punish thin probes.":
+    "Dai rar raise la probe-urile de pe turn. Adaugă raise-uri cu mâini puternice ca să pedepsești probe-urile subțiri.",
+  "You raise turn probes too often. Reserve raises for value and best draws.":
+    "Dai raise la probe-urile de pe turn prea des. Păstrează raise-urile pentru valoare și cele mai bune draw-uri.",
+  "Low donk-river frequency is normal.":
+    "O frecvență mică de donk pe river e normală.",
+  "You donk the river too often. Leading river is usually a leak unless you block-callers.":
+    "Dai donk pe river prea des. Să conduci pe river e de obicei un leak, dacă nu folosești block bet-uri.",
+  "You value-bet and bluff the river too rarely. Bet more when you have clear value or blockers.":
+    "Dai prea rar value bet și bluff pe river. Pariază mai mult când ai valoare clară sau blockeri.",
+  "You bet the river too often. Check more marginal hands and give up on missed bluffs.":
+    "Pariezi river-ul prea des. Dă check cu mai multe mâini marginale și renunță la bluff-urile ratate.",
+  "You call river bets too light — a calling-station leak. Fold more marginal bluff-catchers.":
+    "Dai call la pariurile de pe river prea ușor — leak de calling station. Dă fold la mai multe bluff-catchere marginale.",
+  "You fold too much to river bets. Call down lighter vs aggressive opponents with blockers.":
+    "Dai fold prea mult la pariurile de pe river. Dă call mai ușor împotriva adversarilor agresivi când ai blockeri.",
+  "You are playing too tight preflop. Add suited connectors, suited aces, and late-position opens.":
+    "Joci prea strâns preflop. Adaugă suited connectors, ași suited și deschideri din poziție târzie.",
+  "You are playing too many hands. Tighten up in early position and stop calling with weak offsuit hands.":
+    "Joci prea multe mâini. Strânge în poziție timpurie și nu mai da call cu mâini offsuit slabe.",
+  "You raise too few pots preflop. Open wider in late position and 3-bet more instead of flatting.":
+    "Dai raise la prea puține pot-uri preflop. Deschide mai larg din poziție târzie și dă mai mult 3-bet în loc de call.",
+  "You raise a lot preflop. Make sure the extra volume is late-position steals, not loose early opens.":
+    "Dai mult raise preflop. Asigură-te că volumul în plus vine din steal-uri din poziție târzie, nu din deschideri largi timpurii.",
+  "You pass up too many steal spots. Open more from CO, BTN and SB when it folds to you.":
+    "Ratezi prea multe ocazii de steal. Deschide mai mult din CO, BTN și SB când se dă fold până la tine.",
+  "You steal very often. Fine vs tight blinds, but expect to get 3-bet if the table is paying attention.":
+    "Dai steal foarte des. E în regulă împotriva blindurilor strânse, dar așteaptă-te la 3-bet dacă masa e atentă.",
+  "You reach showdown rarely — you are folding too many rivers or barrelling into folds.":
+    "Ajungi rar la showdown — ori dai fold pe prea multe river-uri, ori barelezi în fold-uri.",
+  "You reach showdown too often. You are calling down too wide; fold more weak bluff-catchers.":
+    "Ajungi la showdown prea des. Dai call prea larg; dă fold la mai multe bluff-catchere slabe.",
+  "You lose most showdowns you reach. Your calling range is too weak — fold the bottom of it.":
+    "Pierzi majoritatea showdown-urilor la care ajungi. Range-ul tău de call e prea slab — renunță la partea de jos.",
+  "You win a lot at showdown, which usually means you only get there with the nuts. Call down wider.":
+    "Câștigi mult la showdown, ceea ce înseamnă de obicei că ajungi acolo doar cu nuts. Dă call mai larg.",
+  "You win too few of the pots you see a flop in. Barrel more and give up less on later streets.":
+    "Câștigi prea puține din pot-urile în care vezi flop-ul. Barelează mai mult și renunță mai puțin pe străzile următoare.",
+  "You win a lot of flops, often by betting. Watch that you are not folding out worse and value-betting thin.":
+    "Câștigi multe flop-uri, deseori pariind. Ai grijă să nu dai afară mâini mai slabe și să nu pariezi valoare prea subțire.",
+  "You check and call more than you bet and raise. Take the betting lead more often postflop.":
+    "Dai check și call mai mult decât pariezi și dai raise. Preia inițiativa mai des postflop.",
+  "Very aggressive postflop. Make sure the extra bets are value and blockers, not pure spew.":
+    "Foarte agresiv postflop. Asigură-te că pariurile în plus sunt valoare și blockeri, nu risipă pură.",
+  "Within the healthy range.":
+    "În intervalul sănătos.",
+  "{verb} — {seat} charts":
+    "{verb} — chart-uri {seat}",
+  "Compare your opens":
+    "Compară-ți deschiderile",
+  "Compare late-position opens":
+    "Compară deschiderile din poziție târzie",
+  "Compare your ranges":
+    "Compară-ți range-urile",
+  "Check the flatting range":
+    "Verifică range-ul de call",
+  "Check the 3-bet range":
+    "Verifică range-ul de 3-bet",
+  "Check blind 3-bets":
+    "Verifică 3-bet-urile din blinduri",
+  "Check the 4-bet range":
+    "Verifică range-ul de 4-bet",
+  "Check the squeeze range":
+    "Verifică range-ul de squeeze",
+  "Review the SB limp range":
+    "Revizuiește range-ul de limp din SB",
+  "Review BB vs limp":
+    "Revizuiește BB împotriva limp-ului",
+  "Review BB defence":
+    "Revizuiește apărarea din BB",
+  "Work out the right defend frequency":
+    "Calculează frecvența corectă de apărare",
+  "Build the flop defending range":
+    "Construiește range-ul de apărare pe flop",
+  "Build the turn defending range":
+    "Construiește range-ul de apărare pe turn",
+  "Build the river defending range":
+    "Construiește range-ul de apărare pe river",
+  "Check equity vs a calling range":
+    "Verifică equity împotriva unui range de call",
+  "Check float equity":
+    "Verifică equity de float",
+  "Check raise equity":
+    "Verifică equity de raise",
+  "Check check-raise equity":
+    "Verifică equity de check-raise",
+  "Check probe equity":
+    "Verifică equity de probe",
+  "Check equity vs a betting range":
+    "Verifică equity împotriva unui range care pariază",
+  "Drill the pot-odds numbers":
+    "Exersează cifrele de pot odds",
+  "Drill the combo maths":
+    "Exersează matematica de combo-uri",
+  "Drill the aggression heuristics":
+    "Exersează regulile de agresivitate",
+  "See what this winrate does over a sample":
+    "Vezi ce face winrate-ul ăsta pe un eșantion",
+  "OK":
+    "OK",
+  "Minor leak":
+    "Leak minor",
+  "Moderate leak":
+    "Leak moderat",
+  "Major leak":
+    "Leak major",
+  "No leaks detected — stats are within healthy ranges.":
+    "Niciun leak detectat — statisticile sunt în intervale sănătoase.",
+  "Solid overall. A few small adjustments will tighten things up.":
+    "Solid în ansamblu. Câteva ajustări mici vor strânge lucrurile.",
+  "Decent foundation, but several stats need attention.":
+    "Bază decentă, dar câteva statistici cer atenție.",
+  "Significant leaks detected. Focus on the major issues first.":
+    "Leak-uri semnificative detectate. Concentrează-te întâi pe problemele majore.",
+  "Hand count unknown — treat as directional only.":
+    "Numărul de mâini e necunoscut — tratează asta doar ca orientare.",
+  "PT4: Reports → stat report grouped by position → Export → CSV. HM3 and Hand2Note: any positional export with a header row. Count columns are read as sample sizes, dash (-) blanks are skipped, and HM3’s combined “Late” bucket is read as CO.":
+    "PT4: Reports → raport de statistici grupat pe poziții → Export → CSV. HM3 și Hand2Note: orice export pe poziții cu un rând de antet. Coloanele Count sunt citite ca mărimi de eșantion, spațiile cu liniuță (-) sunt sărite, iar categoria combinată „Late” din HM3 e citită ca CO.",
+
+  "{leaks} leaks across {seats} seats · weighted by how much sample backs each stat":
+    "{leaks} leak-uri pe {seats} poziții · ponderat după cât eșantion susține fiecare statistică",
+  "{stats} stats analyzed · {leaks} leaks found":
+    "{stats} statistici analizate · {leaks} leak-uri găsite",
+  "too low":
+    "prea mic",
+  "too high":
+    "prea mare",
+  "{hands} hands · {relevance}":
+    "{hands} mâini · {relevance}",
+  "Not enough data":
+    "Date insuficiente",
+  "Low relevance":
+    "Relevanță mică",
+  "Moderately relevant":
+    "Relevanță moderată",
+  "Highly relevant":
+    "Relevanță mare",
+
+  "Flashcards": "Flashcard-uri",
+  "Quiz": "Quiz",
+  "Reference": "Referință",
+
   // ----------------------------------------------------------------- misc --
-  Clear: 'Șterge',
   Save: 'Salvează',
-  Load: 'Încarcă',
-  Delete: 'Șterge',
-  Compare: 'Compară',
   Reset: 'Resetează',
   Import: 'Importă',
   Export: 'Exportă',
   Close: 'Închide',
-  Cancel: 'Anulează',
   Copy: 'Copiază',
   Download: 'Descarcă',
   'Add a rung': 'Adaugă o treaptă',
   Overall: 'General',
-  Position: 'Poziție',
   Preflop: 'Preflop',
   Postflop: 'Postflop',
   Winrate: 'Winrate',

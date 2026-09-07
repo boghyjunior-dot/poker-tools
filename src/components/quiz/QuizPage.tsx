@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
 import { Footer } from '../Footer'
 import bundledDeckFile from '../../content/quizDecks.json'
+import { useT } from '../../lib/i18n'
 import {
   collectTags,
   mergeDecks,
@@ -133,6 +134,7 @@ function cardAnswer(card: QuizCard): string {
 }
 
 export function QuizPage() {
+  const t = useT()
   const [importedDecks, setImportedDecks] = useState<QuizDeck[]>(() => loadImportedDecks())
   const [importErrors, setImportErrors] = useState<string[]>([])
   const [importNotice, setImportNotice] = useState<string | null>(null)
@@ -240,24 +242,24 @@ export function QuizPage() {
         <BackToMenu className="mb-3" />
         <h1 className="text-3xl font-bold text-white">Quiz Me</h1>
         <p className="mb-6 text-sm text-slate-400">
-          Heuristics, flashcards and questions. Study the bundled decks or import your own file.
+          {t('Heuristics, flashcards and questions. Study the bundled decks or import your own file.')}
         </p>
 
         <div className="flex flex-col gap-4">
           <Panel>
             <div className="mb-4 flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-sm text-slate-400">Mode:</span>
+              <span className="mr-1 text-sm text-slate-400">{t('Mode:')}</span>
               {(Object.keys(MODE_LABELS) as StudyMode[]).map((value) => (
                 <Chip key={value} active={mode === value} onClick={() => setMode(value)}>
-                  {MODE_LABELS[value]}
+                  {t(MODE_LABELS[value])}
                 </Chip>
               ))}
             </div>
 
             <div className="mb-3 flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-sm text-slate-400">Decks:</span>
+              <span className="mr-1 text-sm text-slate-400">{t('Decks:')}</span>
               <Chip active={activeDeckIds.length === 0} onClick={() => setActiveDeckIds([])} tone="slate">
-                All
+                {t('All')}
               </Chip>
               {allDecks.map((deck) => (
                 <Chip
@@ -272,9 +274,9 @@ export function QuizPage() {
 
             {availableTags.length > 0 && (
               <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-1 text-sm text-slate-400">Tags:</span>
+                <span className="mr-1 text-sm text-slate-400">{t('Tags:')}</span>
                 <Chip active={activeTags.length === 0} onClick={() => setActiveTags([])} tone="slate">
-                  Any
+                  {t('Any')}
                 </Chip>
                 {availableTags.map((tag) => (
                   <Chip
@@ -302,8 +304,8 @@ export function QuizPage() {
                       : `Card ${position + 1} of ${queue.length}`}
                 </span>
                 <span className="flex items-center gap-3 text-xs">
-                  <span className="text-emerald-400">{right} right</span>
-                  <span className="text-rose-400">{wrong} wrong</span>
+                  <span className="text-emerald-400">{t('{n} right', { n: right })}</span>
+                  <span className="text-rose-400">{t('{n} wrong', { n: wrong })}</span>
                   {answered > 0 && (
                     <span className="text-slate-500">
                       {Math.round((right / answered) * 100)}%
@@ -314,32 +316,32 @@ export function QuizPage() {
                     onClick={restart}
                     className="rounded-md bg-slate-800 px-2.5 py-1 font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
                   >
-                    Restart
+                    {t('Restart')}
                   </button>
                 </span>
               </div>
 
               {queue.length === 0 && (
                 <p className="py-8 text-center text-sm text-slate-500">
-                  Nothing to study with these filters. Widen the deck or tag selection, or import a deck below.
+                  {t('Nothing to study with these filters. Widen the deck or tag selection, or import a deck below.')}
                 </p>
               )}
 
               {finished && (
                 <div className="py-8 text-center">
                   <p className="text-2xl font-bold text-white">
-                    {answered > 0 ? `${Math.round((right / answered) * 100)}%` : 'Done'}
+                    {answered > 0 ? `${Math.round((right / answered) * 100)}%` : t('Done')}
                   </p>
                   <p className="mt-1 text-sm text-slate-400">
-                    {right} right · {wrong} wrong
-                    {replayed > 0 && ` · ${replayed} replayed`}
+                    {t('{right} right · {wrong} wrong', { right, wrong })}
+                    {replayed > 0 && t(' · {n} replayed', { n: replayed })}
                   </p>
                   <button
                     type="button"
                     onClick={restart}
                     className="mt-4 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500"
                   >
-                    Go again
+                    {t('Go again')}
                   </button>
                 </div>
               )}
@@ -360,12 +362,9 @@ export function QuizPage() {
           )}
 
           <Panel>
-            <h2 className="mb-1 text-sm font-semibold text-white">Import a deck</h2>
+            <h2 className="mb-1 text-sm font-semibold text-white">{t('Import a deck')}</h2>
             <p className="mb-3 text-xs leading-relaxed text-slate-500">
-              Pick a <code className="text-slate-400">.json</code> or{' '}
-              <code className="text-slate-400">.md</code> deck file. It is stored in this browser only —
-              to add cards for everyone, edit{' '}
-              <code className="text-slate-400">src/content/quizDecks.json</code> in the repo.
+              {t('Pick a .json or .md deck file. It is stored in this browser only — to add cards for everyone, edit src/content/quizDecks.json in the repo.')}
             </p>
 
             <input
@@ -385,7 +384,7 @@ export function QuizPage() {
                 onClick={() => fileInputRef.current?.click()}
                 className="rounded-md border border-slate-600 bg-slate-800 px-3 py-1.5 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-700"
               >
-                Choose deck file…
+                {t('Choose deck file…')}
               </button>
               {importNotice && <span className="text-xs text-emerald-400">{importNotice}</span>}
             </div>
@@ -418,7 +417,7 @@ export function QuizPage() {
                         onClick={() => removeImported(deck.id)}
                         className="text-slate-500 transition-colors hover:text-rose-400"
                       >
-                        Remove
+                        {t('Remove')}
                       </button>
                     </li>
                   ))}
@@ -428,7 +427,7 @@ export function QuizPage() {
 
             <details className="mt-4">
               <summary className="cursor-pointer text-xs text-slate-500 hover:text-slate-300">
-                Deck file format
+                {t('Deck file format')}
               </summary>
               <pre className="mt-2 overflow-x-auto rounded-md bg-slate-950/70 p-3 text-[11px] leading-relaxed text-slate-400">
 {`# Deck name
@@ -469,6 +468,8 @@ function FlashcardView({
   onReveal: () => void
   onGrade: (knew: boolean) => void
 }) {
+  const t = useT()
+
   return (
     <div>
       <button
@@ -483,7 +484,7 @@ function FlashcardView({
             {cardAnswer(card)}
           </p>
         ) : (
-          <p className="mt-4 text-xs text-slate-500">Click to reveal</p>
+          <p className="mt-4 text-xs text-slate-500">{t('Click to reveal')}</p>
         )}
       </button>
 
@@ -504,14 +505,14 @@ function FlashcardView({
             onClick={() => onGrade(false)}
             className="flex-1 rounded-md border border-rose-900/70 bg-rose-950/40 px-4 py-2 text-sm font-semibold text-rose-300 transition-colors hover:bg-rose-950/70"
           >
-            Again
+            {t('Again')}
           </button>
           <button
             type="button"
             onClick={() => onGrade(true)}
             className="flex-1 rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-600"
           >
-            Got it
+            {t('Got it')}
           </button>
         </div>
       )}
@@ -530,6 +531,8 @@ function ChoiceView({
   onPick: (index: number) => void
   onNext: () => void
 }) {
+  const t = useT()
+
   return (
     <div>
       <p className="text-lg font-semibold leading-snug text-white">{card.question}</p>
@@ -572,7 +575,7 @@ function ChoiceView({
             onClick={onNext}
             className="mt-4 w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500"
           >
-            Next
+            {t('Next')}
           </button>
         </>
       )}

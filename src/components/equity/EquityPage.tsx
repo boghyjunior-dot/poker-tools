@@ -17,6 +17,7 @@ import {
   PKO_IMMEDIATE_CAPTURE,
 } from '../../lib/equityBounty'
 import { cellKey, type BoardCard, type RankIndex } from '../../types/poker'
+import { useT } from '../../lib/i18n'
 import { EquityMatrix } from './EquityMatrix'
 import { HoleCardPicker } from './HoleCardPicker'
 import { BackToMenu } from '../BackToMenu'
@@ -83,6 +84,7 @@ function formatChips(value: number): string {
 }
 
 export function EquityPage() {
+  const t = useT()
   const [heroMode, setHeroMode] = useState<HeroMode>('hand')
   const [heroHand, setHeroHand] = useState<[BoardCard | null, BoardCard | null]>([null, null])
   const [heroRange, setHeroRange] = useState<RangeCellStates>(emptyRange())
@@ -229,7 +231,7 @@ export function EquityPage() {
         <BackToMenu className="mb-2" />
         <h1 className="text-2xl font-bold text-white">Equity Calculator</h1>
         <p className="text-sm text-slate-400 mt-1">
-          Preflop equity via Monte Carlo — hand vs range, stacks, and PKO bounties.
+          {t('Preflop equity via Monte Carlo — hand vs range, stacks, and PKO bounties.')}
         </p>
       </header>
 
@@ -256,7 +258,7 @@ export function EquityPage() {
             </>
           )}
           <StackField
-            label="Hero stack"
+            label={t('Hero stack')}
               emoji="🪙"
             value={heroStack}
             onChange={setHeroStack}
@@ -304,7 +306,7 @@ export function EquityPage() {
                 }}
                 className="px-2.5 py-1 rounded text-xs font-medium text-red-400 hover:text-red-300"
               >
-                Remove
+                {t('Remove')}
               </button>
             )}
           </div>
@@ -365,31 +367,31 @@ export function EquityPage() {
           <h2 className="text-sm font-semibold text-white mb-3">Stacks & bounties</h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <StackField
-              label="Buy-in"
+              label={t('Buy-in')}
               emoji="💵"
               value={buyIn}
               onChange={setBuyIn}
               placeholder="10"
-              hint="Tournament buy-in used to convert bounties to chips"
+              hint={t('Tournament buy-in used to convert bounties to chips')}
             />
             <StackField
-              label="Starting stack"
+              label={t('Starting stack')}
               emoji="🪙"
               value={startingStack}
               onChange={setStartingStack}
               placeholder="10000"
-              hint="Starting chips at buy-in"
+              hint={t('Starting chips at buy-in')}
             />
             <StackField
-              label="Existing pot"
+              label={t('Existing pot')}
               emoji="💰"
               value={existingPot}
               onChange={setExistingPot}
               placeholder="0"
-              hint="Antes + blinds already in the middle"
+              hint={t('Antes + blinds already in the middle')}
             />
             <StackField
-              label="Call amount"
+              label={t('Call amount')}
               emoji="📞"
               value={callAmount}
               onChange={setCallAmount}
@@ -397,18 +399,18 @@ export function EquityPage() {
               hint={`Chips hero must call · default ${formatChips(derivedCallAmount)}`}
             />
             <div className="flex flex-col gap-1 text-sm text-slate-300 sm:col-span-2 lg:col-span-3">
-              <span>Showdown pot</span>
+              <span>{t('Showdown pot')}</span>
               <p className="rounded-md border border-slate-700 bg-slate-950/40 px-3 py-2 text-sm text-slate-200 tabular-nums">
                 {formatChips(showdownPreview.potChips)} chips
               </p>
               <span className="text-xs text-slate-500">
-                {formatChips(showdownPreview.existingPot)} existing + {formatChips(showdownPreview.playerTotal)} from players
+                {t('{existing} existing + {players} from players', { existing: formatChips(showdownPreview.existingPot), players: formatChips(showdownPreview.playerTotal) })}
                 {' '}({showdownPreview.contributions.map((value) => formatChips(value)).join(' + ')})
               </span>
             </div>
           </div>
           <p className="text-xs text-slate-500 mt-2">
-            Showdown pot = existing pot + sum of all-in contributions (matched to effective stack).
+            {t('Showdown pot = existing pot + sum of all-in contributions (matched to effective stack).')}
             Bounty chips = bounty × (starting stack ÷ buy-in). PKO capture uses{' '}
             {Math.round(PKO_IMMEDIATE_CAPTURE * 100)}% when you cover an opponent and win outright.
             Total equity = chip equity + bounty equity (bounty EV as % of the pot).
@@ -418,7 +420,7 @@ export function EquityPage() {
         <div className="flex flex-wrap items-center gap-4">
           <label className="flex flex-col gap-1 text-sm text-slate-300">
             <span className="flex items-center gap-2">
-              Iterations
+              {t('Iterations')}
               <select
                 value={iterations}
                 onChange={(e) => setIterations(Number(e.target.value))}
@@ -441,9 +443,9 @@ export function EquityPage() {
             disabled={running}
             className="px-5 py-2 rounded-lg text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
           >
-            {running ? 'Calculating…' : 'Calculate equity'}
+            {running ? t('Calculating…') : t('Calculate equity')}
           </button>
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && <p className="text-sm text-red-400">{t(error)}</p>}
         </div>
 
         {result && (
@@ -536,6 +538,7 @@ function ModeToggle({
   value: 'hand' | 'range'
   onChange: (mode: 'hand' | 'range') => void
 }) {
+  const t = useT()
   return (
     <div className="flex rounded-md bg-slate-800 p-0.5">
       {(['hand', 'range'] as const).map((mode) => (
@@ -547,7 +550,7 @@ function ModeToggle({
             value === mode ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          {mode === 'hand' ? 'Specific hand' : 'Range'}
+          {mode === 'hand' ? t('Specific hand') : t('Range')}
         </button>
       ))}
     </div>
@@ -636,6 +639,7 @@ function CallSuggestion({
     recommendation: 'call' | 'fold'
   }
 }) {
+  const t = useT()
   const isCall = callEv.recommendation === 'call'
   const border = isCall ? 'border-emerald-800/60' : 'border-red-800/60'
   const badge = isCall ? 'bg-emerald-900/60 text-emerald-300' : 'bg-red-900/60 text-red-300'
@@ -644,20 +648,20 @@ function CallSuggestion({
     <div className={`rounded-lg border ${border} bg-slate-950/50 p-4`}>
       <div className="flex flex-wrap items-center gap-3">
         <span className={`rounded px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ${badge}`}>
-          {isCall ? 'Call' : 'Fold'}
+          {isCall ? t('Call') : t('Fold')}
         </span>
         <p className="text-sm text-white">
-          {isCall ? 'Calling is ' : 'Calling is '}
+          {t('Calling is')}{' '}
           <span className={`font-bold tabular-nums ${isCall ? 'text-emerald-400' : 'text-red-400'}`}>
-            {formatEvChips(callEv.evChips)} chips EV
-          </span>
-          {' '}for a {formatChips(callEv.callAmount)} chip call
+            {t('{ev} chips EV', { ev: formatEvChips(callEv.evChips) })}
+          </span>{' '}
+          {t('for a {amount} chip call', { amount: formatChips(callEv.callAmount) })}
         </p>
       </div>
       <p className="text-xs text-slate-500 mt-2">
-        Chip EV {formatEvChips(callEv.chipEvChips)} chips
+        {t('Chip EV {ev} chips', { ev: formatEvChips(callEv.chipEvChips) })}
         {callEv.bountyEvChips > 0 ? ` · bounty ${formatEvChips(callEv.bountyEvChips)} chips` : ''}
-        {!isCall && ' — fold is higher EV than calling.'}
+        {!isCall && ` ${t('— fold is higher EV than calling.')}`}
       </p>
     </div>
   )
@@ -682,6 +686,7 @@ function BountyField({
   captureChips: number
   covered: boolean
 }) {
+  const t = useT()
   const amount = parseNonNegativeNumber(value, 0)
   const bountyChips = bountyAmountToChips(amount, buyIn, startingStack)
 
@@ -706,12 +711,12 @@ function BountyField({
       <span className="text-xs text-slate-500">
         {amount > 0
           ? `$${amount} = ${formatChips(bountyChips)} chips`
-          : 'Bounty amount in buy-in currency'}
+          : t('Bounty amount in buy-in currency')}
         {amount > 0 && (
           <span className={covered ? ' text-emerald-400' : ' text-amber-400'}>
             {covered
               ? ` · capture ${formatChips(captureChips)}`
-              : ' · not covered'}
+              : ` · ${t('not covered')}`}
           </span>
         )}
       </span>

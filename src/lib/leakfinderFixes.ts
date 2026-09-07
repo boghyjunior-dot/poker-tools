@@ -10,8 +10,12 @@ import type { PositionKey } from './leakfinder'
 export interface FixLink {
   /** Tool page, relative so it survives the GitHub Pages base path. */
   href: string
-  /** Short call to action, e.g. "Drill BTN opens". */
+  /** Short call to action in English, e.g. "Drill BTN opens". Used by the export. */
   label: string
+  /** The action on its own, so the UI can translate it. */
+  verb: string
+  /** Seat the action applies to, when the link points at a specific chart. */
+  seat?: string
 }
 
 /** Seats the Preflop Charts tool ships ranges for, keyed the same way we are. */
@@ -35,13 +39,15 @@ const chartsFix =
     return {
       href: 'charts.html',
       label: seat ? `${verb} — ${seat} charts` : `${verb} — preflop charts`,
+      verb,
+      seat,
     }
   }
 
-const mdfFix = (label: string): FixBuilder => () => ({ href: 'mdf.html', label })
-const equityFix = (label: string): FixBuilder => () => ({ href: 'equity.html', label })
-const quizFix = (label: string): FixBuilder => () => ({ href: 'quiz.html', label })
-const varianceFix = (label: string): FixBuilder => () => ({ href: 'variance.html', label })
+const mdfFix = (label: string): FixBuilder => () => ({ href: 'mdf.html', label, verb: label })
+const equityFix = (label: string): FixBuilder => () => ({ href: 'equity.html', label, verb: label })
+const quizFix = (label: string): FixBuilder => () => ({ href: 'quiz.html', label, verb: label })
+const varianceFix = (label: string): FixBuilder => () => ({ href: 'variance.html', label, verb: label })
 
 /**
  * Stat id to the tool that addresses it. Preflop range problems go to the

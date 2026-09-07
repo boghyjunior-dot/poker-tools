@@ -4,6 +4,7 @@ import { HandMatrix } from '../HandMatrix'
 import { ComboPanel } from '../ComboPanel'
 import { StatsBar } from '../StatsBar'
 import { MdfTargetDisplay } from '../MdfTargetDisplay'
+import { useT } from '../../lib/i18n'
 import { Legend } from '../Legend'
 import { BackToMenu } from '../BackToMenu'
 import { Footer } from '../Footer'
@@ -65,6 +66,7 @@ function PracticeGame() {
   const [phase, setPhase] = useState<Phase>('menu')
   const [rangeId, setRangeId] = useState(PREDEFINED_RANGES[0]?.id ?? '')
   const [useRandomRange, setUseRandomRange] = useState(false)
+  const t = useT()
   const [street, setStreet] = useState<PracticeStreet>('flop')
   const [scores, setScores] = useState<StreetScore[]>([])
   const [feedback, setFeedback] = useState<StreetScore | null>(null)
@@ -168,12 +170,12 @@ function PracticeGame() {
           <div>
             <h1 className="text-2xl font-bold text-white mb-1">MDF Practice</h1>
             <p className="text-sm text-slate-400">
-              Defend a preset range on flop, turn, and river vs random bet sizes.
+              {t('Defend a preset range on flop, turn, and river vs random bet sizes.')}
             </p>
           </div>
           {phase !== 'menu' && (
             <div className="rounded-lg border border-indigo-700/50 bg-indigo-950/30 px-4 py-2 text-right">
-              <p className="text-[10px] uppercase tracking-wider text-indigo-300/80">Score</p>
+              <p className="text-[10px] uppercase tracking-wider text-indigo-300/80">{t('Score')}</p>
               <p className="text-2xl font-bold text-white tabular-nums">
                 {totalPoints}
                 <span className="text-sm text-slate-400"> / {phase === 'complete' ? 9 : maxPoints || '—'}</span>
@@ -185,9 +187,9 @@ function PracticeGame() {
 
       {phase === 'menu' && (
         <section className="max-w-md mx-auto rounded-xl border border-slate-800 bg-slate-900/60 p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-white">New session</h2>
+          <h2 className="text-lg font-semibold text-white">{t('New session')}</h2>
           <p className="text-sm text-slate-400">
-            You will face three streets. Tag combos as fold or call to match the MDF target each time.
+            {t('You will face three streets. Tag combos as fold or call to match the MDF target each time.')}
           </p>
 
           <label className="flex items-center gap-2 text-sm text-slate-300">
@@ -197,7 +199,7 @@ function PracticeGame() {
               onChange={(e) => setUseRandomRange(e.target.checked)}
               className="rounded border-slate-600"
             />
-            Random preset range
+            {t('Random preset range')}
           </label>
 
           {!useRandomRange && (
@@ -223,7 +225,7 @@ function PracticeGame() {
             onClick={handleStart}
             className="w-full rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors"
           >
-            Start practice
+            {t('Start practice')}
           </button>
         </section>
       )}
@@ -233,11 +235,11 @@ function PracticeGame() {
           <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Street</p>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">{t('Street')}</p>
                 <p className="text-lg font-bold text-white">{STREET_LABEL[street]}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Board</p>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">{t('Board')}</p>
                 <div className="flex items-center gap-1.5">
                   {state.board.map((card: BoardCard, i: number) => (
                     <PlayingCard key={`${card.rank}-${card.suit}-${i}`} card={card} size="sm" variant="board" />
@@ -246,12 +248,12 @@ function PracticeGame() {
                 <p className="text-xs text-slate-500 mt-1 sm:hidden">{formatBoardLine(state.board)}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Villain bet</p>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">{t('Villain bet')}</p>
                 <p className="text-lg font-bold text-amber-300">{betDescription(state.betLabel)}</p>
               </div>
               {activeRange && phase === 'playing' && (
                 <div className="ml-auto text-right">
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Range</p>
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">{t('Range')}</p>
                   <p className="text-sm text-slate-300">{activeRange.category} · {activeRange.label}</p>
                 </div>
               )}
@@ -276,7 +278,7 @@ function PracticeGame() {
                   <div className="w-full xl:flex-1 xl:min-w-0 border-t xl:border-t-0 xl:border-l border-slate-700 pt-4 xl:pt-0 xl:pl-6">
                     <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
                       <div className="flex-1 min-w-0 w-full">
-                        <h2 className="text-sm font-semibold text-slate-300 mb-3">Combo detail</h2>
+                        <h2 className="text-sm font-semibold text-slate-300 mb-3">{t('Combo detail')}</h2>
                         <ComboPanel />
                       </div>
                       <div className="shrink-0 sm:ml-auto w-full sm:w-auto">
@@ -297,7 +299,7 @@ function PracticeGame() {
                   disabled={stats.untagged > 0 || stats.total === 0}
                   className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
-                  Submit {STREET_LABEL[street].toLowerCase()} defense
+                  {t('Submit {street} defense', { street: STREET_LABEL[street].toLowerCase() })}
                 </button>
                 {stats.untagged > 0 && (
                   <p className="text-sm text-amber-400">
@@ -326,14 +328,16 @@ function PracticeGame() {
                 onClick={handleContinue}
                 className="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors"
               >
-                {nextStreet(street) ? `Continue to ${STREET_LABEL[nextStreet(street)!]}` : 'See final score'}
+                {nextStreet(street)
+                  ? t('Continue to {street}', { street: STREET_LABEL[nextStreet(street)!] })
+                  : t('See final score')}
               </button>
             </section>
           )}
 
           {phase === 'complete' && (
             <section className="rounded-xl border border-slate-700 bg-slate-900/80 p-6 max-w-lg mx-auto text-center space-y-5">
-              <h2 className="text-xl font-bold text-white">Session complete</h2>
+              <h2 className="text-xl font-bold text-white">{t('Session complete')}</h2>
               <p className="text-5xl font-bold text-indigo-300 tabular-nums">{totalPoints} / 9</p>
               <div className="space-y-2 text-left">
                 {scores.map((s) => (
@@ -350,7 +354,7 @@ function PracticeGame() {
                 onClick={() => setPhase('menu')}
                 className="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors"
               >
-                Play again
+                {t('Play again')}
               </button>
             </section>
           )}
