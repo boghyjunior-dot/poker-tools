@@ -1,7 +1,11 @@
 import {
   FEATURE_PRACTICE_ENABLED,
+  FEATURE_REVIEW_ENABLED,
+  FEATURE_REVIEW_PUBLISHED,
   FEATURE_ROADMAP_ENABLED,
+  FEATURE_ROADMAP_PUBLISHED,
   FEATURE_SESSION_ENABLED,
+  FEATURE_SESSION_PUBLISHED,
 } from '../lib/featureFlags'
 import { useT } from '../lib/i18n'
 import { LanguageSwitcher } from './LanguageSwitcher'
@@ -167,6 +171,7 @@ function ToolCard({
   external,
   disabled,
   status,
+  localOnly,
 }: {
   href: string
   icon: React.ReactNode
@@ -176,6 +181,7 @@ function ToolCard({
   external?: boolean
   disabled?: boolean
   status: ToolStatus
+  localOnly?: boolean
 }) {
   const t = useT()
   const statusStyle = STATUS_STYLES[status]
@@ -206,6 +212,15 @@ function ToolCard({
           </span>
         )}
       </div>
+      {localOnly && (
+        <span className="-mt-2 inline-flex w-fit items-center gap-1.5 rounded bg-amber-950/40 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-400/90 ring-1 ring-inset ring-amber-900/60">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-3 w-3">
+            <rect x="4" y="10" width="16" height="11" rx="2" />
+            <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+          </svg>
+          {t('Local only')}
+        </span>
+      )}
       <p className={`text-sm leading-relaxed ${disabled ? 'text-slate-600' : 'text-slate-400'}`}>
         {t(description)}
       </p>
@@ -243,6 +258,10 @@ interface Tool {
   accent: string
   status: ToolStatus
   disabled?: boolean
+  /** False leaves the tool out of the menu entirely — see `enabled` below. */
+  enabled?: boolean
+  /** True while the page runs locally but is not built into the live site. */
+  localOnly?: boolean
 }
 
 /** The menu, grouped. Order here is the order on screen. */
@@ -252,6 +271,19 @@ interface Section {
   tools: Tool[]
   /** Omitted for sections that always ship; false hides the whole section. */
   enabled?: boolean
+}
+
+/**
+ * A local-only tool is two flags, not one.
+ *
+ * `enabled` decides whether the card is in the menu at all, and matches the
+ * build: a page left out of `LOCAL_ONLY` in `vite.config.ts` has no HTML in
+ * `dist`, so linking to it from a published menu would be a dead link.
+ * `localOnly` is the badge, and is the exact inverse — it says the card you
+ * are looking at is one the public site does not have.
+ */
+function local(enabled: boolean, published: boolean) {
+  return { enabled, localOnly: !published }
 }
 
 const SECTIONS: Section[] = [
@@ -264,6 +296,7 @@ const SECTIONS: Section[] = [
         href: 'roadmap.html',
         icon: <RoadmapIcon />,
         title: 'Roadmap',
+        ...local(FEATURE_ROADMAP_ENABLED, FEATURE_ROADMAP_PUBLISHED),
         description:
           'Six stages of understanding, from the rules to deliberate deviation — what you can explain at each one, and what you still cannot see.',
         accent: 'border-purple-800/60 hover:border-purple-600/80',
@@ -304,6 +337,7 @@ const SECTIONS: Section[] = [
         href: 'equity.html',
         icon: <EquityIcon />,
         title: 'Equity Calculator',
+        ...local(FEATURE_REVIEW_ENABLED, FEATURE_REVIEW_PUBLISHED),
         description:
           'Calculate preflop equity for a hand or range against one or more opponent ranges.',
         accent: 'border-violet-800/60 hover:border-violet-600/80',
@@ -313,6 +347,7 @@ const SECTIONS: Section[] = [
         href: 'bounty.html',
         icon: <BountyIcon />,
         title: 'Mystery Bounty',
+        ...local(FEATURE_REVIEW_ENABLED, FEATURE_REVIEW_PUBLISHED),
         description:
           'Work out what an average bounty is worth in cash and in big blinds, and how much wider it lets you call.',
         accent: 'border-fuchsia-800/60 hover:border-fuchsia-600/80',
@@ -371,6 +406,7 @@ const SECTIONS: Section[] = [
         href: 'schedule.html',
         icon: <ScheduleIcon />,
         title: 'Schedule',
+        ...local(FEATURE_SESSION_ENABLED, FEATURE_SESSION_PUBLISHED),
         description:
           'The tournaments you registered for, how long late registration has left on each, and an alarm before it closes.',
         accent: 'border-orange-800/60 hover:border-orange-600/80',
@@ -380,6 +416,7 @@ const SECTIONS: Section[] = [
         href: 'tracker.html',
         icon: <TrackerIcon />,
         title: 'Bankroll Tracker',
+        ...local(FEATURE_SESSION_ENABLED, FEATURE_SESSION_PUBLISHED),
         description:
           'Log every result and watch the roll move: profit, ROI, ITM and the worst downswing you have been through.',
         accent: 'border-teal-800/60 hover:border-teal-600/80',
@@ -413,6 +450,18 @@ const SECTIONS: Section[] = [
   },
 ]
 
+/**
+ * The menu as it stands in this build.
+ *
+ * A tool held back is dropped rather than greyed out, because the page it
+ * points at is genuinely not in `dist` — and a section left with no tools
+ * disappears rather than leaving an empty heading behind.
+ */
+const VISIBLE = SECTIONS.map((section) => ({
+  ...section,
+  tools: section.tools.filter((tool) => tool.enabled !== false),
+})).filter((section) => section.enabled !== false && section.tools.length > 0)
+
 export function HomePage() {
   const t = useT()
 
@@ -428,7 +477,7 @@ export function HomePage() {
         </header>
 
         <div className="flex flex-col gap-9">
-          {SECTIONS.filter((section) => section.enabled !== false).map((section) => (
+          {VISIBLE.map((section) => (
             <section key={section.name}>
               <div className="mb-3 flex items-baseline gap-3 border-b border-slate-800 pb-2">
                 <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-300">

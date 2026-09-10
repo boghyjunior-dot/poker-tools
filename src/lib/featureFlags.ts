@@ -53,6 +53,18 @@ export const FEATURE_ROADMAP_ENABLED = isEnabled(import.meta.env, ROADMAP_VARIAB
 /** True once the Roadmap is set to ship, so the page can stop calling itself local. */
 export const FEATURE_ROADMAP_PUBLISHED = isPublished(import.meta.env, ROADMAP_VARIABLE)
 
+export const REVIEW_VARIABLE = 'VITE_PUBLISH_IN_REVIEW'
+
+/**
+ * Equity Calculator and Mystery Bounty are still being checked, so they run
+ * locally and stay off the live site until the review is finished. They share
+ * one variable because they come off review together.
+ */
+export const FEATURE_REVIEW_ENABLED = isEnabled(import.meta.env, REVIEW_VARIABLE)
+
+/** True once the tools under review are set to ship. */
+export const FEATURE_REVIEW_PUBLISHED = isPublished(import.meta.env, REVIEW_VARIABLE)
+
 export const SESSION_VARIABLE = 'VITE_PUBLISH_SESSION'
 
 /** Schedule and Bankroll Tracker ship together, so they share one variable. */

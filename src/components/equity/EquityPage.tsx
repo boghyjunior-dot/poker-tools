@@ -22,6 +22,8 @@ import type { CallEvResult } from '../../lib/equityBounty'
 import { EquityMatrix } from './EquityMatrix'
 import { HoleCardPicker } from './HoleCardPicker'
 import { BackToMenu } from '../BackToMenu'
+import { LocalOnlyBanner } from '../LocalOnlyBanner'
+import { FEATURE_REVIEW_PUBLISHED, REVIEW_VARIABLE } from '../../lib/featureFlags'
 import { Footer } from '../Footer'
 
 type HeroMode = 'hand' | 'range'
@@ -235,6 +237,8 @@ export function EquityPage() {
           {t('Preflop equity via Monte Carlo — hand vs range, stacks, and PKO bounties.')}
         </p>
       </header>
+
+      <LocalOnlyBanner published={FEATURE_REVIEW_PUBLISHED} variable={REVIEW_VARIABLE} className="mb-4" />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="bg-slate-900/60 rounded-lg border border-slate-800 p-4 space-y-4">

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
+import { LocalOnlyBanner } from '../LocalOnlyBanner'
+import { FEATURE_REVIEW_PUBLISHED, REVIEW_VARIABLE } from '../../lib/featureFlags'
 import { Footer } from '../Footer'
 import { formatMoney } from '../../lib/formatNumber'
 import { useT } from '../../lib/i18n'
@@ -429,6 +431,8 @@ export function MysteryBountyPage() {
         <p className="mb-6 text-sm text-slate-400">
           {t('What a knockout is really worth — at the start of the phase, and right now.')}
         </p>
+
+        <LocalOnlyBanner published={FEATURE_REVIEW_PUBLISHED} variable={REVIEW_VARIABLE} />
 
         <div className="flex flex-col gap-4">
           <Panel>

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
 import { Footer } from '../Footer'
 import { formatMoney } from '../../lib/formatNumber'
-import { FEATURE_SESSION_PUBLISHED } from '../../lib/featureFlags'
+import { FEATURE_SESSION_PUBLISHED, SESSION_VARIABLE } from '../../lib/featureFlags'
+import { LocalOnlyBanner } from '../LocalOnlyBanner'
 import { useT } from '../../lib/i18n'
 import {
   BANKROLL_KEY,
@@ -191,13 +192,7 @@ export function TrackerPage() {
           )}
         </p>
 
-        {!FEATURE_SESSION_PUBLISHED && (
-          <p className="mb-6 rounded-lg border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-xs text-amber-300">
-            {t(
-              'Local only — this page is not on the published site. Build with VITE_PUBLISH_SESSION=true to ship it.',
-            )}
-          </p>
-        )}
+        <LocalOnlyBanner published={FEATURE_SESSION_PUBLISHED} variable={SESSION_VARIABLE} />
 
         <div className="flex flex-col gap-4">
           <Panel>

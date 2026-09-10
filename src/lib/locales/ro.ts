@@ -952,8 +952,6 @@ export const ro: Dictionary = {
   "Reference": "Referință",
 
   // ------------------------------------------------------------- roadmap --
-  "Local only — this page is not on the published site. Build with VITE_PUBLISH_ROADMAP=true to ship it.":
-    "Doar local — pagina asta nu e pe site-ul publicat. Rulează build cu VITE_PUBLISH_ROADMAP=true ca să o publici.",
   "The idea you own here":
     "Ideea pe care o stăpânești aici",
   "Volume to internalise it":
@@ -1371,6 +1369,10 @@ export const ro: Dictionary = {
     "Bounty-ul scade ce îți trebuie de la {without}% la {with}%.",
 
   // ------------------------------------------------------------- session --
+  "Local only — this page is not on the published site. Build with {variable}=true to ship it.":
+    "Doar local — pagina asta nu e pe site-ul publicat. Rulează build cu {variable}=true ca să o publici.",
+  "Local only":
+    "Doar local",
   "Room": "Camera",
   "Committed by room": "Angajat pe camere",
   "Show": "Arată",
@@ -1386,8 +1388,6 @@ export const ro: Dictionary = {
     "Turneele la care te-ai înscris, cât mai are late reg la fiecare, și o alarmă înainte să se închidă.",
   "Log every result and watch the roll move: profit, ROI, ITM and the worst downswing you have been through.":
     "Notează fiecare rezultat și vezi cum se mișcă bankroll-ul: profit, ROI, ITM și cel mai rău downswing prin care ai trecut.",
-  "Local only — this page is not on the published site. Build with VITE_PUBLISH_SESSION=true to ship it.":
-    "Doar local — pagina asta nu e pe site-ul publicat. Rulează build cu VITE_PUBLISH_SESSION=true ca să o publici.",
   "Untitled":
     "Fără nume",
   "Name":

@@ -13,10 +13,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://boghyjunior-dot.github.io/poker-tools/equity.html</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://boghyjunior-dot.github.io/poker-tools/leakfinder.html</loc>
     <priority>0.8</priority>
   </url>
@@ -30,10 +26,6 @@
   </url>
   <url>
     <loc>https://boghyjunior-dot.github.io/poker-tools/variance.html</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://boghyjunior-dot.github.io/poker-tools/bounty.html</loc>
     <priority>0.8</priority>
   </url>
   <url>
