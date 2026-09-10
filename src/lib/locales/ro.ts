@@ -951,6 +951,232 @@ export const ro: Dictionary = {
   "Quiz": "Quiz",
   "Reference": "Referință",
 
+  // ------------------------------------------------------------- roadmap --
+  "The road from beginner to high stakes, in six stages":
+    "Drumul de la începător la high stakes, în șase etape",
+  "Roadmap":
+    "Roadmap",
+  "Start here":
+    "Începe de aici",
+  "The whole climb, and what each step of it costs.":
+    "Tot drumul, și cât costă fiecare pas din el.",
+  "From knowing nothing to high stakes in six stages — the bankroll, volume and study hours each one takes, and how many players get through.":
+    "De la zero la high stakes în șase etape — bankroll-ul, volumul și orele de studiu pe care le cere fiecare, și câți jucători ajung până la capăt.",
+  "From never having played to sitting in a high-stakes game — the six stages, what each one costs in money and hours, and how many people actually get through.":
+    "De la a nu fi jucat niciodată până la a sta într-un joc de high stakes — cele șase etape, cât costă fiecare în bani și ore, și câți oameni ajung de fapt până la capăt.",
+  "Where are you now?":
+    "Unde te afli acum?",
+  "The road fills in up to where you are. Tap again to clear it.":
+    "Drumul se colorează până unde ești. Apasă din nou ca să ștergi.",
+  "Pick a stage to light up the road behind you. It stays in this browser.":
+    "Alege o etapă ca să aprinzi drumul din spatele tău. Rămâne în acest browser.",
+  "Stage {n}":
+    "Etapa {n}",
+  "Stakes":
+    "Limite",
+  "In buy-ins":
+    "În buy-in-uri",
+  "Time here":
+    "Timp aici",
+  "Volume":
+    "Volum",
+  "Study":
+    "Studiu",
+  "Typically {low}–{high} months of playing before you get here at all.":
+    "De obicei {low}–{high} luni de joc până să ajungi aici.",
+  "What you learn here":
+    "Ce înveți aici",
+  "How you know you are ready":
+    "Cum știi că ești pregătit",
+  "The honest part":
+    "Partea sinceră",
+  "Tools for this stage":
+    "Instrumente pentru etapa asta",
+  "True at every stage":
+    "Adevărat în orice etapă",
+  "The parts no single milestone owns, and the ones that decide who keeps going.":
+    "Părțile care nu aparțin unei singure etape, și cele care decid cine merge mai departe.",
+  "The rules":
+    "Regulile",
+  "Know what beats what, and what a position is.":
+    "Să știi ce bate ce, și ce înseamnă poziția.",
+  "Play money · freerolls":
+    "Bani virtuali · freeroll-uri",
+  "2–4 weeks":
+    "2–4 săptămâni",
+  "~50 tournaments":
+    "~50 de turnee",
+  "2–3 h/week":
+    "2–3 h/săptămână",
+  "Hand rankings without thinking about it":
+    "Ierarhia mâinilor, fără să te gândești",
+  "The seat names and why position matters":
+    "Numele pozițiilor și de ce contează poziția",
+  "Blinds, antes, and how a tournament clock works":
+    "Blinduri, ante și cum funcționează ceasul unui turneu",
+  "Pot odds as a fraction, not a feeling":
+    "Pot odds ca fracție, nu ca senzație",
+  "You never misread your hand and never miss that you are last to act.":
+    "Nu îți citești greșit mâna niciodată și nu ratezi niciodată faptul că ești ultimul care acționează.",
+  "The cheapest stage and the one people rush. Every hour here saves ten later, because everything above is built on it.":
+    "Etapa cea mai ieftină și cea peste care se trece în grabă. Fiecare oră de aici îți economisește zece mai târziu, fiindcă tot ce urmează se construiește pe ea.",
+  "Preflop discipline":
+    "Disciplină preflop",
+  "Play a tight, positionally aware opening game.":
+    "Joacă un joc de deschidere strâns și conștient de poziție.",
+  "$100 – $200":
+    "$100 – $200",
+  "100 buy-ins":
+    "100 de buy-in-uri",
+  "2–4 months":
+    "2–4 luni",
+  "500–1,000 tournaments":
+    "500–1.000 de turnee",
+  "3–5 h/week":
+    "3–5 h/săptămână",
+  "An opening range for every seat, memorised":
+    "Un range de deschidere pentru fiecare poziție, memorat",
+  "Folding the hands that look playable and are not":
+    "Să dai fold la mâinile care par jucabile și nu sunt",
+  "Shove and call ranges under 15bb":
+    "Range-uri de shove și call sub 15bb",
+  "3-betting for value before 3-betting as a bluff":
+    "Să dai 3-bet pentru valoare înainte să dai 3-bet ca bluff",
+  "You can name your open from any seat instantly, and your VPIP and PFR sit close together.":
+    "Poți spune instant ce deschizi din orice poziție, iar VPIP și PFR sunt aproape unul de altul.",
+  "Most players never finish this stage — they learn ranges, then abandon them the first time a tight session gets boring.":
+    "Majoritatea jucătorilor nu termină niciodată etapa asta — învață range-urile, apoi le abandonează prima dată când o sesiune strânsă devine plictisitoare.",
+  "Micro stakes":
+    "Micro stakes",
+  "Win for the first time, and prove it with volume.":
+    "Câștigă pentru prima dată, și dovedește-o cu volum.",
+  "$500 – $1,500":
+    "$500 – $1.500",
+  "150–250 buy-ins":
+    "150–250 de buy-in-uri",
+  "6–12 months":
+    "6–12 luni",
+  "3,000–5,000 tournaments":
+    "3.000–5.000 de turnee",
+  "5–8 h/week":
+    "5–8 h/săptămână",
+  "C-betting by board texture rather than by habit":
+    "Să dai c-bet după textura board-ului, nu din obișnuință",
+  "Reading a board for what it hits, not what you hold":
+    "Să citești board-ul după ce lovește, nu după ce ai tu",
+  "Basic ICM: why the bubble changes everything":
+    "ICM de bază: de ce bula schimbă totul",
+  "Tracking results honestly, including the losing months":
+    "Să îți urmărești rezultatele cinstit, inclusiv lunile pe minus",
+  "A positive ROI over 3,000+ tournaments — not 300, which tells you nothing.":
+    "Un ROI pozitiv pe 3.000+ de turnee — nu pe 300, care nu îți spune nimic.",
+  "The first real filter. Micro fields are soft but the rake is brutal, and a genuine winner here is often only making a few dollars an hour.":
+    "Primul filtru adevărat. Field-urile de micro sunt slabe, dar rake-ul e brutal, iar un câștigător real de aici scoate deseori doar câțiva dolari pe oră.",
+  "Low stakes":
+    "Low stakes",
+  "Turn a small edge into a repeatable one.":
+    "Transformă un edge mic într-unul care se repetă.",
+  "$3,000 – $8,000":
+    "$3.000 – $8.000",
+  "200–300 buy-ins":
+    "200–300 de buy-in-uri",
+  "1–2 years":
+    "1–2 ani",
+  "10,000+ tournaments":
+    "10.000+ de turnee",
+  "8–12 h/week":
+    "8–12 h/săptămână",
+  "Solver work on the spots that actually recur":
+    "Lucru cu solverul pe situațiile care chiar se repetă",
+  "Turn and river barrelling with a plan, not hope":
+    "Barrel pe turn și river cu un plan, nu cu speranță",
+  "ICM in the money, not just on the bubble":
+    "ICM în bani, nu doar pe bulă",
+  "Bankroll rules you follow on a bad day":
+    "Reguli de bankroll pe care le respecți și într-o zi proastă",
+  "You beat the level for a year, through at least one downswing you did not enjoy.":
+    "Bați nivelul timp de un an, trecând prin cel puțin un downswing care nu ți-a plăcut.",
+  "Where most serious players top out and stay — and there is nothing wrong with that. A good low-stakes grinder can make real money part-time.":
+    "Aici se opresc și rămân majoritatea jucătorilor serioși — și nu e nimic greșit în asta. Un grinder bun de low stakes poate scoate bani reali part-time.",
+  "Mid stakes":
+    "Mid stakes",
+  "Beat opponents who are also studying.":
+    "Bate adversari care studiază și ei.",
+  "$15,000 – $50,000":
+    "$15.000 – $50.000",
+  "250–400 buy-ins":
+    "250–400 de buy-in-uri",
+  "2–4 years":
+    "2–4 ani",
+  "15,000+ tournaments":
+    "15.000+ de turnee",
+  "10–15 h/week":
+    "10–15 h/săptămână",
+  "Population tendencies, not just theory":
+    "Tendințele populației, nu doar teorie",
+  "Exploits you can turn on and off deliberately":
+    "Exploatări pe care le pornești și le oprești deliberat",
+  "Mental game that survives a six-figure downswing":
+    "Un mental game care rezistă la un downswing de șase cifre",
+  "Treating it as a business: records, tax, expenses":
+    "Să tratezi totul ca pe o afacere: evidențe, taxe, cheltuieli",
+  "A winrate that holds up when the same names sit down every night.":
+    "Un winrate care rezistă când aceleași nume se așază la masă în fiecare seară.",
+  "Your opponents now study as hard as you do. Edge comes from game selection and consistency, not from knowing one more line.":
+    "Adversarii tăi studiază acum la fel de mult ca tine. Edge-ul vine din selecția jocurilor și din consecvență, nu din a ști încă o linie.",
+  "High stakes":
+    "High stakes",
+  "A small profession with very few seats.":
+    "O profesie mică, cu foarte puține locuri.",
+  "$215 – $10,000+":
+    "$215 – $10.000+",
+  "$100,000+ or backing":
+    "$100.000+ sau backing",
+  "300+ buy-ins, or a stable":
+    "300+ buy-in-uri, sau o echipă care te susține",
+  "Ongoing":
+    "Continuu",
+  "Selective, not maximal":
+    "Selectiv, nu maximal",
+  "15+ h/week, often with a group":
+    "15+ h/săptămână, deseori într-un grup",
+  "Game selection as the primary skill":
+    "Selecția jocurilor ca abilitate principală",
+  "Swings measured in tens of thousands":
+    "Oscilații măsurate în zeci de mii",
+  "A network: staking, swaps, study groups":
+    "O rețea: staking, swap-uri, grupuri de studiu",
+  "Knowing when a game is not worth sitting in":
+    "Să știi când un joc nu merită să te așezi la el",
+  "You are still here in five years, and the money is still yours.":
+    "Ești încă aici peste cinci ani, și banii sunt tot ai tăi.",
+  "Vanishingly few players arrive, and many who do are backed rather than playing their own roll. Most high-stakes careers are shorter than people imagine.":
+    "Extrem de puțini jucători ajung aici, iar mulți dintre cei care ajung sunt susținuți financiar, nu joacă din bankroll-ul propriu. Majoritatea carierelor de high stakes sunt mai scurte decât își imaginează lumea.",
+  "Volume is the entry fee":
+    "Volumul e taxa de intrare",
+  "Results under a few thousand tournaments are noise. A 10% ROI player can lose over 1,000 tournaments without doing anything wrong, so any conclusion drawn from a short sample is guesswork wearing a number.":
+    "Rezultatele sub câteva mii de turnee sunt zgomot. Un jucător cu 10% ROI poate pierde pe 1.000 de turnee fără să greșească cu nimic, deci orice concluzie trasă dintr-un eșantion scurt e o presupunere îmbrăcată în cifre.",
+  "Study time is not optional":
+    "Timpul de studiu nu e opțional",
+  "A rough working ratio is one hour of study for every three or four hours of play. Players who only play get better for about a year and then stop, because the game keeps moving and they do not.":
+    "Un raport practic e o oră de studiu la fiecare trei-patru ore de joc. Jucătorii care doar joacă se îmbunătățesc vreo un an și apoi se opresc, fiindcă jocul merge înainte, iar ei nu.",
+  "Bankroll rules break under pressure, not on paper":
+    "Regulile de bankroll se rup sub presiune, nu pe hârtie",
+  "Everyone agrees with the numbers when they are up. The rule only exists for the day you are stuck and a bigger game looks like the way out — that is the day it is worth something.":
+    "Toată lumea e de acord cu cifrele când e pe plus. Regula există doar pentru ziua în care ești pe minus și un joc mai mare pare soluția — aia e ziua în care valorează ceva.",
+  "Moving up is a decision, not a reward":
+    "Urcatul la limite e o decizie, nu o recompensă",
+  "Move up on a sample and a bankroll, never on a feeling or a heater. And be as willing to move back down: the players who survive are the ones who treat that as normal rather than as failure.":
+    "Urcă pe baza unui eșantion și a unui bankroll, niciodată pe baza unei senzații sau a unei perioade bune. Și fii la fel de dispus să cobori: jucătorii care supraviețuiesc sunt cei care tratează asta ca pe ceva normal, nu ca pe un eșec.",
+  "The mental game is the last leak to close":
+    "Mental game-ul e ultimul leak pe care îl închizi",
+  "Tilt costs more than any strategic error most players will ever make, and it compounds — a bad session becomes a bad week through decisions made while upset rather than through cards.":
+    "Tilt-ul costă mai mult decât orice eroare strategică pe care o va face majoritatea jucătorilor, și se acumulează — o sesiune proastă devine o săptămână proastă prin decizii luate la nervi, nu prin cărți.",
+  "Most people do not make it, and that is the honest part":
+    "Majoritatea nu reușesc, și asta e partea sinceră",
+  "The overwhelming majority of players never beat low stakes for a meaningful sample. Knowing that in advance makes the climb a choice rather than a disappointment.":
+    "Marea majoritate a jucătorilor nu bat niciodată low stakes pe un eșantion semnificativ. Să știi asta dinainte face din urcuș o alegere, nu o dezamăgire.",
+
   // ----------------------------------------------------------------- misc --
   Save: 'Salvează',
   Reset: 'Resetează',

@@ -88,6 +88,17 @@ function BankrollIcon() {
   )
 }
 
+function RoadmapIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+      <path d="M7 21c0-4 10-4 10-9S9 8 9 3" />
+      <circle cx="9" cy="3.5" r="1.6" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="12" r="1.6" />
+      <circle cx="7" cy="20.5" r="1.8" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 function BountyIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
@@ -211,6 +222,21 @@ interface Tool {
 
 /** The menu, grouped. Order here is the order on screen. */
 const SECTIONS: { name: string; blurb: string; tools: Tool[] }[] = [
+  {
+    name: 'Start here',
+    blurb: 'The whole climb, and what each step of it costs.',
+    tools: [
+      {
+        href: 'roadmap.html',
+        icon: <RoadmapIcon />,
+        title: 'Roadmap',
+        description:
+          'From knowing nothing to high stakes in six stages — the bankroll, volume and study hours each one takes, and how many players get through.',
+        accent: 'border-purple-800/60 hover:border-purple-600/80',
+        status: 'done',
+      },
+    ],
+  },
   {
     name: 'MDF',
     blurb: 'Build a defending range, then test it under fire.',

@@ -7,3 +7,71 @@ body {
   color: #e2e8f0;
   font-family: system-ui, -apple-system, sans-serif;
 }
+
+/* -------------------------------------------------------------- roadmap -- */
+/* Animations for the roadmap page. All of them are suppressed for readers who
+   ask for reduced motion — the component drops the classes rather than
+   overriding here, so nothing animates from a standing start. */
+
+@keyframes roadmap-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes roadmap-ping {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.45;
+  }
+  70%,
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+@keyframes roadmap-dashes {
+  to {
+    stroke-dashoffset: -60;
+  }
+}
+
+@keyframes roadmap-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* SVG transforms need an explicit origin or they pivot around the viewBox. */
+.roadmap-ping {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: roadmap-ping 2.4s ease-out infinite;
+}
+
+.roadmap-dashes {
+  animation: roadmap-dashes 3s linear infinite;
+}
+
+.roadmap-rise {
+  animation: roadmap-rise 460ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roadmap-ping,
+  .roadmap-dashes,
+  .roadmap-rise {
+    animation: none;
+  }
+}

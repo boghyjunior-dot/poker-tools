@@ -20,6 +20,7 @@ export default defineConfig({
         variance: path.resolve(__dirname, 'variance.html'),
         bounty: path.resolve(__dirname, 'bounty.html'),
         bankroll: path.resolve(__dirname, 'bankroll.html'),
+        roadmap: path.resolve(__dirname, 'roadmap.html'),
         charts: path.resolve(__dirname, 'charts.html'),
         randomizer: path.resolve(__dirname, 'randomizer.html'),
       },
