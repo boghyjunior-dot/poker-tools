@@ -66,6 +66,41 @@ export function totalEquityWithBounty(chipEquityPct: number, bountyEquityAdd: nu
   return chipEquityPct + bountyEquityAdd
 }
 
+/**
+ * The equity you need for calling to break even.
+ *
+ * The showdown pot already includes your call, so risking `callAmount` to win
+ * `potChips` breaks even at call / pot — ordinary pot odds, stated in chips.
+ *
+ * A bounty you can only collect by winning is extra reward on exactly the
+ * branch where you win, so it goes on the bottom next to the pot and pulls the
+ * requirement down. Pass the bounty you collect *per win*, not its average
+ * across all runs, or the win probability gets counted twice.
+ */
+export function requiredEquityPct(
+  callAmount: number,
+  potChips: number,
+  bountyChipsPerWin = 0,
+): number {
+  if (!Number.isFinite(callAmount) || callAmount <= 0) return 0
+  const reward = potChips + Math.max(0, bountyChipsPerWin)
+  if (!Number.isFinite(reward) || reward <= 0) return 0
+  return Math.min(100, (callAmount / reward) * 100)
+}
+
+/**
+ * Turn the average bounty across every run back into the bounty per win.
+ *
+ * The simulation only adds bounty chips on the runs hero actually wins, so the
+ * average already has the win probability baked in. Dividing it back out gives
+ * the figure the break-even formula wants.
+ */
+export function bountyChipsPerWin(avgBountyChips: number, winPct: number): number {
+  if (!Number.isFinite(avgBountyChips) || avgBountyChips <= 0) return 0
+  if (!Number.isFinite(winPct) || winPct <= 0) return 0
+  return avgBountyChips / (winPct / 100)
+}
+
 export type CallRecommendation = 'call' | 'fold'
 
 export interface CallEvResult {
@@ -74,6 +109,14 @@ export interface CallEvResult {
   chipEvChips: number
   bountyEvChips: number
   recommendation: CallRecommendation
+  /** Equity needed to break even, bounties included. */
+  requiredEquityPct?: number
+  /** The same threshold ignoring bounties, so the discount is visible. */
+  requiredEquityNoBountyPct?: number
+  /** What hero actually has, for the comparison. */
+  heroEquityPct?: number
+  /** Points of equity to spare; negative means short of the threshold. */
+  equityMarginPct?: number
 }
 
 /** EV of calling: equity share of showdown pot minus call, plus bounty EV. */

@@ -18,6 +18,7 @@ import {
 } from '../../lib/equityBounty'
 import { cellKey, type BoardCard, type RankIndex } from '../../types/poker'
 import { useT } from '../../lib/i18n'
+import type { CallEvResult } from '../../lib/equityBounty'
 import { EquityMatrix } from './EquityMatrix'
 import { HoleCardPicker } from './HoleCardPicker'
 import { BackToMenu } from '../BackToMenu'
@@ -628,17 +629,7 @@ function formatEvChips(value: number): string {
   return `${rounded >= 0 ? '+' : ''}${formatChips(rounded)}`
 }
 
-function CallSuggestion({
-  callEv,
-}: {
-  callEv: {
-    callAmount: number
-    evChips: number
-    chipEvChips: number
-    bountyEvChips: number
-    recommendation: 'call' | 'fold'
-  }
-}) {
+function CallSuggestion({ callEv }: { callEv: CallEvResult }) {
   const t = useT()
   const isCall = callEv.recommendation === 'call'
   const border = isCall ? 'border-emerald-800/60' : 'border-red-800/60'
@@ -658,6 +649,55 @@ function CallSuggestion({
           {t('for a {amount} chip call', { amount: formatChips(callEv.callAmount) })}
         </p>
       </div>
+      {callEv.requiredEquityPct !== undefined && callEv.heroEquityPct !== undefined && (
+        <div className="mt-3 grid grid-cols-3 gap-3">
+          <div className="rounded-md border border-slate-800 bg-slate-950/60 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-wider text-slate-500">
+              {t('Equity you need')}
+            </p>
+            <p className="mt-0.5 text-lg font-semibold tabular-nums text-white">
+              {callEv.requiredEquityPct.toFixed(1)}%
+            </p>
+            <p className="text-[10px] text-slate-500">
+              {t('{call} to win {pot}', {
+                call: formatChips(callEv.callAmount),
+                pot: formatChips(callEv.callAmount / (callEv.requiredEquityPct / 100)),
+              })}
+            </p>
+          </div>
+          <div className="rounded-md border border-slate-800 bg-slate-950/60 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-wider text-slate-500">
+              {t('Equity you have')}
+            </p>
+            <p className="mt-0.5 text-lg font-semibold tabular-nums text-white">
+              {callEv.heroEquityPct.toFixed(1)}%
+            </p>
+          </div>
+          <div className="rounded-md border border-slate-800 bg-slate-950/60 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-wider text-slate-500">{t('Margin')}</p>
+            <p
+              className={`mt-0.5 text-lg font-semibold tabular-nums ${
+                (callEv.equityMarginPct ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'
+              }`}
+            >
+              {(callEv.equityMarginPct ?? 0) >= 0 ? '+' : ''}
+              {(callEv.equityMarginPct ?? 0).toFixed(1)} {t('pts')}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {callEv.requiredEquityNoBountyPct !== undefined &&
+        callEv.requiredEquityPct !== undefined &&
+        callEv.requiredEquityNoBountyPct - callEv.requiredEquityPct > 0.05 && (
+          <p className="mt-2 text-xs text-emerald-400/90">
+            {t('The bounty drops what you need from {without}% to {with}%.', {
+              without: callEv.requiredEquityNoBountyPct.toFixed(1),
+              with: callEv.requiredEquityPct.toFixed(1),
+            })}
+          </p>
+        )}
+
       <p className="text-xs text-slate-500 mt-2">
         {t('Chip EV {ev} chips', { ev: formatEvChips(callEv.chipEvChips) })}
         {callEv.bountyEvChips > 0 ? ` · bounty ${formatEvChips(callEv.bountyEvChips)} chips` : ''}

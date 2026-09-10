@@ -5,11 +5,13 @@ import {
   bountyAmountToChips,
   bountyEquityAddPct,
   buildBountyBreakdown,
+  bountyChipsPerWin,
   buildCallEvResult,
   computeShowdownPot,
   heroCoversVillain,
   PKO_IMMEDIATE_CAPTURE,
   totalCapturableBountyChips,
+  requiredEquityPct,
   totalEquityWithBounty,
   type CallEvResult,
   type StackBountyInput,
@@ -277,12 +279,23 @@ export function calculateEquity(players: EquityPlayer[], options: EquityOptions 
 
   const callEv =
     potChips !== undefined && heroCallAmountForEv !== undefined && heroCallAmountForEv > 0
-      ? buildCallEvResult(
-          heroResult.equity,
-          potChips,
-          heroCallAmountForEv,
-          heroResult.avgBountyChips,
-        )
+      ? (() => {
+          const base = buildCallEvResult(
+            heroResult.equity,
+            potChips,
+            heroCallAmountForEv,
+            heroResult.avgBountyChips,
+          )
+          const perWin = bountyChipsPerWin(heroResult.avgBountyChips, heroResult.winPct)
+          const required = requiredEquityPct(heroCallAmountForEv, potChips, perWin)
+          return {
+            ...base,
+            requiredEquityPct: required,
+            requiredEquityNoBountyPct: requiredEquityPct(heroCallAmountForEv, potChips),
+            heroEquityPct: heroResult.equity,
+            equityMarginPct: heroResult.equity - required,
+          }
+        })()
       : undefined
 
   return {

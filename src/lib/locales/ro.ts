@@ -1357,6 +1357,19 @@ export const ro: Dictionary = {
   "The overwhelming majority of players never beat low stakes for a meaningful sample. Knowing that in advance makes the climb a choice rather than a disappointment.":
     "Marea majoritate a jucătorilor nu bat niciodată low stakes pe un eșantion semnificativ. Să știi asta dinainte face din urcuș o alegere, nu o dezamăgire.",
 
+  "Equity you need":
+    "Equity de care ai nevoie",
+  "Equity you have":
+    "Equity pe care o ai",
+  "Margin":
+    "Marjă",
+  "pts":
+    "pct",
+  "{call} to win {pot}":
+    "{call} ca să câștigi {pot}",
+  "The bounty drops what you need from {without}% to {with}%.":
+    "Bounty-ul scade ce îți trebuie de la {without}% la {with}%.",
+
   // ----------------------------------------------------------------- misc --
   Save: 'Salvează',
   Reset: 'Resetează',
