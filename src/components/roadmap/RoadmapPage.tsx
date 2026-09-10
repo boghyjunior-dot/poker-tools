@@ -52,12 +52,19 @@ function StageDetail({ stage, t }: { stage: RoadmapStage; t: TranslateFn }) {
         <p className="mt-1 text-sm text-slate-400">{t(stage.tagline)}</p>
       </div>
 
+      <div
+        className="rounded-lg border p-3"
+        style={{ borderColor: `${stage.color}55`, backgroundColor: `${stage.color}12` }}
+      >
+        <p className="text-[10px] uppercase tracking-wider" style={{ color: stage.color }}>
+          {t('The idea you own here')}
+        </p>
+        <p className="mt-0.5 text-lg font-semibold text-white">{t(stage.concept)}</p>
+      </div>
+
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Stat label={t('Stakes')} value={t(stage.stakes)} accent={stage.color} />
-        <Stat label={t('Bankroll')} value={t(stage.bankroll)} />
-        <Stat label={t('In buy-ins')} value={t(stage.buyIns)} />
         <Stat label={t('Time here')} value={t(stage.months)} />
-        <Stat label={t('Volume')} value={t(stage.volume)} />
+        <Stat label={t('Volume to internalise it')} value={t(stage.volume)} />
         <Stat label={t('Study')} value={t(stage.study)} />
       </div>
 
@@ -71,7 +78,7 @@ function StageDetail({ stage, t }: { stage: RoadmapStage; t: TranslateFn }) {
       )}
 
       <div>
-        <h3 className="mb-2 text-sm font-semibold text-white">{t('What you learn here')}</h3>
+        <h3 className="mb-2 text-sm font-semibold text-white">{t('What you can explain by the end')}</h3>
         <ul className="space-y-1.5">
           {stage.skills.map((skill) => (
             <li key={skill} className="flex gap-2 text-sm text-slate-300">
@@ -91,13 +98,30 @@ function StageDetail({ stage, t }: { stage: RoadmapStage; t: TranslateFn }) {
         <p className="mt-1 text-sm text-slate-200">{t(stage.proof)}</p>
       </div>
 
-      <div
-        className="rounded-lg border p-3"
-        style={{ borderColor: `${stage.color}55`, backgroundColor: `${stage.color}12` }}
-      >
-        <p className="text-[10px] uppercase tracking-wider" style={{ color: stage.color }}>
-          {t('The honest part')}
+      <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+        <p className="text-[10px] uppercase tracking-wider text-slate-500">
+          {t('What you still cannot see')}
         </p>
+        <p className="mt-1 text-sm leading-relaxed text-slate-300">{t(stage.blindSpot)}</p>
+      </div>
+
+      <div className="rounded-lg border border-slate-800 bg-slate-950/30 p-3">
+        <p className="text-[10px] uppercase tracking-wider text-slate-500">
+          {t('Where this usually shows up')}
+        </p>
+        <p className="mt-1 text-sm text-slate-300">
+          {t('{stakes} · a roll of {bankroll}', {
+            stakes: t(stage.stakes),
+            bankroll: t(stage.bankroll),
+          })}
+        </p>
+        <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+          {t('Context, not the milestone — plenty of players sit above or below the level they understand.')}
+        </p>
+      </div>
+
+      <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+        <p className="text-[10px] uppercase tracking-wider text-slate-500">{t('The honest part')}</p>
         <p className="mt-1 text-sm leading-relaxed text-slate-300">{t(stage.reality)}</p>
       </div>
 
@@ -141,7 +165,7 @@ export function RoadmapPage() {
         <h1 className="text-3xl font-bold text-white">{t('Roadmap')}</h1>
         <p className="mb-6 max-w-2xl text-sm text-slate-400">
           {t(
-            'From never having played to sitting in a high-stakes game — the six stages, what each one costs in money and hours, and how many people actually get through.',
+            'Six stages of understanding, from not knowing the rules to knowing the baseline well enough to leave it on purpose. The rungs are what you know — stakes follow, they do not define it.',
           )}
         </p>
 
@@ -152,7 +176,7 @@ export function RoadmapPage() {
             </Panel>
 
             <Panel className="w-full">
-              <p className="mb-2 text-xs font-semibold text-white">{t('Where are you now?')}</p>
+              <p className="mb-2 text-xs font-semibold text-white">{t('What do you already know?')}</p>
               <div className="flex flex-wrap gap-1.5">
                 {STAGES.map((stage) => (
                   <button
@@ -175,8 +199,8 @@ export function RoadmapPage() {
               </div>
               <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
                 {myStage
-                  ? t('The road fills in up to where you are. Tap again to clear it.')
-                  : t('Pick a stage to light up the road behind you. It stays in this browser.')}
+                  ? t('The road fills in up to what you own. Tap again to clear it.')
+                  : t('Pick the last stage you could explain out loud. It stays in this browser.')}
               </p>
             </Panel>
           </div>

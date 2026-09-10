@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import { monthsToReach, stageIndex, STAGES, TRUTHS } from './roadmap'
 
-/** Pull the first number out of a string like "$3,000 – $8,000" or "150–250". */
+/** Pull the first number out of a string like "$3,000 – $8,000" or "8–12 h". */
 const firstNumber = (text: string): number => {
   const match = text.replace(/,/g, '').match(/\d+(?:\.\d+)?/)
   return match ? Number(match[0]) : 0
 }
 
 describe('the road', () => {
-  it('runs from nothing to high stakes in six numbered stages', () => {
+  it('climbs through six stages of understanding', () => {
     expect(STAGES).toHaveLength(6)
     expect(STAGES.map((s) => s.step)).toEqual([1, 2, 3, 4, 5, 6])
-    expect(STAGES[0].bankroll).toBe('$0')
-    expect(STAGES[STAGES.length - 1].id).toBe('high')
+    expect(STAGES[0].id).toBe('rules')
+    expect(STAGES[STAGES.length - 1].id).toBe('deviation')
   })
 
   it('gives every stage a unique id and a colour', () => {
@@ -22,8 +22,47 @@ describe('the road', () => {
     }
   })
 
-  it('asks for more money the further along you are', () => {
-    // Stage 1 is free, so the ladder starts at the second rung.
+  it('names each rung after an idea rather than a stake level', () => {
+    // A stage called "Micro stakes" would be the old, wrong axis.
+    for (const stage of STAGES) {
+      expect(stage.name).not.toMatch(/stakes/i)
+      expect(stage.concept.length).toBeGreaterThan(6)
+      // The concept is a phrase, not a buy-in.
+      expect(stage.concept).not.toMatch(/^\$/)
+    }
+    expect(new Set(STAGES.map((s) => s.concept)).size).toBe(STAGES.length)
+  })
+
+  it('tests understanding rather than results', () => {
+    for (const stage of STAGES) {
+      expect(stage.proof.length).toBeGreaterThan(20)
+      expect(stage.skills.length).toBeGreaterThanOrEqual(4)
+      expect(stage.reality.length).toBeGreaterThan(40)
+    }
+    // Most rungs are proved by being able to say the thing out loud.
+    const spoken = STAGES.filter((s) => /explain|say|name|write/i.test(s.proof))
+    expect(spoken.length).toBeGreaterThanOrEqual(5)
+  })
+
+  it('tells you what you cannot see yet from every stage', () => {
+    for (const stage of STAGES) {
+      expect(stage.blindSpot.length).toBeGreaterThan(40)
+    }
+    expect(new Set(STAGES.map((s) => s.blindSpot)).size).toBe(STAGES.length)
+  })
+
+  it('keeps the blind spot of one stage pointed at the next idea', () => {
+    // Ranges come before boards, boards before frequencies, frequencies before ICM.
+    expect(STAGES[1].blindSpot).toMatch(/their|theirs/i)
+    expect(STAGES[2].blindSpot).toMatch(/turn|river/i)
+    expect(STAGES[3].blindSpot).toMatch(/chips|tournament/i)
+  })
+
+  it('still carries stakes and bankroll, as context under the idea', () => {
+    for (const stage of STAGES) {
+      expect(stage.stakes.length).toBeGreaterThan(0)
+      expect(stage.bankroll.length).toBeGreaterThan(0)
+    }
     const money = STAGES.slice(1).map((s) => firstNumber(s.bankroll))
     for (let i = 1; i < money.length; i++) {
       expect(money[i]).toBeGreaterThan(money[i - 1])
@@ -34,14 +73,6 @@ describe('the road', () => {
     const hours = STAGES.map((s) => firstNumber(s.study))
     for (let i = 1; i < hours.length; i++) {
       expect(hours[i]).toBeGreaterThanOrEqual(hours[i - 1])
-    }
-  })
-
-  it('tells you what to learn, how to know you are done, and what really happens', () => {
-    for (const stage of STAGES) {
-      expect(stage.skills.length).toBeGreaterThanOrEqual(4)
-      expect(stage.proof.length).toBeGreaterThan(20)
-      expect(stage.reality.length).toBeGreaterThan(40)
     }
   })
 
@@ -62,9 +93,12 @@ describe('the road', () => {
     }
   })
 
-  it('points the early stages at the tools a beginner can actually use', () => {
-    expect(STAGES[0].tools.map((t) => t.href)).toContain('quiz.html')
-    expect(STAGES[1].tools.map((t) => t.href)).toContain('charts.html')
+  it('points each stage at the tool that teaches its idea', () => {
+    const hrefs = (step: number) => STAGES[step - 1].tools.map((t) => t.href)
+    expect(hrefs(2)).toContain('charts.html')
+    expect(hrefs(3)).toContain('equity.html')
+    expect(hrefs(4)).toContain('mdf.html')
+    expect(hrefs(5)).toContain('bounty.html')
   })
 })
 
@@ -95,7 +129,7 @@ describe('monthsToReach', () => {
     expect(monthsToReach(99)).toEqual(monthsToReach(STAGES.length))
   })
 
-  it('puts high stakes years away, not months', () => {
+  it('puts the last stage years away, not months', () => {
     expect(monthsToReach(6).low).toBeGreaterThanOrEqual(36)
   })
 })
@@ -103,7 +137,7 @@ describe('monthsToReach', () => {
 describe('stageIndex', () => {
   it('finds a stage by id and reports nothing for an unset one', () => {
     expect(stageIndex('rules')).toBe(0)
-    expect(stageIndex('high')).toBe(STAGES.length - 1)
+    expect(stageIndex('deviation')).toBe(STAGES.length - 1)
     expect(stageIndex(null)).toBe(-1)
     expect(stageIndex('not-a-stage')).toBe(-1)
   })
@@ -116,7 +150,10 @@ describe('the truths', () => {
       expect(truth.title.length).toBeGreaterThan(10)
       expect(truth.body.length).toBeGreaterThan(60)
     }
-    // The page is not worth much if it only tells people what they want to hear.
-    expect(TRUTHS.some((t) => /do not make it/i.test(t.title))).toBe(true)
+    expect(TRUTHS.some((t) => /stop at stage/i.test(t.title))).toBe(true)
+  })
+
+  it('says outright that stakes are not the ladder', () => {
+    expect(TRUTHS.some((t) => /stakes are a consequence/i.test(t.title))).toBe(true)
   })
 })

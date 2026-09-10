@@ -952,6 +952,184 @@ export const ro: Dictionary = {
   "Reference": "Referință",
 
   // ------------------------------------------------------------- roadmap --
+  "The idea you own here":
+    "Ideea pe care o stăpânești aici",
+  "Volume to internalise it":
+    "Volum ca să o interiorizezi",
+  "What you can explain by the end":
+    "Ce poți explica până la final",
+  "What you still cannot see":
+    "Ce încă nu vezi",
+  "Where this usually shows up":
+    "Unde se vede de obicei",
+  "{stakes} · a roll of {bankroll}":
+    "{stakes} · un bankroll de {bankroll}",
+  "Context, not the milestone — plenty of players sit above or below the level they understand.":
+    "Context, nu reperul — mulți jucători stau peste sau sub nivelul pe care îl înțeleg.",
+  "Six stages of understanding, from not knowing the rules to knowing the baseline well enough to leave it on purpose. The rungs are what you know — stakes follow, they do not define it.":
+    "Șase etape de înțelegere, de la a nu ști regulile până la a cunoaște linia de bază suficient de bine cât să o părăsești intenționat. Treptele sunt ce știi — limitele vin după, nu le definesc.",
+  "What do you already know?":
+    "Ce știi deja?",
+  "The road fills in up to what you own. Tap again to clear it.":
+    "Drumul se colorează până unde stăpânești. Apasă din nou ca să ștergi.",
+  "Pick the last stage you could explain out loud. It stays in this browser.":
+    "Alege ultima etapă pe care ai putea-o explica cu voce tare. Rămâne în acest browser.",
+  "Six stages of understanding, from the rules to deliberate deviation":
+    "Șase etape de înțelegere, de la reguli la deviere deliberată",
+  "Six stages of understanding, from the rules to deliberate deviation — what you can explain at each one, and what you still cannot see.":
+    "Șase etape de înțelegere, de la reguli la deviere deliberată — ce poți explica la fiecare, și ce încă nu vezi.",
+  "The whole climb, measured by what you understand.":
+    "Tot drumul, măsurat după cât înțelegi.",
+  "Six stages of understanding, from the rules to deliberate deviation, in six stages":
+    "Șase etape de înțelegere, de la reguli la deviere deliberată",
+  "The mechanics":
+    "Mecanica jocului",
+  "You know what beats what, and whose turn it is.":
+    "Știi ce bate ce și al cui e rândul.",
+  "How the game runs":
+    "Cum funcționează jocul",
+  "Hand rankings without stopping to think":
+    "Ierarhia mâinilor, fără să te oprești să gândești",
+  "The seat names, and why acting last is worth something":
+    "Numele pozițiilor și de ce acțiunea ultimă valorează ceva",
+  "Blinds, antes, and how a tournament clock changes the game":
+    "Blinduri, ante și cum schimbă jocul ceasul unui turneu",
+  "Pot odds as a fraction you can actually work out":
+    "Pot odds ca fracție pe care chiar o poți calcula",
+  "You can explain why the button is the best seat without saying \"because it is\".":
+    "Poți explica de ce BTN e cea mai bună poziție fără să spui „pentru că așa e”.",
+  "You do not yet know that most of your decisions are made before the flop, so you are still thinking of a hand as five cards rather than as a range.":
+    "Încă nu știi că majoritatea deciziilor tale se iau înainte de flop, așa că încă te gândești la o mână ca la cinci cărți, nu ca la un range.",
+  "~50 hands played slowly, out loud":
+    "~50 de mâini jucate rar, cu voce tare",
+  "Ranges, not hands":
+    "Range-uri, nu mâini",
+  "You think in the set of hands you could have, not the two you do.":
+    "Gândești în mulțimea mâinilor pe care le-ai putea avea, nu în cele două pe care le ai.",
+  "Range thinking":
+    "Gândire pe range-uri",
+  "An opening range for every seat, and the reason it differs":
+    "Un range de deschidere pentru fiecare poziție, și motivul pentru care diferă",
+  "Why a hand that looks playable from the button is a fold from UTG":
+    "De ce o mână care pare jucabilă de pe BTN e fold din UTG",
+  "Combos: why AK is 16 hands and AA is only 6":
+    "Combo-uri: de ce AK înseamnă 16 mâini, iar AA doar 6",
+  "Shove and call ranges when the stack gets short":
+    "Range-uri de shove și call când stack-ul devine scurt",
+  "You can write out your opening range from any seat and defend each edge of it.":
+    "Poți scrie range-ul de deschidere din orice poziție și poți justifica fiecare margine a lui.",
+  "You know your own range and have barely thought about theirs, so every flop still feels like it is about your cards.":
+    "Îți știi propriul range și abia dacă te-ai gândit la al lui, așa că fiecare flop încă pare că e despre cărțile tale.",
+  "500–1,000 hands with a chart open":
+    "500–1.000 de mâini cu un chart deschis",
+  "Boards and equity":
+    "Board-uri și equity",
+  "You can say what a flop did to both ranges, not just to your hand.":
+    "Poți spune ce a făcut un flop ambelor range-uri, nu doar mâinii tale.",
+  "Whose board is it?":
+    "Al cui e board-ul?",
+  "Reading a texture for who it favours and why":
+    "Să citești o textură după cine e favorizat și de ce",
+  "Equity as a number you can estimate, then check":
+    "Equity ca număr pe care îl poți estima, apoi verifica",
+  "C-betting because the board earns it, not out of habit":
+    "Să dai c-bet fiindcă board-ul o merită, nu din obișnuință",
+  "Which draws are worth continuing with and which only look like it":
+    "Ce draw-uri merită continuate și care doar par că merită",
+  "Shown a flop and two ranges, you can name who it favours and roughly by how much.":
+    "Dându-ți-se un flop și două range-uri, poți spune pe cine favorizează și aproximativ cu cât.",
+  "You can read one street. Turn and river still arrive as surprises rather than as branches you planned for.":
+    "Poți citi o singură stradă. Turn-ul și river-ul încă vin ca surprize, nu ca ramuri pe care le-ai plănuit.",
+  "3,000–5,000 hands, reviewed afterwards":
+    "3.000–5.000 de mâini, analizate după",
+  "The first real filter, and where most self-taught players stall — reading a board well is much harder than memorising a chart.":
+    "Primul filtru adevărat, și locul unde se blochează majoritatea autodidacților — să citești bine un board e mult mai greu decât să memorezi un chart.",
+  "Frequencies":
+    "Frecvențe",
+  "You defend by number, and plan streets before you reach them.":
+    "Aperi după cifre și plănuiești străzile înainte să ajungi la ele.",
+  "How often, not just what":
+    "Cât de des, nu doar ce",
+  "Minimum defence frequency, and when it stops applying":
+    "Minimum defence frequency, și când încetează să se aplice",
+  "Choosing a river before you bet the turn":
+    "Să alegi river-ul înainte să pariezi turn-ul",
+  "Blockers: why the hand you hold changes what they can have":
+    "Blockeri: de ce mâna pe care o ai schimbă ce poate avea el",
+  "Balancing a line, and knowing when balance is a waste of effort":
+    "Să echilibrezi o linie, și să știi când echilibrul e efort irosit",
+  "You can say what fraction of your range continues against a bet, and why that number.":
+    "Poți spune ce fracțiune din range-ul tău continuă împotriva unui pariu, și de ce exact acea cifră.",
+  "Everything you know assumes chips are worth chips. In a tournament they stop being worth chips exactly when the pots get big.":
+    "Tot ce știi presupune că jetoanele valorează cât jetoane. Într-un turneu încetează să valoreze atât exact când pot-urile devin mari.",
+  "10,000+ hands, with the leaks tracked":
+    "10.000+ de mâini, cu leak-urile urmărite",
+  "Where most serious players top out, and there is nothing wrong with that. This is already more than most people at the table understand.":
+    "Aici se opresc majoritatea jucătorilor serioși, și nu e nimic greșit în asta. E deja mai mult decât înțeleg cei mai mulți de la masă.",
+  "Tournament theory":
+    "Teorie de turneu",
+  "You know when a chip stops being worth a chip.":
+    "Știi când un jeton încetează să mai valoreze cât un jeton.",
+  "Chips are not money":
+    "Jetoanele nu sunt bani",
+  "ICM on the bubble, on pay jumps, and at a final table":
+    "ICM pe bulă, la salturile de premii și la masa finală",
+  "Why the same shove is right at 40bb and terrible at 12bb":
+    "De ce același shove e corect la 40bb și groaznic la 12bb",
+  "Bounties, and what they do to a calling range":
+    "Bounty-urile, și ce fac unui range de call",
+  "Reading a payout structure before you register":
+    "Să citești structura de premii înainte să te înscrii",
+  "You can explain to somebody else why a clear chipEV call can be a clear ICM fold.":
+    "Poți explica altcuiva de ce un call clar în chipEV poate fi un fold clar în ICM.",
+  "You know the theory and still play the baseline against everybody. You have not yet learned to leave it on purpose.":
+    "Știi teoria și încă joci linia de bază împotriva tuturor. Încă nu ai învățat să o părăsești intenționat.",
+  "15,000+ hands, including deep runs":
+    "15.000+ de mâini, inclusiv parcursuri lungi",
+  "The point where your opponents study too. Understanding stops being rare, and the edge moves to who applies it consistently.":
+    "Punctul în care și adversarii tăi studiază. Înțelegerea încetează să fie rară, iar edge-ul se mută spre cine o aplică constant.",
+  "Deliberate deviation":
+    "Deviere deliberată",
+  "You know the baseline well enough to leave it on purpose.":
+    "Cunoști linia de bază suficient de bine cât să o părăsești intenționat.",
+  "Knowing why, not just what":
+    "Să știi de ce, nu doar ce",
+  "Why the solver does what it does, not only what it outputs":
+    "De ce face solverul ce face, nu doar ce afișează",
+  "Exploits you can switch on for one player and off for the next":
+    "Exploatări pe care le pornești pentru un jucător și le oprești pentru următorul",
+  "Diagnosing your own game without waiting for someone to tell you":
+    "Să îți diagnostichezi singur jocul, fără să aștepți să îți spună cineva",
+  "Explaining any of it clearly enough to teach it":
+    "Să explici orice din toate astea suficient de clar cât să le poți preda",
+  "You can name a spot where you deviate, say who you deviate against, and say what it costs if you are wrong.":
+    "Poți numi o situație în care deviezi, împotriva cui deviezi, și cât te costă dacă greșești.",
+  "Nothing structural is missing. From here it is upkeep — the game moves, and staying level means never quite stopping.":
+    "Nu mai lipsește nimic structural. De aici e întreținere — jocul se schimbă, iar să ții pasul înseamnă să nu te oprești niciodată de tot.",
+  "Selective study beats raw volume":
+    "Studiul selectiv bate volumul brut",
+  "Very few players get here, and knowing this much does not by itself pay. It is necessary for the top games, not sufficient.":
+    "Foarte puțini jucători ajung aici, iar atâta cunoaștere nu aduce bani prin ea însăși. E necesară pentru jocurile de top, nu suficientă.",
+  "Knowing and doing are different rungs":
+    "A ști și a face sunt trepte diferite",
+  "You can explain minimum defence frequency perfectly and still fold too much at the table on a bad night. A concept is not yours until it survives being tired, tilted and behind.":
+    "Poți explica perfect minimum defence frequency și tot să dai fold prea mult la masă într-o seară proastă. Un concept nu e al tău până nu supraviețuiește oboselii, tilt-ului și faptului că ești pe minus.",
+  "Volume is what turns study into knowledge":
+    "Volumul transformă studiul în cunoaștere",
+  "Reading about board texture teaches you the words. A few thousand hands teaches you the pattern. Neither substitutes for the other, and study without volume produces players who can argue but not play.":
+    "Cititul despre textura board-ului te învață cuvintele. Câteva mii de mâini te învață tiparul. Niciunul nu îl înlocuiește pe celălalt, iar studiul fără volum produce jucători care pot argumenta, dar nu pot juca.",
+  "A rough working ratio is one hour of study for every three or four of play. Players who only play improve for about a year and then stop, because the game keeps moving and they do not.":
+    "Un raport practic e o oră de studiu la fiecare trei-patru de joc. Jucătorii care doar joacă progresează vreo un an și apoi se opresc, fiindcă jocul merge înainte, iar ei nu.",
+  "Stakes are a consequence, not a rung":
+    "Limitele sunt o consecință, nu o treaptă",
+  "Moving up should follow understanding and a bankroll, never a heater. Plenty of players sit at stakes their game does not support, and plenty of strong players stay low on purpose.":
+    "Urcatul ar trebui să urmeze înțelegerii și bankroll-ului, niciodată unei perioade bune. Mulți jucători stau la limite pe care jocul lor nu le susține, iar mulți jucători buni rămân jos intenționat.",
+  "The mental game is the last thing to close":
+    "Mental game-ul e ultimul lucru pe care îl închizi",
+  "Most people stop at stage three or four":
+    "Majoritatea se opresc la etapa trei sau patru",
+  "Very few players ever really own frequencies, let alone ICM. Knowing that in advance turns the climb into a choice rather than a disappointment.":
+    "Foarte puțini jucători stăpânesc cu adevărat frecvențele, darămite ICM. Să știi asta dinainte transformă urcușul într-o alegere, nu într-o dezamăgire.",
   "The road from beginner to high stakes, in six stages":
     "Drumul de la începător la high stakes, în șase etape",
   "Roadmap":

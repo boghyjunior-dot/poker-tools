@@ -8,6 +8,7 @@ anything you save stays in your own `localStorage`.
 
 | Tool | What it answers | Status |
 | --- | --- | --- |
+| [Roadmap](#roadmap) | What do I actually understand, and what comes next? | Done |
 | [MDF Range Tool](#mdf-range-tool) | How much of my range do I have to defend? | In progress |
 | [MDF Practice](#mdf-practice) | Can I actually hit that frequency under fire? | Coming soon |
 | [Equity Calculator](#equity-calculator) | How does this hand run against that range? | In review |
@@ -20,6 +21,26 @@ anything you save stays in your own `localStorage`.
 | [Leak Finder](#leak-finder) | What should I fix first? | Done |
 
 ---
+
+## Roadmap
+
+Six stages of understanding, from not knowing the rules to knowing the
+baseline well enough to leave it on purpose.
+
+The rungs are what you know, not what you play. Stakes make a bad ladder:
+players move up on a heater and down on a downswing without their game
+changing either way, and plenty of strong players stay low on purpose. Money
+and volume still appear on every stage, because a concept is not learned until
+it has survived a sample — but they sit under the idea rather than above it.
+
+- Each stage names the one idea it is about, what you can explain by the end,
+  and the test for owning it — phrased as understanding rather than results
+- **What you still cannot see**: the blind spot each stage leaves, which is
+  what points at the next one
+- An animated SVG road whose geometry is generated from the milestone
+  positions, so the curve keeps passing through them if a stage is added
+- Mark the last stage you could explain out loud and the road fills in behind
+  you; every animation is dropped for `prefers-reduced-motion`
 
 ## MDF Range Tool
 

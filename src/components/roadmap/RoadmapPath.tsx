@@ -78,7 +78,7 @@ export function RoadmapPath({
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
       className="mx-auto h-auto w-full max-w-[400px]"
       role="img"
-      aria-label={t('The road from beginner to high stakes, in six stages')}
+      aria-label={t('Six stages of understanding, from the rules to deliberate deviation')}
     >
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -203,7 +203,7 @@ export function RoadmapPath({
               fontSize="10.5"
               fill="#64748b"
             >
-              {t(stage.stakes)}
+              {t(stage.concept)}
             </text>
           </g>
         )

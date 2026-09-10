@@ -224,14 +224,14 @@ interface Tool {
 const SECTIONS: { name: string; blurb: string; tools: Tool[] }[] = [
   {
     name: 'Start here',
-    blurb: 'The whole climb, and what each step of it costs.',
+    blurb: 'The whole climb, measured by what you understand.',
     tools: [
       {
         href: 'roadmap.html',
         icon: <RoadmapIcon />,
         title: 'Roadmap',
         description:
-          'From knowing nothing to high stakes in six stages — the bankroll, volume and study hours each one takes, and how many players get through.',
+          'Six stages of understanding, from the rules to deliberate deviation — what you can explain at each one, and what you still cannot see.',
         accent: 'border-purple-800/60 hover:border-purple-600/80',
         status: 'done',
       },
