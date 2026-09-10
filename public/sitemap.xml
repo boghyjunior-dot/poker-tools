@@ -1,39 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://boghyjunior-dot.github.io/poker-tools/</loc>
+    <loc>https://snapper.poker/</loc>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://boghyjunior-dot.github.io/poker-tools/mdf.html</loc>
+    <loc>https://snapper.poker/mdf.html</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://boghyjunior-dot.github.io/poker-tools/practice.html</loc>
+    <loc>https://snapper.poker/practice.html</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://boghyjunior-dot.github.io/poker-tools/leakfinder.html</loc>
+    <loc>https://snapper.poker/leakfinder.html</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://boghyjunior-dot.github.io/poker-tools/charts.html</loc>
+    <loc>https://snapper.poker/charts.html</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://boghyjunior-dot.github.io/poker-tools/quiz.html</loc>
+    <loc>https://snapper.poker/quiz.html</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://boghyjunior-dot.github.io/poker-tools/variance.html</loc>
+    <loc>https://snapper.poker/variance.html</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://boghyjunior-dot.github.io/poker-tools/bankroll.html</loc>
+    <loc>https://snapper.poker/bankroll.html</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://boghyjunior-dot.github.io/poker-tools/randomizer.html</loc>
+    <loc>https://snapper.poker/randomizer.html</loc>
     <priority>0.8</priority>
   </url>
 </urlset>

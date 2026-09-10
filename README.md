@@ -4,7 +4,7 @@ A free study suite for tournament poker that runs entirely in your browser. No
 account, no server, no install — every calculation happens on your machine and
 anything you save stays in your own `localStorage`.
 
-**Live at [boghyjunior-dot.github.io/poker-tools](https://boghyjunior-dot.github.io/poker-tools/)**
+**Live at [snapper.poker](https://snapper.poker/)**
 
 | Tool | What it answers | Status |
 | --- | --- | --- |
@@ -271,6 +271,13 @@ entry in `vite.config.ts`. `base` is `./` so the build works from a subpath.
 Pushing to `main` deploys `dist/` to GitHub Pages via
 `.github/workflows/static.yml`.
 
+The site is served from **snapper.poker**. Because the deploy runs from a
+workflow rather than a branch, the custom domain has to travel in the built
+output: `public/CNAME` holds the domain and Vite copies `public/` into `dist/`
+verbatim. Delete that file and a later deploy can quietly drop the custom
+domain from the Pages settings. `base` being `./` is what let the site move off
+the `/poker-tools/` subpath without touching a single asset path.
+
 ### Conventions
 
 - Combo weighting throughout: a pair is 6 combos, a suited hand 4, an offsuit
@@ -287,5 +294,6 @@ tags. `public/robots.txt` and `public/sitemap.xml` are generated for the live
 URL, and the home page carries JSON-LD describing the suite and its tools.
 Local-only pages are kept out of both automatically at build time, so the
 sitemap and the structured data always describe what actually shipped. If the
-site ever moves to another domain, those URLs need updating in the page heads,
-the sitemap, robots.txt and `SITE` in `vite.config.ts`.
+site ever moves to another domain, the absolute URLs need updating in six
+places: the page heads, the JSON-LD in `index.html`, `public/sitemap.xml`,
+`public/robots.txt`, `public/CNAME` and `SITE` in `vite.config.ts`.

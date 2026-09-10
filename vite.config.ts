@@ -5,7 +5,7 @@ import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-const SITE = 'https://boghyjunior-dot.github.io/poker-tools/'
+const SITE = 'https://snapper.poker/'
 
 /** Pages that always ship. */
 const PAGES = [
