@@ -52,3 +52,11 @@ export const FEATURE_ROADMAP_ENABLED = isEnabled(import.meta.env, ROADMAP_VARIAB
 
 /** True once the Roadmap is set to ship, so the page can stop calling itself local. */
 export const FEATURE_ROADMAP_PUBLISHED = isPublished(import.meta.env, ROADMAP_VARIABLE)
+
+export const SESSION_VARIABLE = 'VITE_PUBLISH_SESSION'
+
+/** Schedule and Bankroll Tracker ship together, so they share one variable. */
+export const FEATURE_SESSION_ENABLED = isEnabled(import.meta.env, SESSION_VARIABLE)
+
+/** True once the session tools are set to ship. */
+export const FEATURE_SESSION_PUBLISHED = isPublished(import.meta.env, SESSION_VARIABLE)

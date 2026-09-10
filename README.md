@@ -9,6 +9,8 @@ anything you save stays in your own `localStorage`.
 | Tool | What it answers | Status |
 | --- | --- | --- |
 | [Roadmap](#roadmap) | What do I actually understand, and what comes next? | Local only |
+| [Schedule](#schedule) | How long have I got to register? | Local only |
+| [Bankroll Tracker](#bankroll-tracker) | What is my roll actually doing? | Local only |
 | [MDF Range Tool](#mdf-range-tool) | How much of my range do I have to defend? | In progress |
 | [MDF Practice](#mdf-practice) | Can I actually hit that frequency under fire? | Coming soon |
 | [Equity Calculator](#equity-calculator) | How does this hand run against that range? | In review |
@@ -51,10 +53,44 @@ sitemap. To ship it, set the variable:
 VITE_PUBLISH_ROADMAP=true npm run build
 ```
 
-The same mechanism works for any page — add it to `LOCAL_ONLY` in
+Schedule and Bankroll Tracker are held back the same way, behind
+`VITE_PUBLISH_SESSION`. The mechanism works for any page — add it to `LOCAL_ONLY` in
 `vite.config.ts` and gate its menu section with a flag from
 `src/lib/featureFlags.ts`. While a page is local-only it says so in a banner,
 so you cannot mistake the dev server for the live site.
+
+## Schedule
+
+The tournaments you are registered for, with late registration counting down
+on each and an alarm before it closes.
+
+There is no feed to subscribe to — everything here runs in your browser — so
+the schedule is what you type or paste. Paste a few lines from a lobby and it
+picks the start time, buy-in and late-reg window out of each one:
+
+```
+20:15  $22  Bounty Hunter  90m
+21:00 | $5.50 | Micro Millions | late 120
+```
+
+- Sorted by which deadline lands first, with finished tournaments pushed down
+- Per-tournament alarm, set in minutes before late reg closes
+- Alarms show a browser notification, beep, and raise a banner that keeps
+  counting down
+- **They only fire while the tab is open.** There is no service worker and no
+  server, so a closed tab means no alarm
+
+## Bankroll Tracker
+
+Where the ROI the other tools ask for should come from — measured rather than
+remembered, since almost everybody remembers it high.
+
+- Profit, ROI on total cost, ITM percentage and average buy-in
+- Worst peak-to-trough drawdown, counting the roll you started with as the
+  first peak
+- Bounties are logged apart from the cash so they do not hide inside it
+- A running bankroll line, and CSV export
+- Says plainly when a sample is too short to size a bankroll from
 
 ## MDF Range Tool
 

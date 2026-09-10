@@ -1370,6 +1370,142 @@ export const ro: Dictionary = {
   "The bounty drops what you need from {without}% to {with}%.":
     "Bounty-ul scade ce îți trebuie de la {without}% la {with}%.",
 
+  // ------------------------------------------------------------- session --
+  "Your session":
+    "Sesiunea ta",
+  "What you are playing tonight, and what it did to the roll.":
+    "Ce joci în seara asta, și ce a făcut asta bankroll-ului.",
+  "The tournaments you registered for, how long late registration has left on each, and an alarm before it closes.":
+    "Turneele la care te-ai înscris, cât mai are late reg la fiecare, și o alarmă înainte să se închidă.",
+  "Log every result and watch the roll move: profit, ROI, ITM and the worst downswing you have been through.":
+    "Notează fiecare rezultat și vezi cum se mișcă bankroll-ul: profit, ROI, ITM și cel mai rău downswing prin care ai trecut.",
+  "Local only — this page is not on the published site. Build with VITE_PUBLISH_SESSION=true to ship it.":
+    "Doar local — pagina asta nu e pe site-ul publicat. Rulează build cu VITE_PUBLISH_SESSION=true ca să o publici.",
+  "Untitled":
+    "Fără nume",
+  "Name":
+    "Nume",
+  "Date":
+    "Data",
+  "Site":
+    "Camera",
+  "Profit":
+    "Profit",
+  "ROI":
+    "ROI",
+  "Schedule":
+    "Program",
+  "What you are registered for, what is still open, and how long you have left to get in. Alarms fire while this tab is open.":
+    "La ce ești înscris, ce mai e deschis, și cât timp mai ai să intri. Alarmele sună cât timp acest tab e deschis.",
+  "Late reg closing":
+    "Se închide late reg",
+  "left":
+    "rămase",
+  "Dismiss":
+    "Închide",
+  "Registered and open":
+    "Înscris și deschis",
+  "Committed":
+    "Angajat",
+  "Local time":
+    "Ora locală",
+  "Add tournament":
+    "Adaugă turneu",
+  "Paste a lobby":
+    "Lipește un lobby",
+  "Enable notifications":
+    "Activează notificările",
+  "This browser has no notifications, so alarms appear on the page and beep.":
+    "Browserul ăsta nu are notificări, așa că alarmele apar în pagină și sună.",
+  "Alarms show a notification and beep. They only fire while this tab is open.":
+    "Alarmele afișează o notificare și sună. Funcționează doar cât timp acest tab e deschis.",
+  "Without notification permission, alarms still appear on this page and beep.":
+    "Fără permisiunea de notificări, alarmele tot apar în pagină și sună.",
+  "Read the lines":
+    "Citește liniile",
+  "One tournament per line: a start time, a buy-in with a currency symbol, a name, and the late-reg window.":
+    "Un turneu pe linie: ora de start, un buy-in cu simbol de monedă, un nume și fereastra de late reg.",
+  "Nothing scheduled yet. Add a tournament or paste a few lines from a lobby.":
+    "Nimic programat încă. Adaugă un turneu sau lipește câteva linii dintr-un lobby.",
+  "Nothing to read.":
+    "Nimic de citit.",
+  "Added {n} tournaments{skipped}.":
+    "Am adăugat {n} turnee{skipped}.",
+  " · skipped {n} lines":
+    " · am sărit {n} linii",
+  "In":
+    "Înscris",
+  "Starts":
+    "Începe",
+  "Late reg":
+    "Late reg",
+  "Closes in":
+    "Se închide în",
+  "Alarm":
+    "Alarmă",
+  "Registered":
+    "Înscris",
+  "Tournament name":
+    "Numele turneului",
+  "Upcoming":
+    "Urmează",
+  "Open":
+    "Deschis",
+  "Closed":
+    "Închis",
+  "Start time":
+    "Ora de start",
+  "Late reg minutes":
+    "Minute de late reg",
+  "min":
+    "min",
+  "Alarm minutes before close":
+    "Minute de alarmă înainte de închidere",
+  "off":
+    "oprit",
+  "Bankroll Tracker":
+    "Bankroll Tracker",
+  "Log every tournament and the numbers follow: profit, ROI, ITM and the worst run your roll has been through. This is where the ROI the other tools ask for should come from.":
+    "Notează fiecare turneu și cifrele vin de la sine: profit, ROI, ITM și cea mai rea perioadă prin care a trecut bankroll-ul tău. De aici ar trebui să vină ROI-ul pe care ți-l cer celelalte instrumente.",
+  "from ${amount}":
+    "de la ${amount}",
+  "on ${amount} staked":
+    "la ${amount} investiți",
+  "{n} of {total}":
+    "{n} din {total}",
+  "peak to trough":
+    "de la vârf la fund",
+  "Average buy-in":
+    "Buy-in mediu",
+  "best ${amount}":
+    "cel mai bun ${amount}",
+  "Starting bankroll":
+    "Bankroll de start",
+  "Export CSV":
+    "Exportă CSV",
+  "Log a tournament":
+    "Notează un turneu",
+  "Nightly":
+    "Nightly",
+  "Cashed":
+    "Încasat",
+  "Bounties":
+    "Bounty-uri",
+  "Add result":
+    "Adaugă rezultatul",
+  "Cost":
+    "Cost",
+  "Back":
+    "Înapoi",
+  "Under 500 tournaments this ROI is mostly noise. Do not size a bankroll off it.":
+    "Sub 500 de turnee, ROI-ul ăsta e mai mult zgomot statistic. Nu îți dimensiona bankroll-ul după el.",
+  "A few thousand is still thin for MTTs. Treat this as a direction, not a number.":
+    "Câteva mii tot puțin înseamnă pentru MTT-uri. Tratează-l ca pe o direcție, nu ca pe o cifră.",
+  "Enough to be worth something, though a good or bad run still moves it.":
+    "Suficient cât să însemne ceva, deși o perioadă bună sau proastă tot îl mișcă.",
+  "A sample big enough that the number means roughly what it says.":
+    "Un eșantion destul de mare cât cifra să însemne aproximativ ce spune.",
+
   // ----------------------------------------------------------------- misc --
   Save: 'Salvează',
   Reset: 'Resetează',

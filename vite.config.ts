@@ -32,6 +32,8 @@ const PAGES = [
  */
 const LOCAL_ONLY: { name: string; variable: string }[] = [
   { name: 'roadmap', variable: 'VITE_PUBLISH_ROADMAP' },
+  { name: 'schedule', variable: 'VITE_PUBLISH_SESSION' },
+  { name: 'tracker', variable: 'VITE_PUBLISH_SESSION' },
 ]
 
 function isOn(value: string | undefined): boolean {
