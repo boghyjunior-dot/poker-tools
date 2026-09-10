@@ -120,8 +120,15 @@ const TIME = /(\d{1,2}):(\d{2})/
  *
  *     20:15  $22  Bounty Hunter  90m
  *     21:00 | $5.50 | Micro Millions | late 120
+ *
+ * Every line in one paste belongs to the same room, which is how a lobby is
+ * actually copied — one site at a time.
  */
-export function parseScheduleText(text: string, today = new Date()): ScheduleParse {
+export function parseScheduleText(
+  text: string,
+  options: { today?: Date; site?: string } = {},
+): ScheduleParse {
+  const { today = new Date(), site = '' } = options
   const tournaments: Tournament[] = []
   const errors: string[] = []
   let seq = 0
@@ -166,7 +173,7 @@ export function parseScheduleText(text: string, today = new Date()): SchedulePar
     tournaments.push({
       id: `paste-${Date.now().toString(36)}-${seq++}`,
       name: name || 'Untitled',
-      site: '',
+      site,
       startsAt: startsAt.toISOString(),
       buyIn,
       lateRegMinutes,
@@ -180,6 +187,82 @@ export function parseScheduleText(text: string, today = new Date()): SchedulePar
   }
 
   return { tournaments, errors }
+}
+
+/**
+ * Rooms the schedule knows by name.
+ *
+ * Only suggestions: the site field stays free text, because networks and skins
+ * multiply faster than any list here could keep up with. Nothing about a
+ * tournament is inferred from its room — late registration varies far too much
+ * between events for a per-site default to be anything but a wrong guess.
+ */
+export const SITES = ['GGPoker', 'CoinPoker', 'iPoker', 'PokerStars', 'partypoker'] as const
+
+/** Every room actually present in a schedule, for the filter row. */
+export function sitesInUse(tournaments: readonly Tournament[]): string[] {
+  const seen = new Set<string>()
+  for (const tournament of tournaments) {
+    const site = tournament.site.trim()
+    if (site) seen.add(site)
+  }
+  return [...seen].sort((a, b) => a.localeCompare(b))
+}
+
+/** Committed money per room, so you can see where the night's stake sits. */
+export function committedBySite(views: readonly TournamentView[]): { site: string; amount: number }[] {
+  const totals = new Map<string, number>()
+  for (const view of views) {
+    if (!view.registered || view.status === 'closed') continue
+    const site = view.site.trim() || 'Other'
+    totals.set(site, (totals.get(site) ?? 0) + view.buyIn)
+  }
+  return [...totals.entries()]
+    .map(([site, amount]) => ({ site, amount }))
+    .sort((a, b) => b.amount - a.amount || a.site.localeCompare(b.site))
+}
+
+/** An empty filter means everything; otherwise only the rooms named. */
+export function filterBySite(
+  views: readonly TournamentView[],
+  sites: ReadonlySet<string>,
+): TournamentView[] {
+  if (sites.size === 0) return [...views]
+  return views.filter((view) => sites.has(view.site.trim()))
+}
+
+/** The whole schedule as JSON, so it can be backed up or shared. */
+export function toJson(tournaments: readonly Tournament[]): string {
+  return JSON.stringify(tournaments, null, 2)
+}
+
+export interface JsonImport {
+  tournaments: Tournament[]
+  error: string | null
+}
+
+/**
+ * Read a schedule back from JSON.
+ *
+ * Ids are reissued so importing a file twice adds two copies rather than
+ * silently overwriting the first — merging is the caller's decision, not this
+ * function's.
+ */
+export function fromJson(text: string): JsonImport {
+  let raw: unknown
+  try {
+    raw = JSON.parse(text)
+  } catch {
+    return { tournaments: [], error: 'That is not valid JSON.' }
+  }
+  const tournaments = parseStored(raw).map((tournament) => ({
+    ...tournament,
+    id: newTournamentId(),
+  }))
+  if (tournaments.length === 0) {
+    return { tournaments: [], error: 'No tournaments in that file.' }
+  }
+  return { tournaments, error: null }
 }
 
 export const STORAGE_KEY = 'poker-tools:schedule'

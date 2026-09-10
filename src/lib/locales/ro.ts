@@ -1371,6 +1371,13 @@ export const ro: Dictionary = {
     "Bounty-ul scade ce îți trebuie de la {without}% la {with}%.",
 
   // ------------------------------------------------------------- session --
+  "Room": "Camera",
+  "Committed by room": "Angajat pe camere",
+  "Show": "Arată",
+  "These lines are from": "Liniile astea sunt de la",
+  "Imported {n} tournaments.": "Am importat {n} turnee.",
+  "That is not valid JSON.": "Ăsta nu e JSON valid.",
+  "No tournaments in that file.": "Niciun turneu în fișierul ăla.",
   "Your session":
     "Sesiunea ta",
   "What you are playing tonight, and what it did to the roll.":

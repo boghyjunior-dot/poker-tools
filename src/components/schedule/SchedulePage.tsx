@@ -6,13 +6,19 @@ import { FEATURE_SESSION_PUBLISHED } from '../../lib/featureFlags'
 import { useT } from '../../lib/i18n'
 import {
   committed,
+  committedBySite,
   dueAlarms,
+  filterBySite,
+  fromJson,
   formatCountdown,
   loadSchedule,
   newTournamentId,
   parseScheduleText,
   saveSchedule,
+  SITES,
+  sitesInUse,
   sortByUrgency,
+  toJson,
   viewTournament,
   type Tournament,
 } from '../../lib/schedule'
@@ -74,6 +80,9 @@ export function SchedulePage() {
   const [pasteOpen, setPasteOpen] = useState(false)
   const [pasteText, setPasteText] = useState('')
   const [note, setNote] = useState<string | null>(null)
+  const [pasteSite, setPasteSite] = useState('')
+  const [siteFilter, setSiteFilter] = useState<Set<string>>(() => new Set())
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Alarms are checked inside the tick rather than in an effect on the
   // countdowns: an effect that reacts to a clock updating once a second is a
@@ -153,7 +162,7 @@ export function SchedulePage() {
   }
 
   const applyPaste = () => {
-    const { tournaments: parsed, errors } = parseScheduleText(pasteText)
+    const { tournaments: parsed, errors } = parseScheduleText(pasteText, { site: pasteSite })
     if (parsed.length === 0) {
       setNote(errors[0] ?? t('Nothing to read.'))
       return
@@ -177,6 +186,38 @@ export function SchedulePage() {
   // Looked up fresh each tick, so a banner that is still open keeps counting
   // down, and a tournament that closes drops out of it by itself.
   const ringingViews = views.filter((view) => ringing.has(view.id) && view.status !== 'closed')
+
+  const rooms = sitesInUse(tournaments)
+  const shown = filterBySite(views, siteFilter)
+  const perSite = committedBySite(views)
+
+  const toggleSite = (site: string) =>
+    setSiteFilter((prev) => {
+      const next = new Set(prev)
+      if (next.has(site)) next.delete(site)
+      else next.add(site)
+      return next
+    })
+
+  const exportJson = () => {
+    const blob = new Blob([toJson(tournaments)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `poker-schedule-${new Date().toISOString().slice(0, 10)}.json`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const importJson = async (file: File) => {
+    const { tournaments: imported, error } = fromJson(await file.text())
+    if (error) {
+      setNote(t(error))
+      return
+    }
+    setTournaments((prev) => [...prev, ...imported])
+    setNote(t('Imported {n} tournaments.', { n: imported.length }))
+  }
 
   const staked = committed(views)
   const live = views.filter((view) => view.status === 'lateReg' && view.registered)
@@ -271,6 +312,33 @@ export function SchedulePage() {
                 >
                   {t('Paste a lobby')}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-slate-700"
+                >
+                  {t('Import JSON')}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json,application/json"
+                  className="hidden"
+                  onChange={(event) => {
+                    const picked = event.target.files?.[0]
+                    if (picked) void importJson(picked)
+                    event.target.value = ''
+                  }}
+                />
+                {tournaments.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={exportJson}
+                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-slate-700"
+                  >
+                    {t('Export JSON')}
+                  </button>
+                )}
                 {permission !== 'granted' && permission !== 'unsupported' && (
                   <button
                     type="button"
@@ -302,19 +370,84 @@ export function SchedulePage() {
                   placeholder={'20:15  $22  Bounty Hunter  90m\n21:00 | $5.50 | Micro Millions | late 120'}
                   className="w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 font-mono text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                 />
-                <button
-                  type="button"
-                  onClick={applyPaste}
-                  className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-500"
-                >
-                  {t('Read the lines')}
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="text-[11px] text-slate-500">{t('These lines are from')}</label>
+                  <input
+                    list="schedule-sites"
+                    value={pasteSite}
+                    onChange={(event) => setPasteSite(event.target.value)}
+                    placeholder={t('Room')}
+                    className="w-36 rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                  />
+                  <button
+                    type="button"
+                    onClick={applyPaste}
+                    className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-500"
+                  >
+                    {t('Read the lines')}
+                  </button>
+                </div>
                 <p className="text-[11px] text-slate-500">
                   {t('One tournament per line: a start time, a buy-in with a currency symbol, a name, and the late-reg window.')}
                 </p>
               </div>
             )}
           </Panel>
+
+          {(perSite.length > 1 || rooms.length > 1) && (
+            <Panel>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                {perSite.length > 1 && (
+                  <div className="flex flex-wrap items-center gap-4">
+                    <span className="text-[10px] uppercase tracking-wider text-slate-500">
+                      {t('Committed by room')}
+                    </span>
+                    {perSite.map((row) => (
+                      <span key={row.site} className="text-sm text-slate-300">
+                        {row.site}{' '}
+                        <span className="font-semibold tabular-nums text-white">
+                          ${formatMoney(row.amount)}
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {rooms.length > 1 && (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-500">
+                      {t('Show')}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setSiteFilter(new Set())}
+                      className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                        siteFilter.size === 0
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                      }`}
+                    >
+                      {t('All')}
+                    </button>
+                    {rooms.map((room) => (
+                      <button
+                        key={room}
+                        type="button"
+                        onClick={() => toggleSite(room)}
+                        aria-pressed={siteFilter.has(room)}
+                        className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                          siteFilter.has(room)
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                        }`}
+                      >
+                        {room}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </Panel>
+          )}
 
           {views.length === 0 ? (
             <Panel>
@@ -324,11 +457,12 @@ export function SchedulePage() {
             </Panel>
           ) : (
             <Panel className="overflow-x-auto">
-              <table className="w-full min-w-[820px] text-sm">
+              <table className="w-full min-w-[900px] text-sm">
                 <thead>
                   <tr className="border-b border-slate-800 text-left text-[11px] uppercase tracking-wide text-slate-500">
                     <th className="pb-2 font-medium">{t('In')}</th>
                     <th className="pb-2 font-medium">{t('Tournament')}</th>
+                    <th className="pb-2 font-medium">{t('Room')}</th>
                     <th className="pb-2 font-medium">{t('Starts')}</th>
                     <th className="pb-2 font-medium">{t('Buy-in')}</th>
                     <th className="pb-2 font-medium">{t('Late reg')}</th>
@@ -338,7 +472,7 @@ export function SchedulePage() {
                   </tr>
                 </thead>
                 <tbody className="text-slate-300">
-                  {views.map((view) => {
+                  {shown.map((view) => {
                     const style = STATUS_STYLE[view.status]
                     const urgent = view.status === 'lateReg' && view.msToLateRegClose < 15 * MINUTE
                     return (
@@ -371,6 +505,16 @@ export function SchedulePage() {
                                 ? t('Open')
                                 : t('Closed')}
                           </span>
+                        </td>
+                        <td className="py-2">
+                          <input
+                            list="schedule-sites"
+                            aria-label={t('Room')}
+                            value={view.site}
+                            onChange={(event) => update(view.id, { site: event.target.value })}
+                            placeholder="—"
+                            className="w-24 rounded border border-transparent bg-transparent px-1 py-0.5 text-xs text-slate-400 placeholder:text-slate-700 hover:border-slate-700 focus:border-indigo-600 focus:outline-none"
+                          />
                         </td>
                         <td className="py-2">
                           <input
@@ -459,6 +603,12 @@ export function SchedulePage() {
             </Panel>
           )}
         </div>
+
+        <datalist id="schedule-sites">
+          {[...new Set([...SITES, ...rooms])].map((room) => (
+            <option key={room} value={room} />
+          ))}
+        </datalist>
 
         <Footer />
       </div>

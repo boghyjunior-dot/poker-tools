@@ -6,7 +6,13 @@ import {
   lateRegCloseTime,
   parseScheduleText,
   parseStored,
+  committedBySite,
+  filterBySite,
+  fromJson,
+  SITES,
+  sitesInUse,
   sortByUrgency,
+  toJson,
   viewTournament,
   type Tournament,
 } from './schedule'
@@ -117,7 +123,7 @@ describe('reading a pasted lobby', () => {
   const today = new Date('2026-09-10T00:00:00')
 
   it('picks out time, buy-in, late reg and name from a loose line', () => {
-    const { tournaments, errors } = parseScheduleText('20:15  $22  Bounty Hunter  90m', today)
+    const { tournaments, errors } = parseScheduleText('20:15  $22  Bounty Hunter  90m', { today })
     expect(errors).toEqual([])
     expect(tournaments).toHaveLength(1)
     const [t] = tournaments
@@ -129,35 +135,35 @@ describe('reading a pasted lobby', () => {
   })
 
   it('copes with separators and a written late-reg', () => {
-    const { tournaments } = parseScheduleText('21:00 | $5.50 | Micro Millions | late 120', today)
+    const { tournaments } = parseScheduleText('21:00 | $5.50 | Micro Millions | late 120', { today })
     expect(tournaments[0].buyIn).toBe(5.5)
     expect(tournaments[0].lateRegMinutes).toBe(120)
     expect(tournaments[0].name).toBe('Micro Millions')
   })
 
   it('falls back to an hour of late reg when the line does not say', () => {
-    const { tournaments } = parseScheduleText('19:30 $11 Nightly', today)
+    const { tournaments } = parseScheduleText('19:30 $11 Nightly', { today })
     expect(tournaments[0].lateRegMinutes).toBe(60)
   })
 
   it('needs a currency symbol before it calls a number a buy-in', () => {
     // "109" here is part of the name, not the price.
-    const { tournaments } = parseScheduleText('19:30 Event 109 Special', today)
+    const { tournaments } = parseScheduleText('19:30 Event 109 Special', { today })
     expect(tournaments[0].buyIn).toBe(0)
   })
 
   it('reports lines it cannot read instead of inventing a tournament', () => {
-    const { tournaments, errors } = parseScheduleText('Tournament schedule\n20:15 $22 Real', today)
+    const { tournaments, errors } = parseScheduleText('Tournament schedule\n20:15 $22 Real', { today })
     expect(tournaments).toHaveLength(1)
     expect(errors[0]).toContain('No start time')
   })
 
   it('rejects an impossible time', () => {
-    expect(parseScheduleText('99:99 $5 Nope', today).errors[0]).toContain('not a time')
+    expect(parseScheduleText('99:99 $5 Nope', { today }).errors[0]).toContain('not a time')
   })
 
   it('says so when there is nothing at all', () => {
-    expect(parseScheduleText('   ', today).errors[0]).toContain('Nothing to read')
+    expect(parseScheduleText('   ', { today }).errors[0]).toContain('Nothing to read')
   })
 })
 
@@ -195,5 +201,93 @@ describe('formatCountdown', () => {
   it('shows a dash once the moment has passed', () => {
     expect(formatCountdown(0)).toBe('—')
     expect(formatCountdown(-5000)).toBe('—')
+  })
+})
+
+describe('rooms', () => {
+  it('suggests the networks people actually name', () => {
+    expect(SITES).toContain('GGPoker')
+    expect(SITES).toContain('CoinPoker')
+    expect(SITES).toContain('iPoker')
+  })
+
+  it('lists only the rooms a schedule really uses, sorted and deduped', () => {
+    const schedule = [
+      make({ id: '1', site: 'iPoker' }),
+      make({ id: '2', site: 'GGPoker' }),
+      make({ id: '3', site: 'GGPoker' }),
+      make({ id: '4', site: '  ' }),
+    ]
+    expect(sitesInUse(schedule)).toEqual(['GGPoker', 'iPoker'])
+  })
+
+  it('tags every line of one paste with the room it came from', () => {
+    const today = new Date('2026-09-10T00:00:00')
+    const { tournaments } = parseScheduleText('20:15 $22 A 90m\n21:00 $5 B 60m', {
+      today,
+      site: 'CoinPoker',
+    })
+    expect(tournaments.map((t) => t.site)).toEqual(['CoinPoker', 'CoinPoker'])
+  })
+
+  it('leaves the room blank when a paste does not say', () => {
+    const today = new Date('2026-09-10T00:00:00')
+    expect(parseScheduleText('20:15 $22 A', { today }).tournaments[0].site).toBe('')
+  })
+
+  it('splits the committed stake by room, biggest first', () => {
+    const views = [
+      viewTournament(make({ id: '1', site: 'GGPoker', buyIn: 22 }), NOW),
+      viewTournament(make({ id: '2', site: 'GGPoker', buyIn: 55 }), NOW),
+      viewTournament(make({ id: '3', site: 'CoinPoker', buyIn: 11 }), NOW),
+      viewTournament(make({ id: '4', site: '', buyIn: 5 }), NOW),
+    ]
+    expect(committedBySite(views)).toEqual([
+      { site: 'GGPoker', amount: 77 },
+      { site: 'CoinPoker', amount: 11 },
+      { site: 'Other', amount: 5 },
+    ])
+  })
+
+  it('leaves closed and unregistered tournaments out of the split', () => {
+    const closed = viewTournament(
+      make({ id: 'c', site: 'iPoker', startsAt: new Date(NOW - 5 * 3600_000).toISOString() }),
+      NOW,
+    )
+    const watching = viewTournament(make({ id: 'w', site: 'iPoker', registered: false }), NOW)
+    expect(committedBySite([closed, watching])).toEqual([])
+  })
+
+  it('filters to the rooms picked, and shows everything when none are', () => {
+    const views = [
+      viewTournament(make({ id: 'g', site: 'GGPoker' }), NOW),
+      viewTournament(make({ id: 'c', site: 'CoinPoker' }), NOW),
+    ]
+    expect(filterBySite(views, new Set()).map((v) => v.id)).toEqual(['g', 'c'])
+    expect(filterBySite(views, new Set(['GGPoker'])).map((v) => v.id)).toEqual(['g'])
+    expect(filterBySite(views, new Set(['GGPoker', 'CoinPoker']))).toHaveLength(2)
+  })
+})
+
+describe('sharing a schedule', () => {
+  it('round-trips through JSON', () => {
+    const schedule = [make({ site: 'GGPoker' }), make({ id: 't2', site: 'CoinPoker' })]
+    const { tournaments, error } = fromJson(toJson(schedule))
+    expect(error).toBeNull()
+    expect(tournaments.map((t) => t.site)).toEqual(['GGPoker', 'CoinPoker'])
+  })
+
+  it('reissues ids so importing twice adds copies rather than overwriting', () => {
+    const schedule = [make()]
+    const first = fromJson(toJson(schedule)).tournaments[0]
+    const second = fromJson(toJson(schedule)).tournaments[0]
+    expect(first.id).not.toBe('t1')
+    expect(first.id).not.toBe(second.id)
+  })
+
+  it('says what is wrong instead of throwing', () => {
+    expect(fromJson('{ not json').error).toContain('not valid JSON')
+    expect(fromJson('[]').error).toContain('No tournaments')
+    expect(fromJson('{"a":1}').error).toContain('No tournaments')
   })
 })

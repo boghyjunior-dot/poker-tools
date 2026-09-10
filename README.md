@@ -73,12 +73,24 @@ picks the start time, buy-in and late-reg window out of each one:
 21:00 | $5.50 | Micro Millions | late 120
 ```
 
+A paste is tagged with the room it came from — GGPoker, CoinPoker, iPoker or
+anything else you type — so one night across three networks reads as one list.
+
 - Sorted by which deadline lands first, with finished tournaments pushed down
 - Per-tournament alarm, set in minutes before late reg closes
 - Alarms show a browser notification, beep, and raise a banner that keeps
   counting down
 - **They only fire while the tab is open.** There is no service worker and no
   server, so a closed tab means no alarm
+- Filter by room, and see the committed stake split per room
+- Export the whole schedule to JSON and import it back, so a regular week can be
+  kept as a file rather than retyped
+
+**No live lobby feeds.** GGPoker, CoinPoker and iPoker publish no open schedule
+API, a browser cannot fetch another site's lobby across origins, and scraping
+them would breach their terms — so nothing here pretends to know what is running
+tonight. Late registration is also never guessed from the room: it varies far too
+much between events for a per-site default to be anything but wrong.
 
 ## Bankroll Tracker
 
