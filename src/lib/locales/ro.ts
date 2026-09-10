@@ -952,6 +952,8 @@ export const ro: Dictionary = {
   "Reference": "Referință",
 
   // ------------------------------------------------------------- roadmap --
+  "Local only — this page is not on the published site. Build with VITE_PUBLISH_ROADMAP=true to ship it.":
+    "Doar local — pagina asta nu e pe site-ul publicat. Rulează build cu VITE_PUBLISH_ROADMAP=true ca să o publici.",
   "The idea you own here":
     "Ideea pe care o stăpânești aici",
   "Volume to internalise it":

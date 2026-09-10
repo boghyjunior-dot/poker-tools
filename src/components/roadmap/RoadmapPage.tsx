@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
 import { Footer } from '../Footer'
+import { FEATURE_ROADMAP_PUBLISHED } from '../../lib/featureFlags'
 import { useT, type TranslateFn } from '../../lib/i18n'
 import {
   loadStage,
@@ -168,6 +169,14 @@ export function RoadmapPage() {
             'Six stages of understanding, from not knowing the rules to knowing the baseline well enough to leave it on purpose. The rungs are what you know — stakes follow, they do not define it.',
           )}
         </p>
+
+        {!FEATURE_ROADMAP_PUBLISHED && (
+          <p className="mb-6 rounded-lg border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-xs text-amber-300">
+            {t(
+              'Local only — this page is not on the published site. Build with VITE_PUBLISH_ROADMAP=true to ship it.',
+            )}
+          </p>
+        )}
 
         <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
           <div className="flex flex-col items-center gap-4">

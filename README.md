@@ -8,7 +8,7 @@ anything you save stays in your own `localStorage`.
 
 | Tool | What it answers | Status |
 | --- | --- | --- |
-| [Roadmap](#roadmap) | What do I actually understand, and what comes next? | Done |
+| [Roadmap](#roadmap) | What do I actually understand, and what comes next? | Local only |
 | [MDF Range Tool](#mdf-range-tool) | How much of my range do I have to defend? | In progress |
 | [MDF Practice](#mdf-practice) | Can I actually hit that frequency under fire? | Coming soon |
 | [Equity Calculator](#equity-calculator) | How does this hand run against that range? | In review |
@@ -41,6 +41,20 @@ it has survived a sample — but they sit under the idea rather than above it.
   positions, so the curve keeps passing through them if a stage is added
 - Mark the last stage you could explain out loud and the road fills in behind
   you; every animation is dropped for `prefers-reduced-motion`
+
+**Local only.** The Roadmap is visible in the dev server but left out of the
+published site. It is not just hidden: the build drops the entry entirely, so
+no HTML reaches `dist`, there is no URL to stumble onto and nothing in the
+sitemap. To ship it, set the variable:
+
+```bash
+VITE_PUBLISH_ROADMAP=true npm run build
+```
+
+The same mechanism works for any page — add it to `LOCAL_ONLY` in
+`vite.config.ts` and gate its menu section with a flag from
+`src/lib/featureFlags.ts`. While a page is local-only it says so in a banner,
+so you cannot mistake the dev server for the live site.
 
 ## MDF Range Tool
 

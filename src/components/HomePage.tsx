@@ -1,4 +1,4 @@
-import { FEATURE_PRACTICE_ENABLED } from '../lib/featureFlags'
+import { FEATURE_PRACTICE_ENABLED, FEATURE_ROADMAP_ENABLED } from '../lib/featureFlags'
 import { useT } from '../lib/i18n'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { Footer } from './Footer'
@@ -221,9 +221,18 @@ interface Tool {
 }
 
 /** The menu, grouped. Order here is the order on screen. */
-const SECTIONS: { name: string; blurb: string; tools: Tool[] }[] = [
+interface Section {
+  name: string
+  blurb: string
+  tools: Tool[]
+  /** Held back from the published site unless its flag is set. */
+  localOnly?: boolean
+}
+
+const SECTIONS: Section[] = [
   {
     name: 'Start here',
+    localOnly: true,
     blurb: 'The whole climb, measured by what you understand.',
     tools: [
       {
@@ -369,7 +378,7 @@ export function HomePage() {
         </header>
 
         <div className="flex flex-col gap-9">
-          {SECTIONS.map((section) => (
+          {SECTIONS.filter((section) => !section.localOnly || FEATURE_ROADMAP_ENABLED).map((section) => (
             <section key={section.name}>
               <div className="mb-3 flex items-baseline gap-3 border-b border-slate-800 pb-2">
                 <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-300">
