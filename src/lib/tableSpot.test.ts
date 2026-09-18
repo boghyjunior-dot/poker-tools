@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { deriveSpot, formatAmount, newSeat, seatsForTable, type Blinds, type Seat } from './tableSpot'
+import { defaultBounty, deriveSpot, formatAmount, newSeat, seatsForTable, type Blinds, type Seat } from './tableSpot'
 
 const BLINDS: Blinds = { smallBlind: 500, bigBlind: 1000, ante: 0, bigBlindAnte: 1000 }
 
@@ -208,5 +208,24 @@ describe('amounts in big blinds', () => {
 
   it('falls back to chips when the big blind is nonsense', () => {
     expect(formatAmount(5000, 0, 'bb')).toBe('5,000')
+  })
+})
+
+describe('the default bounty', () => {
+  it('reads 2.50 off a 10.80 listed buy-in, because the fee sits on top', () => {
+    // 10.80 = 10 + 8%. A flat 8% discount would give 2.48, which is wrong.
+    expect(defaultBounty(10.8)).toBe(2.5)
+  })
+
+  it('scales with the buy-in', () => {
+    expect(defaultBounty(108)).toBe(25)
+    expect(defaultBounty(54)).toBe(12.5)
+    expect(defaultBounty(10)).toBe(2.31)
+  })
+
+  it('offers nothing when there is no buy-in to read', () => {
+    expect(defaultBounty(0)).toBe(0)
+    expect(defaultBounty(-5)).toBe(0)
+    expect(defaultBounty(Number.NaN)).toBe(0)
   })
 })

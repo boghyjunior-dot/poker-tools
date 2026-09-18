@@ -9,6 +9,7 @@ import { countRangeCombosFromStates, type RangeCellStates } from '../../lib/equi
 import { useT } from '../../lib/i18n'
 import { cellKey, type RankIndex } from '../../types/poker'
 import {
+  defaultBounty,
   deriveSpot,
   formatAmount,
   newSeat,
@@ -31,9 +32,14 @@ const ACTION_LABEL: Record<SeatAction, string> = {
 const DEFAULT_BLINDS: Blinds = { smallBlind: 500, bigBlind: 1000, ante: 0, bigBlindAnte: 1000 }
 const DEFAULT_STACK = 25_000
 
-/** An opening table: everyone folded to the big blind, who is you. */
-function startingSeats(size: TableSize): Seat[] {
-  const seats = seatsForTable(size).map((position) => newSeat(position, DEFAULT_STACK))
+/**
+ * An opening table: everyone folded to the big blind, who is you, and every
+ * seat carrying the bounty the buy-in implies.
+ */
+function startingSeats(size: TableSize, buyIn: number): Seat[] {
+  const seats = seatsForTable(size).map((position) =>
+    newSeat(position, DEFAULT_STACK, defaultBounty(buyIn)),
+  )
   seats[seats.length - 1].isHero = true
   return seats
 }
@@ -101,10 +107,10 @@ export function TableSpotPanel({
 }) {
   const t = useT()
   const [size, setSize] = useState<TableSize>(8)
-  const [seats, setSeats] = useState<Seat[]>(() => startingSeats(8))
+  const [seats, setSeats] = useState<Seat[]>(() => startingSeats(8, buyIn))
   const [blinds, setBlinds] = useState<Blinds>(DEFAULT_BLINDS)
   const [view, setView] = useState<AmountView>('chips')
-  const [selected, setSelected] = useState(() => startingSeats(8).length - 1)
+  const [selected, setSelected] = useState(() => seatsForTable(8).length - 1)
   const [result, setResult] = useState<EquityResult | null>(null)
   const [grid, setGrid] = useState<HandEquityGrid | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -122,10 +128,23 @@ export function TableSpotPanel({
 
   const changeSize = (next: TableSize) => {
     setSize(next)
-    setSeats(startingSeats(next))
+    setSeats(startingSeats(next, buyIn))
     setSelected(seatsForTable(next).length - 1)
     setResult(null)
     setGrid(null)
+  }
+
+  /**
+   * A new buy-in re-derives the bounty on every seat still carrying the old
+   * default. A bounty someone typed by hand is theirs and stays put.
+   */
+  const changeBuyIn = (value: number) => {
+    const previous = defaultBounty(buyIn)
+    const next = defaultBounty(value)
+    setSeats((prev) =>
+      prev.map((item) => (item.bountyAmount === previous ? { ...item, bountyAmount: next } : item)),
+    )
+    onBuyIn(value)
   }
 
   const makeHero = (index: number) =>
@@ -261,7 +280,7 @@ export function TableSpotPanel({
         </div>
 
         <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Num label="Buy-in" value={buyIn} onChange={onBuyIn} hint="Prices bounties in chips" />
+          <Num label="Buy-in" value={buyIn} onChange={changeBuyIn} hint="Prices bounties in chips" />
           <Num
             label="Starting stack"
             value={startingStack}

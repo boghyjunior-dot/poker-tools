@@ -114,11 +114,11 @@ export interface SpotDerived {
   problems: string[]
 }
 
-export function newSeat(position: Position, stack: number): Seat {
+export function newSeat(position: Position, stack: number, bountyAmount = 0): Seat {
   return {
     position,
     stack,
-    bountyAmount: 0,
+    bountyAmount,
     action: 'fold',
     raiseTo: 0,
     range: {},
@@ -294,4 +294,20 @@ export function formatAmount(chips: number, bigBlind: number, view: AmountView):
     return `${text} BB`
   }
   return formatMoney(chips)
+}
+
+/**
+ * The bounty a PKO seat starts with, read off the listed buy-in.
+ *
+ * A listed buy-in like 10.80 carries the 8% fee on top of the money that
+ * plays (10.80 = 10 + 8%), and the starting bounty is a quarter of that net:
+ * half the net funds the bounty pool, and half of a player's bounty is the
+ * cash half a captor is actually paid. So 10.80 → 2.50, not 2.48 — the fee
+ * comes off by division because it was added on top, not carved out.
+ *
+ * Only a default: rooms vary, and every seat's bounty stays editable.
+ */
+export function defaultBounty(listedBuyIn: number): number {
+  if (!Number.isFinite(listedBuyIn) || listedBuyIn <= 0) return 0
+  return Math.round((listedBuyIn / 1.08 / 4) * 100) / 100
 }

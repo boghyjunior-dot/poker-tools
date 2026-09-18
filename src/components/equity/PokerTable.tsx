@@ -215,7 +215,9 @@ export function PokerTable({
             {actionChip}
             {seat.bountyAmount > 0 && !seat.isHero && (
               <span className="mt-0.5 block text-[9px] font-medium leading-tight text-fuchsia-300">
-                🎯 {seat.bountyAmount}
+                🎯{' '}
+                {/* Money reads as money: 2.50, not 2.5 — but 50 stays 50. */}
+                {seat.bountyAmount % 1 === 0 ? seat.bountyAmount : seat.bountyAmount.toFixed(2)}
               </span>
             )}
           </button>
