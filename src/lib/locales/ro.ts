@@ -1369,6 +1369,8 @@ export const ro: Dictionary = {
     "Bounty-ul scade ce îți trebuie de la {without}% la {with}%.",
 
   // ------------------------------------------------------------ the table --
+  "{n} capturable": "{n} de câștigat",
+  "Show amounts as": "Arată sumele ca",
   "Start from":
     "Pornește de la",
   "A table":
@@ -1409,8 +1411,6 @@ export const ro: Dictionary = {
     "doar pe pot odds",
   "With the bounty":
     "Cu bounty-ul",
-  "{n} chips capturable":
-    "{n} chips de câștigat",
   "no bounty you can win":
     "niciun bounty pe care îl poți câștiga",
   "{n} dead":

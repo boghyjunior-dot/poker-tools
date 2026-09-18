@@ -19,6 +19,7 @@ import {
   totalCapturableBountyChips,
   type BountyBreakdown,
 } from './equityBounty'
+import { formatMoney } from './formatNumber'
 import type { RangeCellStates } from './equityRange'
 import type { BoardCard } from '../types/poker'
 
@@ -273,4 +274,24 @@ export function deriveSpot(
     potOdds: formatOdds(finalPot - heroCallAmount, heroCallAmount),
     problems,
   }
+}
+
+/** How amounts are shown: raw chips, or multiples of the big blind. */
+export type AmountView = 'chips' | 'bb'
+
+/**
+ * One amount, in the chosen view.
+ *
+ * Big blinds keep one decimal until they are large enough that the fraction
+ * stops meaning anything — nobody talks about a 112.4 BB stack, but the
+ * difference between 8 BB and 8.5 BB is a different shove chart.
+ */
+export function formatAmount(chips: number, bigBlind: number, view: AmountView): string {
+  if (view === 'bb' && bigBlind > 0) {
+    const bb = chips / bigBlind
+    const text =
+      Math.abs(bb) >= 100 ? Math.round(bb).toLocaleString('en-US') : bb.toFixed(1).replace(/\.0$/, '')
+    return `${text} BB`
+  }
+  return formatMoney(chips)
 }

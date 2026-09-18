@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { deriveSpot, newSeat, seatsForTable, type Blinds, type Seat } from './tableSpot'
+import { deriveSpot, formatAmount, newSeat, seatsForTable, type Blinds, type Seat } from './tableSpot'
 
 const BLINDS: Blinds = { smallBlind: 500, bigBlind: 1000, ante: 0, bigBlindAnte: 1000 }
 
@@ -187,5 +187,26 @@ describe('table sizes', () => {
     for (const size of [6, 8, 9] as const) {
       expect(seatsForTable(size).slice(-2)).toEqual(['SB', 'BB'])
     }
+  })
+})
+
+describe('amounts in big blinds', () => {
+  it('shows chips untouched and BB divided', () => {
+    expect(formatAmount(23_500, 1000, 'chips')).toBe('23,500')
+    expect(formatAmount(23_500, 1000, 'bb')).toBe('23.5 BB')
+  })
+
+  it('drops the pointless fraction on round and huge figures', () => {
+    expect(formatAmount(25_000, 1000, 'bb')).toBe('25 BB')
+    expect(formatAmount(250_000, 1000, 'bb')).toBe('250 BB')
+  })
+
+  it('keeps the half blind that changes a shove chart', () => {
+    expect(formatAmount(8500, 1000, 'bb')).toBe('8.5 BB')
+    expect(formatAmount(-1200, 1000, 'bb')).toBe('-1.2 BB')
+  })
+
+  it('falls back to chips when the big blind is nonsense', () => {
+    expect(formatAmount(5000, 0, 'bb')).toBe('5,000')
   })
 })

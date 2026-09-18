@@ -6,13 +6,14 @@ import { EQUITY_PRESET_RANGES, parsePredefinedRange } from '../../lib/predefined
 import { calculateEquity, marginOfErrorForEquity, type EquityResult } from '../../lib/equity'
 import { handEquities, type HandEquityGrid } from '../../lib/callingRange'
 import { countRangeCombosFromStates, type RangeCellStates } from '../../lib/equityRange'
-import { formatMoney } from '../../lib/formatNumber'
 import { useT } from '../../lib/i18n'
 import { cellKey, type RankIndex } from '../../types/poker'
 import {
   deriveSpot,
+  formatAmount,
   newSeat,
   seatsForTable,
+  type AmountView,
   type Blinds,
   type Seat,
   type SeatAction,
@@ -102,6 +103,7 @@ export function TableSpotPanel({
   const [size, setSize] = useState<TableSize>(8)
   const [seats, setSeats] = useState<Seat[]>(() => startingSeats(8))
   const [blinds, setBlinds] = useState<Blinds>(DEFAULT_BLINDS)
+  const [view, setView] = useState<AmountView>('chips')
   const [selected, setSelected] = useState(() => startingSeats(8).length - 1)
   const [result, setResult] = useState<EquityResult | null>(null)
   const [grid, setGrid] = useState<HandEquityGrid | null>(null)
@@ -195,13 +197,33 @@ export function TableSpotPanel({
 
   const heroCombos = spot.hero ? countRangeCombosFromStates(spot.hero.range) : 0
   const ready = spot.problems.length === 0 && heroCombos > 0
+  // One view for every number derived in chips; inputs stay in chips.
+  const amount = (chips: number) => formatAmount(chips, blinds.bigBlind, view)
 
   return (
     <div className="flex flex-col gap-4">
       <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-sm font-semibold text-white">{t('The table')}</h2>
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-1" role="group" aria-label={t('Show amounts as')}>
+              {(['chips', 'bb'] as AmountView[]).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setView(option)}
+                  aria-pressed={view === option}
+                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                    view === option
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                  }`}
+                >
+                  {option === 'chips' ? t('Chips') : 'BB'}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-1">
             {([6, 8, 9] as TableSize[]).map((option) => (
               <button
                 key={option}
@@ -216,6 +238,7 @@ export function TableSpotPanel({
                 {option}-max
               </button>
             ))}
+            </div>
           </div>
         </div>
 
@@ -225,6 +248,8 @@ export function TableSpotPanel({
           onSelect={setSelected}
           potBeforeCall={spot.potBeforeCall}
           heroCallAmount={spot.heroCallAmount}
+          bigBlind={blinds.bigBlind}
+          view={view}
         />
 
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -331,8 +356,8 @@ export function TableSpotPanel({
       <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
         <h2 className="mb-3 text-sm font-semibold text-white">{t('The price')}</h2>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Stat label="Pot" value={formatMoney(spot.finalPot)} hint={t('{n} dead', { n: formatMoney(spot.deadChips) })} />
-          <Stat label="To call" value={formatMoney(spot.heroCallAmount)} tone="text-amber-300" hint={spot.potOdds} />
+          <Stat label="Pot" value={amount(spot.finalPot)} hint={t('{n} dead', { n: amount(spot.deadChips) })} />
+          <Stat label="To call" value={amount(spot.heroCallAmount)} tone="text-amber-300" hint={spot.potOdds} />
           <Stat
             label="Equity you need"
             value={`${spot.requiredEquityPct.toFixed(1)}%`}
@@ -344,7 +369,7 @@ export function TableSpotPanel({
             tone={spot.capturableBountyChips > 0 ? 'text-emerald-400' : 'text-slate-500'}
             hint={
               spot.capturableBountyChips > 0
-                ? t('{n} chips capturable', { n: formatMoney(spot.capturableBountyChips) })
+                ? t('{n} capturable', { n: amount(spot.capturableBountyChips) })
                 : t('no bounty you can win')
             }
           />
@@ -423,7 +448,8 @@ export function TableSpotPanel({
                 }`}
               >
                 {result.callEv.evChips >= 0 ? '+' : ''}
-                {formatMoney(result.callEv.evChips)} {t('chips')}
+                {amount(result.callEv.evChips)}
+                {view === 'chips' ? ` ${t('chips')}` : ''}
               </span>
             </p>
           )}
