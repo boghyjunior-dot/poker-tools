@@ -1368,6 +1368,26 @@ export const ro: Dictionary = {
   "The bounty drops what you need from {without}% to {with}%.":
     "Bounty-ul scade ce îți trebuie de la {without}% la {with}%.",
 
+  // -------------------------------------------------------- calling range --
+  "Hands you can call with":
+    "Mâinile cu care poți da call",
+  "Every hand worth at least {pct}% against this range":
+    "Fiecare mână care valorează cel puțin {pct}% împotriva acestui range",
+  "{n} of 1,326 combos":
+    "{n} din 1.326 de combos",
+  "The bounty adds":
+    "Bounty-ul adaugă",
+  "{n} more combos, from {from}% to {to}%":
+    "încă {n} combos, de la {from}% la {to}%",
+  "Call on pot odds alone":
+    "Call doar pe pot odds",
+  "Call only because of the bounty":
+    "Call doar din cauza bounty-ului",
+  "Too close to separate at this sample":
+    "Prea aproape ca să le separi la acest eșantion",
+  "Equity per hand from {n} simulated hands, so the edge of the range is fuzzy: {marginal} combos sit close enough to break-even that this sample cannot call it either way. Assumes the pot is settled all-in on this street.":
+    "Equity pe mână din {n} mâini simulate, deci marginea range-ului e neclară: {marginal} combos sunt destul de aproape de break-even cât acest eșantion nu le poate decide în niciun fel. Presupune că potul se rezolvă all-in pe strada asta.",
+
   // ------------------------------------------------------------- session --
   "Local only — this page is not on the published site. Build with {variable}=true to ship it.":
     "Doar local — pagina asta nu e pe site-ul publicat. Rulează build cu {variable}=true ca să o publici.",

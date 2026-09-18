@@ -133,6 +133,12 @@ against one or more opponents.
   trust it
 - Bounty-aware call EV, including whether you actually cover the player whose
   bounty you would be winning
+- **The calling range**: all 169 starting hands scored against the villain range
+  at once, with the ones that clear the break-even bar shaded in. The hands the
+  bounty pays for are a separate colour, so you can see what it buys rather than
+  read it off a number
+- Hands too close to break-even to separate at the sample size are marked as
+  such rather than being quietly sorted into one side
 
 ## Mystery Bounty
 
