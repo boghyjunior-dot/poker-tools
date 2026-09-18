@@ -63,9 +63,16 @@ export interface Seat {
   action: SeatAction
   /** Total chips committed on a raise. Ignored for every other action. */
   raiseTo: number
+  /** What a villain shoves, raises or calls with. Hero does not get one. */
   range: RangeCellStates
-  /** A specific holding, used instead of the range when both are present. */
-  hand?: [BoardCard, BoardCard] | null
+  /**
+   * Hero's exact two cards, half-filled while the picker is open.
+   *
+   * Hero is a hand and villains are ranges on purpose: you always know your
+   * own cards, and you never know theirs — a range for hero only invites
+   * averaging over hands you are not actually holding.
+   */
+  hand?: [BoardCard | null, BoardCard | null] | null
   isHero: boolean
 }
 

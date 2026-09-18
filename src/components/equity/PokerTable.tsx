@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { useT } from '../../lib/i18n'
+import { RANKS, type BoardCard, type SuitId } from '../../types/poker'
 import {
   formatAmount,
   type AmountView,
@@ -13,6 +14,29 @@ const ACTION_STYLE: Record<SeatAction, string> = {
   call: 'bg-sky-900/70 text-sky-200',
   raise: 'bg-amber-900/70 text-amber-200',
   shove: 'bg-rose-900/70 text-rose-200',
+}
+
+const SUIT_GLYPH: Record<SuitId, string> = { s: '♠', h: '♥', d: '♦', c: '♣' }
+
+/** Hero's cards on the seat card — A♠ K♥, red suits in red. */
+function HandGlyphs({ hand }: { hand?: [BoardCard | null, BoardCard | null] | null }) {
+  if (!hand?.[0] || !hand?.[1]) return null
+  return (
+    <span className="block text-[10px] font-bold leading-tight sm:text-[11px]">
+      {[hand[0], hand[1]].map((card, slot) => (
+        <span
+          key={slot}
+          className={
+            card.suit === 'h' || card.suit === 'd' ? 'text-rose-300' : 'text-slate-100'
+          }
+        >
+          {slot === 1 ? ' ' : ''}
+          {RANKS[card.rank]}
+          {SUIT_GLYPH[card.suit]}
+        </span>
+      ))}
+    </span>
+  )
 }
 
 const ACTION_LABEL: Record<SeatAction, string> = {
@@ -198,6 +222,7 @@ export function PokerTable({
                   {seat.position}
                 </span>
               )}
+              {seat.isHero && <HandGlyphs hand={seat.hand} />}
               <SeatInput
                 label={t('Stack')}
                 value={seat.stack}
@@ -234,6 +259,7 @@ export function PokerTable({
             {seat.isHero && (
               <span className="block text-[9px] leading-tight text-slate-400">{seat.position}</span>
             )}
+            {seat.isHero && <HandGlyphs hand={seat.hand} />}
             <span
               className={`block text-[10px] font-semibold tabular-nums leading-tight sm:text-[11px] ${
                 dimmed ? 'text-slate-300' : 'text-slate-100'

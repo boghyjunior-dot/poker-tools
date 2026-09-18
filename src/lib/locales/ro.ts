@@ -1369,6 +1369,8 @@ export const ro: Dictionary = {
     "Bounty-ul scade ce îți trebuie de la {without}% la {with}%.",
 
   // ------------------------------------------------------------ the table --
+  "Pick your two cards first.": "Alege-ți mai întâi cele două cărți.",
+  "Your hand": "Mâna ta",
   "Click a seat to edit it. Double-click to make it yours.":
     "Dă click pe un loc ca să-l editezi. Dublu click ca să fie al tău.",
   "{n} capturable": "{n} de câștigat",

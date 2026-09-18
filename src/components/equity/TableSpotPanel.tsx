@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { EquityMatrix } from './EquityMatrix'
+import { HoleCardPicker } from './HoleCardPicker'
 import { PokerTable } from './PokerTable'
 import { CallingRangeSection } from './CallingRangeSection'
 import { EQUITY_PRESET_RANGES, parsePredefinedRange } from '../../lib/predefinedRanges'
@@ -7,7 +8,7 @@ import { calculateEquity, marginOfErrorForEquity, type EquityResult } from '../.
 import { handEquities, type HandEquityGrid } from '../../lib/callingRange'
 import { countRangeCombosFromStates, type RangeCellStates } from '../../lib/equityRange'
 import { useT } from '../../lib/i18n'
-import { cellKey, type RankIndex } from '../../types/poker'
+import { cellKey, type BoardCard, type RankIndex } from '../../types/poker'
 import {
   defaultBounty,
   deriveSpot,
@@ -165,9 +166,15 @@ export function TableSpotPanel({
         const hero = spot.hero
         if (!hero) throw new Error('Pick which seat is yours.')
         if (spot.activeVillains.length === 0) throw new Error('Nobody is in the hand with you.')
+        const heroCards = hero.hand
+        if (!heroCards?.[0] || !heroCards?.[1]) throw new Error('Pick your two cards first.')
 
         const players = [
-          { type: 'range' as const, name: t('You'), cellStates: hero.range },
+          {
+            type: 'hand' as const,
+            name: t('You'),
+            cards: [heroCards[0], heroCards[1]] as [BoardCard, BoardCard],
+          },
           ...spot.activeVillains.map((villain) => ({
             type: 'range' as const,
             name: villain.position,
@@ -214,8 +221,8 @@ export function TableSpotPanel({
     }, 0)
   }
 
-  const heroCombos = spot.hero ? countRangeCombosFromStates(spot.hero.range) : 0
-  const ready = spot.problems.length === 0 && heroCombos > 0
+  const heroHandComplete = Boolean(spot.hero?.hand?.[0] && spot.hero?.hand?.[1])
+  const ready = spot.problems.length === 0 && heroHandComplete
   // One view for every number derived in chips; inputs stay in chips.
   const amount = (chips: number) => formatAmount(chips, blinds.bigBlind, view)
 
@@ -347,7 +354,19 @@ export function TableSpotPanel({
           </div>
         )}
 
-        {(seat.isHero || seat.action !== 'fold') && (
+        {seat.isHero && (
+          <div className="mt-3">
+            <span className="mb-1 block text-[10px] uppercase tracking-wider text-slate-500">
+              {t('Your hand')}
+            </span>
+            <HoleCardPicker
+              cards={seat.hand ?? [null, null]}
+              onChange={(cards) => patch(selected, { hand: cards })}
+            />
+          </div>
+        )}
+
+        {!seat.isHero && seat.action !== 'fold' && (
           <div className="mt-3">
             <div className="mb-2 flex flex-wrap items-center gap-2">
               <select
@@ -409,8 +428,8 @@ export function TableSpotPanel({
             ))}
           </ul>
         )}
-        {spot.problems.length === 0 && heroCombos === 0 && (
-          <p className="mt-3 text-xs text-amber-400">{t('Give your own seat a range first.')}</p>
+        {spot.problems.length === 0 && !heroHandComplete && (
+          <p className="mt-3 text-xs text-amber-400">{t('Pick your two cards first.')}</p>
         )}
 
         <button
