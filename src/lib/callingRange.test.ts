@@ -149,6 +149,10 @@ describe('against the general equity engine', () => {
       ],
       { iterations: 20_000 },
     )
-    expect(equityOf(grid, label)).toBeCloseTo(engine.players[0].equity, 0)
+    // The engine is unseeded, so at 20,000 iterations the two estimates sit
+    // up to about a point apart on pure sampling noise. The bug this test
+    // exists to catch — dealing hero a board full of his own rank — was a
+    // twelve-point error, so a 1.5-point gate is still a tight one.
+    expect(Math.abs(equityOf(grid, label) - engine.players[0].equity)).toBeLessThan(1.5)
   })
 })
