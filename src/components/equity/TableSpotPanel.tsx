@@ -246,6 +246,7 @@ export function TableSpotPanel({
           seats={spot.seats}
           selected={selected}
           onSelect={setSelected}
+          onPatch={patch}
           potBeforeCall={spot.potBeforeCall}
           heroCallAmount={spot.heroCallAmount}
           bigBlind={blinds.bigBlind}

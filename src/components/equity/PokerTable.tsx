@@ -1,5 +1,11 @@
 import { useT } from '../../lib/i18n'
-import { formatAmount, type AmountView, type SeatAction, type SeatView } from '../../lib/tableSpot'
+import {
+  formatAmount,
+  type AmountView,
+  type Seat,
+  type SeatAction,
+  type SeatView,
+} from '../../lib/tableSpot'
 
 const ACTION_STYLE: Record<SeatAction, string> = {
   fold: 'bg-slate-800 text-slate-500',
@@ -39,10 +45,38 @@ function ringPosition(
   }
 }
 
+/**
+ * A tiny number field that lives on a seat card.
+ *
+ * Always denominated in chips (bounties in buy-in currency), whatever the
+ * display view says — an input that silently rescaled with the toggle would
+ * turn a glance at the settings into an edit of the spot.
+ */
+function SeatInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: number
+  onChange: (value: number) => void
+}) {
+  return (
+    <input
+      type="number"
+      aria-label={label}
+      value={Number.isFinite(value) ? value : 0}
+      onChange={(event) => onChange(Number(event.target.value) || 0)}
+      className="w-full rounded border border-slate-600 bg-slate-950/70 px-1 py-0.5 text-center text-[10px] font-semibold tabular-nums text-white [appearance:textfield] focus:border-indigo-500 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+    />
+  )
+}
+
 export function PokerTable({
   seats,
   selected,
   onSelect,
+  onPatch,
   potBeforeCall,
   heroCallAmount,
   bigBlind,
@@ -51,6 +85,7 @@ export function PokerTable({
   seats: SeatView[]
   selected: number
   onSelect: (index: number) => void
+  onPatch: (index: number, change: Partial<Seat>) => void
   potBeforeCall: number
   heroCallAmount: number
   bigBlind: number
@@ -65,7 +100,7 @@ export function PokerTable({
 
   return (
     <div className="relative mx-auto aspect-[3/2] w-full min-w-[300px] max-w-[560px]">
-      {/* The felt. Purely decorative — every control is a seat button. */}
+      {/* The felt. Purely decorative — every control is a seat. */}
       <div
         aria-hidden
         className="absolute inset-[14%] rounded-[50%] border-2 border-emerald-950 bg-emerald-900/25 shadow-inner"
@@ -96,28 +131,77 @@ export function PokerTable({
 
       {seats.map((seat, index) => {
         const { x, y } = ringPosition(index, seats.length, heroIndex, 40, 39)
-        const isSelected = index === selected
         const dimmed = !seat.isActive
+
+        const positionLabel = (
+          <span
+            className={`block text-[10px] font-semibold uppercase leading-tight sm:text-[11px] ${
+              seat.isHero ? 'text-indigo-300' : 'text-slate-100'
+            }`}
+          >
+            {seat.isHero ? t('You') : seat.position}
+          </span>
+        )
+
+        const actionChip = !seat.isHero && (
+          <span
+            className={`mt-0.5 block rounded px-1 py-px text-[9px] font-semibold leading-tight ${ACTION_STYLE[seat.action]}`}
+          >
+            {t(ACTION_LABEL[seat.action])}
+            {seat.action === 'raise' && seat.raiseTo > 0 ? ` ${amount(seat.raiseTo)}` : ''}
+          </span>
+        )
+
+        // The seat you have picked edits in place: its stack and bounty turn
+        // into fields where the numbers were. Every other seat stays a button,
+        // so one click is still all it takes to move the editing somewhere
+        // else.
+        if (index === selected) {
+          return (
+            <div
+              key={seat.position}
+              style={{ left: `${x}%`, top: `${y}%` }}
+              className="absolute w-[74px] -translate-x-1/2 -translate-y-1/2 space-y-0.5 rounded-lg border border-indigo-500 bg-slate-800 px-1.5 py-1 text-center ring-2 ring-indigo-500/40 sm:w-[86px]"
+            >
+              {positionLabel}
+              {seat.isHero && (
+                <span className="block text-[9px] leading-tight text-slate-400">
+                  {seat.position}
+                </span>
+              )}
+              <SeatInput
+                label={t('Stack')}
+                value={seat.stack}
+                onChange={(value) => onPatch(index, { stack: value })}
+              />
+              {actionChip}
+              {!seat.isHero && (
+                <span className="flex items-center gap-0.5">
+                  <span aria-hidden className="text-[9px]">
+                    🎯
+                  </span>
+                  <SeatInput
+                    label={t('Bounty')}
+                    value={seat.bountyAmount}
+                    onChange={(value) => onPatch(index, { bountyAmount: value })}
+                  />
+                </span>
+              )}
+            </div>
+          )
+        }
+
         return (
           <button
             key={seat.position}
             type="button"
             onClick={() => onSelect(index)}
-            aria-pressed={isSelected}
             style={{ left: `${x}%`, top: `${y}%` }}
-            className={`absolute w-[74px] -translate-x-1/2 -translate-y-1/2 rounded-lg border px-1.5 py-1 text-center transition-colors sm:w-[86px] ${
-              isSelected
-                ? 'border-indigo-500 bg-slate-800 ring-2 ring-indigo-500/40'
-                : 'border-slate-700 bg-slate-900 hover:border-slate-500'
-            } ${dimmed ? 'opacity-80' : ''}`}
+            className={`absolute w-[74px] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-slate-700 bg-slate-900 px-1.5 py-1 text-center transition-colors hover:border-slate-500 sm:w-[86px] ${
+              dimmed ? 'opacity-80' : ''
+            }`}
           >
-            <span
-              className={`block text-[10px] font-semibold uppercase leading-tight sm:text-[11px] ${
-                seat.isHero ? 'text-indigo-300' : 'text-slate-100'
-              }`}
-            >
-              {seat.isHero ? t('You') : seat.position}
-            </span>
+            {positionLabel}
             {seat.isHero && (
               <span className="block text-[9px] leading-tight text-slate-400">{seat.position}</span>
             )}
@@ -128,14 +212,7 @@ export function PokerTable({
             >
               {amount(seat.stack)}
             </span>
-            {!seat.isHero && (
-              <span
-                className={`mt-0.5 block rounded px-1 py-px text-[9px] font-semibold leading-tight ${ACTION_STYLE[seat.action]}`}
-              >
-                {t(ACTION_LABEL[seat.action])}
-                {seat.action === 'raise' && seat.raiseTo > 0 ? ` ${amount(seat.raiseTo)}` : ''}
-              </span>
-            )}
+            {actionChip}
             {seat.bountyAmount > 0 && !seat.isHero && (
               <span className="mt-0.5 block text-[9px] font-medium leading-tight text-fuchsia-300">
                 🎯 {seat.bountyAmount}
