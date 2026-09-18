@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { useT } from '../../lib/i18n'
 import {
   formatAmount,
@@ -77,6 +78,7 @@ export function PokerTable({
   selected,
   onSelect,
   onPatch,
+  onMakeHero,
   potBeforeCall,
   heroCallAmount,
   bigBlind,
@@ -86,12 +88,38 @@ export function PokerTable({
   selected: number
   onSelect: (index: number) => void
   onPatch: (index: number, change: Partial<Seat>) => void
+  onMakeHero: (index: number) => void
   potBeforeCall: number
   heroCallAmount: number
   bigBlind: number
   view: AmountView
 }) {
   const t = useT()
+
+  /**
+   * Double-click is detected by hand, because the DOM one cannot work here:
+   * the first click selects the seat, which swaps the button for the editing
+   * card, so the second click lands on a freshly mounted element — usually
+   * the stack field that appeared under the pointer. Pairing clicks by seat
+   * and time survives the swap. A pair that starts inside a field is left
+   * alone: that is someone selecting a number to retype, not a claim.
+   */
+  const lastClickRef = useRef<{ index: number; time: number } | null>(null)
+  const handleSeatClick = (index: number, event: React.MouseEvent) => {
+    const previous = lastClickRef.current
+    // The event's own clock, so the pairing window never touches render purity.
+    const now = event.timeStamp
+    lastClickRef.current = null
+    if (previous !== null && previous.index === index && now - previous.time < 400) {
+      onMakeHero(index)
+      return
+    }
+    if (!(event.target instanceof HTMLInputElement)) {
+      lastClickRef.current = { index, time: now }
+    }
+    onSelect(index)
+  }
+
   const heroIndex = seats.findIndex((seat) => seat.isHero)
   const buttonIndex = seats.findIndex((seat) => seat.position === 'BTN')
   const dealerDisc =
@@ -161,6 +189,7 @@ export function PokerTable({
             <div
               key={seat.position}
               style={{ left: `${x}%`, top: `${y}%` }}
+              onClick={(event) => handleSeatClick(index, event)}
               className="absolute w-[74px] -translate-x-1/2 -translate-y-1/2 space-y-0.5 rounded-lg border border-indigo-500 bg-slate-800 px-1.5 py-1 text-center ring-2 ring-indigo-500/40 sm:w-[86px]"
             >
               {positionLabel}
@@ -195,7 +224,7 @@ export function PokerTable({
           <button
             key={seat.position}
             type="button"
-            onClick={() => onSelect(index)}
+            onClick={(event) => handleSeatClick(index, event)}
             style={{ left: `${x}%`, top: `${y}%` }}
             className={`absolute w-[74px] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-slate-700 bg-slate-900 px-1.5 py-1 text-center transition-colors hover:border-slate-500 sm:w-[86px] ${
               dimmed ? 'opacity-80' : ''

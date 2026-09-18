@@ -266,11 +266,16 @@ export function TableSpotPanel({
           selected={selected}
           onSelect={setSelected}
           onPatch={patch}
+          onMakeHero={makeHero}
           potBeforeCall={spot.potBeforeCall}
           heroCallAmount={spot.heroCallAmount}
           bigBlind={blinds.bigBlind}
           view={view}
         />
+
+        <p className="mt-1 text-center text-[11px] text-slate-500">
+          {t('Click a seat to edit it. Double-click to make it yours.')}
+        </p>
 
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <Num label="Small blind" value={blinds.smallBlind} onChange={(v) => setBlinds({ ...blinds, smallBlind: v })} />
