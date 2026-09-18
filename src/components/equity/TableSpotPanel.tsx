@@ -123,6 +123,7 @@ export function TableSpotPanel({
   )
 
   const seat = seats[Math.min(selected, seats.length - 1)]
+  const heroIndex = seats.findIndex((item) => item.isHero)
 
   const patch = (index: number, change: Partial<Seat>) =>
     setSeats((prev) => prev.map((item, i) => (i === index ? { ...item, ...change } : item)))
@@ -284,6 +285,45 @@ export function TableSpotPanel({
           {t('Click a seat to edit it. Double-click to make it yours.')}
         </p>
 
+        <div className="mt-3 flex flex-wrap items-end gap-x-6 gap-y-3">
+          {heroIndex >= 0 && (
+            <div>
+              <span className="mb-1 block text-[10px] uppercase tracking-wider text-slate-500">
+                {t('Your hand')}
+              </span>
+              <HoleCardPicker
+                cards={seats[heroIndex].hand ?? [null, null]}
+                onChange={(cards) => patch(heroIndex, { hand: cards })}
+              />
+            </div>
+          )}
+          <div className="flex flex-col gap-1 pb-1">
+            <button
+              type="button"
+              onClick={run}
+              disabled={!ready || running}
+              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-500"
+            >
+              {running ? t('Running…') : t('Work out the equity')}
+            </button>
+            {error && <p className="text-xs text-red-400">{t(error)}</p>}
+          </div>
+        </div>
+
+        {/* Whatever is stopping the run, said next to the button that runs. */}
+        {spot.problems.length > 0 && (
+          <ul className="mt-2 space-y-1">
+            {spot.problems.map((problem) => (
+              <li key={problem} className="text-xs text-amber-400">
+                {t(problem)}
+              </li>
+            ))}
+          </ul>
+        )}
+        {spot.problems.length === 0 && !heroHandComplete && (
+          <p className="mt-2 text-xs text-amber-400">{t('Pick your two cards first.')}</p>
+        )}
+
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <Num label="Small blind" value={blinds.smallBlind} onChange={(v) => setBlinds({ ...blinds, smallBlind: v })} />
           <Num label="Big blind" value={blinds.bigBlind} onChange={(v) => setBlinds({ ...blinds, bigBlind: v })} />
@@ -354,18 +394,6 @@ export function TableSpotPanel({
           </div>
         )}
 
-        {seat.isHero && (
-          <div className="mt-3">
-            <span className="mb-1 block text-[10px] uppercase tracking-wider text-slate-500">
-              {t('Your hand')}
-            </span>
-            <HoleCardPicker
-              cards={seat.hand ?? [null, null]}
-              onChange={(cards) => patch(selected, { hand: cards })}
-            />
-          </div>
-        )}
-
         {!seat.isHero && seat.action !== 'fold' && (
           <div className="mt-3">
             <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -419,28 +447,6 @@ export function TableSpotPanel({
           />
         </div>
 
-        {spot.problems.length > 0 && (
-          <ul className="mt-3 space-y-1">
-            {spot.problems.map((problem) => (
-              <li key={problem} className="text-xs text-amber-400">
-                {t(problem)}
-              </li>
-            ))}
-          </ul>
-        )}
-        {spot.problems.length === 0 && !heroHandComplete && (
-          <p className="mt-3 text-xs text-amber-400">{t('Pick your two cards first.')}</p>
-        )}
-
-        <button
-          type="button"
-          onClick={run}
-          disabled={!ready || running}
-          className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-500"
-        >
-          {running ? t('Running…') : t('Work out the equity')}
-        </button>
-        {error && <p className="mt-2 text-xs text-red-400">{t(error)}</p>}
       </section>
 
       {result && (
