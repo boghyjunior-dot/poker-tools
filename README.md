@@ -198,8 +198,10 @@ MTT opening ranges by seat and stack depth, entered as plain range strings.
 ## Quiz Me
 
 Flashcards, heuristics and multiple-choice questions for drilling the numbers.
-Bundled decks cover combo maths, pot odds and MDF, and you can import your own
-from a JSON or Markdown file.
+Bundled decks cover combo maths, pot odds and MDF, preflop heuristics, tournament
+spots and blind-vs-blind play, and you can import your own from a JSON or
+Markdown file. Three modes read the same cards: flashcards, a scored quiz, and a
+searchable reference list of just the heuristics.
 
 ## Randomizer
 

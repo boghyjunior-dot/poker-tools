@@ -590,6 +590,167 @@
           ]
         }
       ]
+    },
+    {
+      "id": "blind-vs-blind",
+      "name": "Blind vs blind",
+      "description": "Limped SB vs BB pots: what each range is made of, and which flops favour whom.",
+      "cards": [
+        {
+          "type": "heuristic",
+          "title": "SB limp-call ≈ a button open",
+          "body": "The range the small blind limp-calls with lands close to a button opening range. The shorthand is suited 5, offsuit 8: suited hands down to a 5 kicker (K5s, Q5s, J5s, T5s) and offsuit hands down to an 8 kicker (K8o, Q8o, J8o).",
+          "tags": [
+            "preflop",
+            "blind-vs-blind",
+            "sb"
+          ]
+        },
+        {
+          "type": "heuristic",
+          "title": "SB is suited, BB is polarised",
+          "body": "The small blind's range is mainly suited cards. The big blind raises offsuit hands more often, so those leave the checking range — what the big blind takes to the flop is very good hands and very bad ones with little in between. Every board-texture read below comes out of that one difference: SB arrives suited and connected, BB arrives polarised.",
+          "tags": [
+            "preflop",
+            "blind-vs-blind",
+            "sb",
+            "bb"
+          ]
+        },
+        {
+          "type": "heuristic",
+          "title": "Wet boards for SB, dry boards for BB",
+          "body": "SB's suited, connected range wants texture. Flush draws, monotone flops and middling cards all favour SB. Dry, disconnected flops favour BB, where hand strength is settled on the spot and the polarised range has more of both the top and the bottom.",
+          "tags": [
+            "postflop",
+            "blind-vs-blind",
+            "board-texture"
+          ]
+        },
+        {
+          "type": "heuristic",
+          "title": "King-high and queen-high are SB flops",
+          "body": "Suited down to a 5 kicker means SB holds every suited king and every suited queen, plus K8o+ and Q8o+. King-high and queen-high flops hit that range hard and hand SB the top-pair advantage.",
+          "tags": [
+            "postflop",
+            "blind-vs-blind",
+            "board-texture",
+            "sb"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "SB limp-call range, in one line",
+          "back": "Close to a button open — suited down to a 5 kicker, offsuit down to an 8",
+          "tags": [
+            "preflop",
+            "blind-vs-blind",
+            "sb"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "Which blind is suited-heavy in a limped pot?",
+          "back": "The small blind. The big blind raises offsuit hands more often, so they leave the checking range.",
+          "tags": [
+            "preflop",
+            "blind-vs-blind"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "Flops that favour the small blind",
+          "back": "Flush draws, monotone, middling cards, king-high and queen-high",
+          "tags": [
+            "postflop",
+            "blind-vs-blind",
+            "board-texture",
+            "sb"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "Flops that favour the big blind",
+          "back": "Dry and disconnected — BB is polarised: very good hands and very bad ones",
+          "tags": [
+            "postflop",
+            "blind-vs-blind",
+            "board-texture",
+            "bb"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "The small blind's limp-call range is 'suited 5, offsuit 8'. What does that mean?",
+          "options": [
+            "Suited hands down to a 5 kicker, offsuit down to an 8",
+            "Five suited combos and eight offsuit combos",
+            "5% suited hands and 8% offsuit hands",
+            "Suited hands worth 5bb, offsuit hands worth 8bb"
+          ],
+          "answer": "Suited hands down to a 5 kicker, offsuit down to an 8",
+          "explanation": "K5s, Q5s, J5s on the suited side; K8o, Q8o, J8o on the offsuit. That lands close to a button opening range.",
+          "tags": [
+            "preflop",
+            "blind-vs-blind",
+            "sb"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "Which flop most favours the small blind in a limped blind-vs-blind pot?",
+          "options": [
+            "9♥ 8♥ 6♥",
+            "A♠ 8♦ 3♣",
+            "A♥ K♦ 7♠",
+            "2♠ 2♦ 7♣"
+          ],
+          "answer": "9♥ 8♥ 6♥",
+          "explanation": "Monotone, middling and connected — three SB textures at once, and the suited range has the flush combos. The other three are dry boards where hand strength is settled immediately, which suits the polarised big blind.",
+          "tags": [
+            "postflop",
+            "blind-vs-blind",
+            "board-texture",
+            "sb"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "Why do dry, disconnected flops favour the big blind?",
+          "options": [
+            "BB's range is polarised — very good hands and very bad ones",
+            "BB holds more suited combos",
+            "BB acts last on every street",
+            "BB's range is capped below top pair"
+          ],
+          "answer": "BB's range is polarised — very good hands and very bad ones",
+          "explanation": "BB raised most of their offsuit hands preflop, so what checks through is split between traps and trash. A dry flop settles hand strength on the spot, which is exactly what a polarised range wants.",
+          "tags": [
+            "postflop",
+            "blind-vs-blind",
+            "board-texture",
+            "bb"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "A king-high flop comes down in a limped blind-vs-blind pot. Whose range does it favour?",
+          "options": [
+            "The small blind — every suited king is in their limp-call range",
+            "The big blind — they hold more offsuit kings",
+            "Neither — king-high flops are range-neutral",
+            "The big blind — a king is a scare card for the limper"
+          ],
+          "answer": "The small blind — every suited king is in their limp-call range",
+          "explanation": "Suited down to a 5 kicker puts K5s through KQs in the SB range, plus K8o+. King-high and queen-high flops give SB the top-pair advantage.",
+          "tags": [
+            "postflop",
+            "blind-vs-blind",
+            "board-texture",
+            "sb"
+          ]
+        }
+      ]
     }
   ]
 }
