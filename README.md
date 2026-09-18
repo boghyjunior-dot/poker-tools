@@ -127,6 +127,13 @@ to the target.
 Preflop equity by Monte Carlo simulation: a specific hand or a whole range
 against one or more opponents.
 
+- **Start from a table**: a 6-, 8- or 9-max felt where you set each seat's
+  stack, bounty, action and range. The pot, the dead money, what it costs you
+  to call and the equity that call needs are all derived from the action, so
+  the price can never drift out of step with the story of the hand
+- Antes are kept separate from blinds, because an ante is dead money and buys
+  no part of the current bet — a big blind facing a raise still owes the raise
+  less their blind alone
 - Hand vs range, range vs range, and multiway
 - Preset opening ranges from top 10% through to the full range
 - Margin of error reported alongside every result, so you know how much to

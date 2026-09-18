@@ -1,0 +1,276 @@
+/**
+ * A preflop spot laid out as a table: who did what, for how much, with which
+ * range and which bounty.
+ *
+ * The equity calculator takes a hero, some villains and a pot typed in by
+ * hand. That is fine once you already know the pot, but the pot is the part
+ * people get wrong — dead blinds get forgotten, antes get counted twice, and
+ * the price ends up flattering the call. Here the seats are the input and the
+ * pot is derived, so the price cannot disagree with the action.
+ *
+ * Hero has no action of their own. Hero is the seat being asked whether to
+ * call, so what hero has committed is the blind and ante they posted, and the
+ * call is what it costs to match the largest bet.
+ */
+
+import {
+  buildBountyBreakdown,
+  requiredEquityPct,
+  totalCapturableBountyChips,
+  type BountyBreakdown,
+} from './equityBounty'
+import type { RangeCellStates } from './equityRange'
+import type { BoardCard } from '../types/poker'
+
+export type TableSize = 6 | 8 | 9
+
+export type Position =
+  | 'UTG'
+  | 'UTG+1'
+  | 'UTG+2'
+  | 'LJ'
+  | 'HJ'
+  | 'CO'
+  | 'BTN'
+  | 'SB'
+  | 'BB'
+
+/**
+ * Seats in acting order, shortest table first.
+ *
+ * Short tables lose the earliest seats rather than the blinds, which is how a
+ * table actually empties out.
+ */
+const SEATS_BY_SIZE: Record<TableSize, Position[]> = {
+  6: ['LJ', 'HJ', 'CO', 'BTN', 'SB', 'BB'],
+  8: ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN', 'SB', 'BB'],
+  9: ['UTG', 'UTG+1', 'UTG+2', 'LJ', 'HJ', 'CO', 'BTN', 'SB', 'BB'],
+}
+
+export function seatsForTable(size: TableSize): Position[] {
+  return [...SEATS_BY_SIZE[size]]
+}
+
+/** What a villain did. Hero has no action — see the module note. */
+export type SeatAction = 'fold' | 'call' | 'raise' | 'shove'
+
+export interface Seat {
+  position: Position
+  stack: number
+  /** Bounty in tournament currency; only meaningful on villains. */
+  bountyAmount: number
+  action: SeatAction
+  /** Total chips committed on a raise. Ignored for every other action. */
+  raiseTo: number
+  range: RangeCellStates
+  /** A specific holding, used instead of the range when both are present. */
+  hand?: [BoardCard, BoardCard] | null
+  isHero: boolean
+}
+
+export interface Blinds {
+  smallBlind: number
+  bigBlind: number
+  /** Posted by every seat. Use this or `bigBlindAnte`, not both. */
+  ante: number
+  /** A single ante posted by the big blind, the usual tournament form. */
+  bigBlindAnte: number
+}
+
+export interface SeatView extends Seat {
+  /** Chips this seat has put in, ante and dead blinds included. */
+  contribution: number
+  /** Ante this seat posted. Dead money: it buys no part of the current bet. */
+  ante: number
+  /** Blind this seat posted, which does count toward the bet. */
+  blind: number
+  /** Still in the hand and able to win it. */
+  isActive: boolean
+}
+
+export interface SpotDerived {
+  seats: SeatView[]
+  hero: SeatView | null
+  activeVillains: SeatView[]
+  /** Largest amount any one seat has committed. */
+  currentBet: number
+  /** Everything in the middle before hero decides. */
+  potBeforeCall: number
+  heroCallAmount: number
+  /** The pot hero is playing for, their own call included. */
+  finalPot: number
+  /** Chips that reached the middle from seats that folded. */
+  deadChips: number
+  /** Equity a call needs on pot odds alone. */
+  requiredEquityPct: number
+  /** The same threshold once bounties hero can actually win are counted. */
+  requiredEquityWithBountyPct: number
+  capturableBountyChips: number
+  bountyBreakdown: BountyBreakdown[]
+  /** "3.2 : 1" — the price, the way it gets said out loud. */
+  potOdds: string
+  /** Things that stop the spot being calculable, in the order found. */
+  problems: string[]
+}
+
+export function newSeat(position: Position, stack: number): Seat {
+  return {
+    position,
+    stack,
+    bountyAmount: 0,
+    action: 'fold',
+    raiseTo: 0,
+    range: {},
+    hand: null,
+    isHero: false,
+  }
+}
+
+/**
+ * What a seat puts up before anyone acts, split by what it buys.
+ *
+ * An ante is dead money: it goes to the middle and buys no part of the current
+ * bet, so a big blind facing a raise still owes the raise less their blind
+ * alone. Folding the ante into the blind would quietly discount every call
+ * hero makes from the big blind, which is the most common spot there is.
+ */
+function forcedBets(position: Position, blinds: Blinds): { ante: number; blind: number } {
+  let ante = Math.max(0, blinds.ante)
+  let blind = 0
+  if (position === 'SB') blind = Math.max(0, blinds.smallBlind)
+  if (position === 'BB') {
+    blind = Math.max(0, blinds.bigBlind)
+    ante += Math.max(0, blinds.bigBlindAnte)
+  }
+  return { ante, blind }
+}
+
+/**
+ * The part of a seat's chips that counts toward matching the bet.
+ *
+ * Capped by what is left of the stack after the ante, because the ante has
+ * already left it.
+ */
+function betPartOf(seat: Seat, ante: number, blind: number, currentBet: number): number {
+  const room = Math.max(0, Math.max(0, seat.stack) - ante)
+  switch (seat.action) {
+    case 'fold':
+      // The blind is already in the middle and stays there.
+      return Math.min(blind, room)
+    case 'shove':
+      return room
+    case 'raise':
+      return Math.min(Math.max(seat.raiseTo, blind), room)
+    case 'call':
+      return Math.min(Math.max(currentBet, blind), room)
+  }
+}
+
+function formatOdds(reward: number, risk: number): string {
+  if (risk <= 0 || !Number.isFinite(reward / risk)) return '—'
+  return `${(reward / risk).toFixed(1)} : 1`
+}
+
+/**
+ * Work the whole spot out from the seats.
+ *
+ * `buyIn` and `startingStack` are only needed to price bounties in chips; pass
+ * zero for either and the bounty columns simply come out empty.
+ */
+export function deriveSpot(
+  seats: Seat[],
+  blinds: Blinds,
+  buyIn: number,
+  startingStack: number,
+): SpotDerived {
+  const problems: string[] = []
+
+  const forced = seats.map((seat) => forcedBets(seat.position, blinds))
+
+  // The largest bet has to be known before a call can be priced, and only
+  // aggressive actions can set it. A limped pot leaves it at the big blind.
+  let currentBet = Math.max(0, blinds.bigBlind)
+  seats.forEach((seat, index) => {
+    if (seat.isHero) return
+    if (seat.action === 'shove' || seat.action === 'raise') {
+      currentBet = Math.max(
+        currentBet,
+        betPartOf(seat, forced[index].ante, forced[index].blind, currentBet),
+      )
+    }
+  })
+
+  const views: SeatView[] = seats.map((seat, index) => {
+    const { ante, blind } = forced[index]
+    // Hero has not acted: what hero has in is the ante and the blind, no more.
+    const betPart = seat.isHero
+      ? Math.min(blind, Math.max(0, Math.max(0, seat.stack) - ante))
+      : betPartOf(seat, ante, blind, currentBet)
+    return {
+      ...seat,
+      ante: Math.min(ante, Math.max(0, seat.stack)),
+      blind,
+      contribution: Math.min(ante, Math.max(0, seat.stack)) + betPart,
+      isActive: seat.isHero || seat.action !== 'fold',
+    }
+  })
+
+  const heroes = views.filter((seat) => seat.isHero)
+  if (heroes.length === 0) problems.push('Pick which seat is yours.')
+  if (heroes.length > 1) problems.push('Only one seat can be yours.')
+  const hero = heroes.length === 1 ? heroes[0] : null
+
+  const activeVillains = views.filter((seat) => !seat.isHero && seat.action !== 'fold')
+  if (hero && activeVillains.length === 0) {
+    problems.push('Nobody is in the hand with you — give a seat an action other than fold.')
+  }
+
+  const potBeforeCall = views.reduce((sum, seat) => sum + seat.contribution, 0)
+  const deadChips = views
+    .filter((seat) => !seat.isHero && seat.action === 'fold')
+    .reduce((sum, seat) => sum + seat.contribution, 0)
+
+  // What it costs to match the bet: the ante is already gone and buys nothing.
+  const heroCallAmount = hero
+    ? Math.max(
+        0,
+        Math.min(currentBet, Math.max(0, Math.max(0, hero.stack) - hero.ante)) - hero.blind,
+      )
+    : 0
+  const finalPot = potBeforeCall + heroCallAmount
+
+  if (hero && heroCallAmount === 0 && activeVillains.length > 0) {
+    problems.push('There is nothing to call — no seat has bet more than you have posted.')
+  }
+
+  const bountyBreakdown = hero
+    ? buildBountyBreakdown(
+        buyIn,
+        startingStack,
+        hero.stack,
+        activeVillains.map((seat) => ({ stack: seat.stack, bountyAmount: seat.bountyAmount })),
+      )
+    : []
+  const capturableBountyChips = totalCapturableBountyChips(bountyBreakdown)
+
+  return {
+    seats: views,
+    hero,
+    activeVillains,
+    currentBet,
+    potBeforeCall,
+    heroCallAmount,
+    finalPot,
+    deadChips,
+    requiredEquityPct: requiredEquityPct(heroCallAmount, finalPot),
+    requiredEquityWithBountyPct: requiredEquityPct(
+      heroCallAmount,
+      finalPot,
+      capturableBountyChips,
+    ),
+    capturableBountyChips,
+    bountyBreakdown,
+    potOdds: formatOdds(finalPot - heroCallAmount, heroCallAmount),
+    problems,
+  }
+}

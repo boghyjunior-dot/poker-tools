@@ -1368,6 +1368,70 @@ export const ro: Dictionary = {
   "The bounty drops what you need from {without}% to {with}%.":
     "Bounty-ul scade ce îți trebuie de la {without}% la {with}%.",
 
+  // ------------------------------------------------------------ the table --
+  "Start from":
+    "Pornește de la",
+  "A table":
+    "O masă",
+  "Ranges only":
+    "Doar range-uri",
+  "The table":
+    "Masa",
+  "The price":
+    "Prețul",
+  "{n} to call":
+    "{n} de call",
+  "Small blind":
+    "Small blind",
+  "BB ante":
+    "BB ante",
+  "Posted by the big blind":
+    "Pus de big blind",
+  "Ante each":
+    "Ante de fiecare",
+  "Posted by every seat":
+    "Pus de fiecare poziție",
+  "Prices bounties in chips":
+    "Transformă bounty-urile în chips",
+  "Chips at buy-in":
+    "Chips la buy-in",
+  "You — {position}":
+    "Tu — {position}",
+  "This seat is mine":
+    "Locul ăsta e al meu",
+  "In buy-in currency":
+    "În moneda buy-in-ului",
+  "Raise to":
+    "Raise la",
+  "To call":
+    "De call",
+  "on pot odds alone":
+    "doar pe pot odds",
+  "With the bounty":
+    "Cu bounty-ul",
+  "{n} chips capturable":
+    "{n} chips de câștigat",
+  "no bounty you can win":
+    "niciun bounty pe care îl poți câștiga",
+  "{n} dead":
+    "{n} bani morți",
+  "Give your own seat a range first.":
+    "Dă-i mai întâi un range locului tău.",
+  "Work out the equity":
+    "Calculează equity-ul",
+  "Bounties are worth another {pct}% of this pot to you":
+    "Bounty-urile mai valorează încă {pct}% din potul ăsta pentru tine",
+  "Pick which seat is yours.":
+    "Alege care loc e al tău.",
+  "Only one seat can be yours.":
+    "Doar un singur loc poate fi al tău.",
+  "Nobody is in the hand with you — give a seat an action other than fold.":
+    "Nimeni nu e în mână cu tine — dă-i unui loc o acțiune diferită de fold.",
+  "Nobody is in the hand with you.":
+    "Nimeni nu e în mână cu tine.",
+  "There is nothing to call — no seat has bet more than you have posted.":
+    "Nu ai ce da call — niciun loc nu a pariat mai mult decât ai pus tu.",
+
   // -------------------------------------------------------- calling range --
   "Hands you can call with":
     "Mâinile cu care poți da call",
