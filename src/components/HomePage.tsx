@@ -337,7 +337,6 @@ const SECTIONS: Section[] = [
         href: 'equity.html',
         icon: <EquityIcon />,
         title: 'Equity Calculator',
-        ...local(FEATURE_REVIEW_ENABLED, FEATURE_REVIEW_PUBLISHED),
         description:
           'Calculate preflop equity for a hand or range against one or more opponent ranges.',
         accent: 'border-violet-800/60 hover:border-violet-600/80',

@@ -12,6 +12,7 @@ const PAGES = [
   'index',
   'home',
   'mdf',
+  'equity',
   'practice',
   'leakfinder',
   'quiz',
@@ -30,7 +31,6 @@ const PAGES = [
  */
 const LOCAL_ONLY: { name: string; variable: string }[] = [
   { name: 'roadmap', variable: 'VITE_PUBLISH_ROADMAP' },
-  { name: 'equity', variable: 'VITE_PUBLISH_IN_REVIEW' },
   { name: 'bounty', variable: 'VITE_PUBLISH_IN_REVIEW' },
   { name: 'schedule', variable: 'VITE_PUBLISH_SESSION' },
   { name: 'tracker', variable: 'VITE_PUBLISH_SESSION' },

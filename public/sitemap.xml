@@ -13,6 +13,10 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://snapper.poker/equity.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://snapper.poker/leakfinder.html</loc>
     <priority>0.8</priority>
   </url>

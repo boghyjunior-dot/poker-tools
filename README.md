@@ -13,7 +13,7 @@ anything you save stays in your own `localStorage`.
 | [Bankroll Tracker](#bankroll-tracker) | What is my roll actually doing? | Local only |
 | [MDF Range Tool](#mdf-range-tool) | How much of my range do I have to defend? | In progress |
 | [MDF Practice](#mdf-practice) | Can I actually hit that frequency under fire? | Coming soon |
-| [Equity Calculator](#equity-calculator) | How does this hand run against that range? | In review · local only |
+| [Equity Calculator](#equity-calculator) | How does this hand run against that range? | In review |
 | [Mystery Bounty](#mystery-bounty) | What is a knockout worth right now? | In review · local only |
 | [Bankroll](#bankroll) | What stakes can I afford to play? | Done |
 | [MTT Variance](#mtt-variance) | How bad can a downswing get? | Done |
@@ -243,13 +243,13 @@ Import a positional export from **PokerTracker**, **Hold'em Manager** or
 
 ## Local-only pages
 
-Five pages run in the dev server but are left out of the published site, in
+Four pages run in the dev server but are left out of the published site, in
 three groups that ship independently:
 
 | Variable | Pages |
 | --- | --- |
 | `VITE_PUBLISH_ROADMAP` | Roadmap |
-| `VITE_PUBLISH_IN_REVIEW` | Equity Calculator, Mystery Bounty |
+| `VITE_PUBLISH_IN_REVIEW` | Mystery Bounty |
 | `VITE_PUBLISH_SESSION` | Schedule, Bankroll Tracker |
 
 They are not merely hidden. The build drops the entry entirely, so no HTML

@@ -56,9 +56,9 @@ export const FEATURE_ROADMAP_PUBLISHED = isPublished(import.meta.env, ROADMAP_VA
 export const REVIEW_VARIABLE = 'VITE_PUBLISH_IN_REVIEW'
 
 /**
- * Equity Calculator and Mystery Bounty are still being checked, so they run
- * locally and stay off the live site until the review is finished. They share
- * one variable because they come off review together.
+ * Mystery Bounty is still being checked, so it runs locally and stays off the
+ * live site until the review is finished. The Equity Calculator used to sit
+ * behind this flag too, and shipped once its review closed.
  */
 export const FEATURE_REVIEW_ENABLED = isEnabled(import.meta.env, REVIEW_VARIABLE)
 
