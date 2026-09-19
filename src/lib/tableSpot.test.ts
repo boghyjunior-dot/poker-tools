@@ -1,7 +1,18 @@
 import { describe, expect, it } from 'vitest'
-import { defaultBounty, deriveSpot, formatAmount, newSeat, seatsForTable, type Blinds, type Seat } from './tableSpot'
+import {
+  anteOf,
+  defaultBounty,
+  deriveSpot,
+  formatAmount,
+  newSeat,
+  seatsForTable,
+  smallBlindOf,
+  type Blinds,
+  type Seat,
+} from './tableSpot'
 
-const BLINDS: Blinds = { smallBlind: 500, bigBlind: 1000, ante: 0, bigBlindAnte: 1000 }
+// A 1,000 big blind: 500 small, 100 of ante from each of the eight seats.
+const BLINDS: Blinds = { bigBlind: 1000, antePct: 0.1 }
 
 /** An 8-max table where everyone folds, so a test only states what it changes. */
 function table(overrides: Partial<Record<string, Partial<Seat>>> = {}): Seat[] {
@@ -11,28 +22,55 @@ function table(overrides: Partial<Record<string, Partial<Seat>>> = {}): Seat[] {
   }))
 }
 
-describe('what is in the middle', () => {
-  it('counts the blinds and the big-blind ante', () => {
-    const spot = deriveSpot(table({ BB: { isHero: true } }), BLINDS, 100, 25_000)
-    // SB 500 + BB 1,000 + BB ante 1,000, everyone else folded for nothing.
-    expect(spot.potBeforeCall).toBe(2500)
+describe('one number describes the level', () => {
+  it('halves the big blind for the small', () => {
+    expect(smallBlindOf(1000)).toBe(500)
+    expect(smallBlindOf(150)).toBe(75)
+    // A structure pays whole chips, so an odd blind rounds rather than splits.
+    expect(smallBlindOf(75)).toBe(38)
+    expect(smallBlindOf(0)).toBe(0)
   })
 
-  it('charges every seat when the ante is per player', () => {
-    const spot = deriveSpot(table({ BB: { isHero: true } }), { ...BLINDS, ante: 100, bigBlindAnte: 0 }, 100, 25_000)
-    // 8 antes of 100, plus the blinds.
+  it('takes the ante as a share of the big blind', () => {
+    expect(anteOf({ bigBlind: 1000, antePct: 0.1 })).toBe(100)
+    expect(anteOf({ bigBlind: 1000, antePct: 0.125 })).toBe(125)
+    expect(anteOf({ bigBlind: 0, antePct: 0.1 })).toBe(0)
+  })
+
+  it('puts one big blind of antes in the middle at 12.5% eight-handed', () => {
+    // Which is the whole reason that option is worth having.
+    expect(anteOf({ bigBlind: 1000, antePct: 0.125 }) * 8).toBe(1000)
+  })
+})
+
+describe('what is in the middle', () => {
+  it('counts every seat’s ante and both blinds', () => {
+    const spot = deriveSpot(table({ BB: { isHero: true } }), BLINDS, 100, 25_000)
+    // 8 antes of 100, plus SB 500 and BB 1,000.
     expect(spot.potBeforeCall).toBe(800 + 500 + 1000)
   })
 
-  it('keeps the blinds of seats that folded', () => {
+  it('charges more when the structure asks 12.5%', () => {
+    const spot = deriveSpot(
+      table({ BB: { isHero: true } }),
+      { ...BLINDS, antePct: 0.125 },
+      100,
+      25_000,
+    )
+    expect(spot.potBeforeCall).toBe(1000 + 500 + 1000)
+  })
+
+  it('keeps the antes and blinds of seats that folded', () => {
     const spot = deriveSpot(
       table({ SB: { action: 'fold' }, BB: { isHero: true }, CO: { action: 'raise', raiseTo: 2200 } }),
       BLINDS,
       100,
       25_000,
     )
-    expect(spot.deadChips).toBe(500) // the small blind, abandoned
-    expect(spot.potBeforeCall).toBe(500 + 2000 + 2200)
+    // Five seats folded for their ante alone; the small blind left 100 + 500.
+    expect(spot.deadChips).toBe(5 * 100 + 600)
+    // Those 1,100, plus CO's 100 + 2,200 and hero's 100 + 1,000.
+    expect(spot.potBeforeCall).toBe(1100 + 2300 + 1100)
   })
 })
 
@@ -44,12 +82,13 @@ describe('the price hero is being offered', () => {
       100,
       25_000,
     )
-    // Hero posted 1,000 blind + 1,000 ante; matching 2,200 costs 1,200 more.
+    // Hero posted a 1,000 blind and a 100 ante; only the blind counts toward
+    // the 2,200, so calling costs 1,200 more.
     expect(spot.heroCallAmount).toBe(1200)
-    // 500 SB + 2,000 hero posted + 2,200 raise = 4,700, plus hero's 1,200.
-    expect(spot.potBeforeCall).toBe(4700)
-    expect(spot.finalPot).toBe(5900)
-    expect(spot.requiredEquityPct).toBeCloseTo((1200 / 5900) * 100, 4)
+    // 800 of antes + 500 SB + 1,000 BB + 2,200 raise.
+    expect(spot.potBeforeCall).toBe(4500)
+    expect(spot.finalPot).toBe(5700)
+    expect(spot.requiredEquityPct).toBeCloseTo((1200 / 5700) * 100, 4)
   })
 
   it('states the odds the way they get said out loud', () => {
@@ -59,8 +98,8 @@ describe('the price hero is being offered', () => {
       100,
       25_000,
     )
-    // 4,700 to win for 1,200 risked.
-    expect(spot.potOdds).toBe('3.9 : 1')
+    // 4,500 to win for 1,200 risked.
+    expect(spot.potOdds).toBe('3.8 : 1')
   })
 
   it('caps the call at hero’s stack when the shove is bigger', () => {
@@ -70,8 +109,8 @@ describe('the price hero is being offered', () => {
       100,
       25_000,
     )
-    // Hero cannot call more than the 9,000 they have, 2,000 of it already in.
-    expect(spot.heroCallAmount).toBe(7000)
+    // Hero has 9,000, of which 100 went to the ante and 1,000 is already in.
+    expect(spot.heroCallAmount).toBe(7900)
   })
 
   it('takes the largest bet when two seats came in', () => {
@@ -102,7 +141,8 @@ describe('the price hero is being offered', () => {
       25_000,
     )
     const button = spot.seats.find((seat) => seat.position === 'BTN')!
-    expect(button.contribution).toBe(2200)
+    // The raise matched, plus the ante that was never part of it.
+    expect(button.contribution).toBe(2300)
   })
 })
 

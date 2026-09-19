@@ -132,6 +132,10 @@ against one or more opponents.
   because you always know your hand and never know theirs. The pot, the dead money, what it costs you
   to call and the equity that call needs are all derived from the action, so
   the price can never drift out of step with the story of the hand
+- The level is one number: type the big blind, and the small blind is half of
+  it while the ante is a share of it — 10% from each seat, or 12.5%, which is
+  the structure that puts exactly one big blind of antes in the middle
+  eight-handed
 - Antes are kept separate from blinds, because an ante is dead money and buys
   no part of the current bet — a big blind facing a raise still owes the raise
   less their blind alone

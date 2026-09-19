@@ -12,11 +12,14 @@ import { useNumberField } from '../../lib/numberField'
 import { useT } from '../../lib/i18n'
 import { cellKey, type BoardCard, type RankIndex } from '../../types/poker'
 import {
+  ANTE_OPTIONS,
+  anteOf,
   defaultBounty,
   deriveSpot,
   formatAmount,
   newSeat,
   seatsForTable,
+  smallBlindOf,
   type AmountView,
   type Blinds,
   type Seat,
@@ -32,7 +35,7 @@ const ACTION_LABEL: Record<SeatAction, string> = {
   shove: 'Shove',
 }
 
-const DEFAULT_BLINDS: Blinds = { smallBlind: 500, bigBlind: 1000, ante: 0, bigBlindAnte: 1000 }
+const DEFAULT_BLINDS: Blinds = { bigBlind: 1000, antePct: 0.1 }
 const DEFAULT_STACK = 25_000
 
 /**
@@ -379,10 +382,33 @@ export function TableSpotPanel({
         )}
 
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Num label="Small blind" value={blinds.smallBlind} onChange={(v) => setBlinds({ ...blinds, smallBlind: v })} />
-          <Num label="Big blind" value={blinds.bigBlind} onChange={(v) => setBlinds({ ...blinds, bigBlind: v })} />
-          <Num label="BB ante" value={blinds.bigBlindAnte} onChange={(v) => setBlinds({ ...blinds, bigBlindAnte: v })} hint="Posted by the big blind" />
-          <Num label="Ante each" value={blinds.ante} onChange={(v) => setBlinds({ ...blinds, ante: v })} hint="Posted by every seat" />
+          <Num
+            label="Big blind"
+            value={blinds.bigBlind}
+            onChange={(v) => setBlinds({ ...blinds, bigBlind: v })}
+            hint={t('Small blind is half of it: {n}', { n: formatMoney(smallBlindOf(blinds.bigBlind)) })}
+          />
+          <label className="block">
+            <span className="mb-1 block text-[10px] uppercase tracking-wider text-slate-500">
+              {t('Ante')}
+            </span>
+            <select
+              value={blinds.antePct}
+              onChange={(event) =>
+                setBlinds({ ...blinds, antePct: Number(event.target.value) })
+              }
+              className="w-full rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1.5 text-sm text-slate-200 focus:border-indigo-600 focus:outline-none"
+            >
+              {ANTE_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option * 100}% {t('of the big blind')}
+                </option>
+              ))}
+            </select>
+            <span className="mt-0.5 block text-[10px] text-slate-600">
+              {t('{n} from every seat', { n: formatMoney(anteOf(blinds)) })}
+            </span>
+          </label>
         </div>
 
         <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">

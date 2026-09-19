@@ -76,13 +76,38 @@ export interface Seat {
   isHero: boolean
 }
 
+/**
+ * The ante a structure charges each seat, as a share of the big blind.
+ *
+ * Ten per cent is the common default. An eight-handed table at 12.5% puts
+ * exactly one big blind of antes in the middle, which is the other structure
+ * worth having to hand.
+ */
+export const ANTE_OPTIONS = [0.1, 0.125] as const
+export type AntePct = (typeof ANTE_OPTIONS)[number]
+
+/**
+ * One number describes the level.
+ *
+ * The small blind is half the big blind and the ante is a share of it, so
+ * asking for either separately only invites a level that could not exist.
+ */
 export interface Blinds {
-  smallBlind: number
   bigBlind: number
-  /** Posted by every seat. Use this or `bigBlindAnte`, not both. */
-  ante: number
-  /** A single ante posted by the big blind, the usual tournament form. */
-  bigBlindAnte: number
+  antePct: number
+}
+
+/** Half the big blind, rounded to a whole chip the way a structure would. */
+export function smallBlindOf(bigBlind: number): number {
+  if (!Number.isFinite(bigBlind) || bigBlind <= 0) return 0
+  return Math.round(bigBlind / 2)
+}
+
+/** What each seat antes, in chips. */
+export function anteOf(blinds: Blinds): number {
+  if (!Number.isFinite(blinds.bigBlind) || blinds.bigBlind <= 0) return 0
+  if (!Number.isFinite(blinds.antePct) || blinds.antePct <= 0) return 0
+  return Math.round(blinds.bigBlind * blinds.antePct)
 }
 
 export interface SeatView extends Seat {
@@ -150,13 +175,10 @@ export function newSeat(position: Position, stack: number, bountyAmount = 0): Se
  * hero makes from the big blind, which is the most common spot there is.
  */
 function forcedBets(position: Position, blinds: Blinds): { ante: number; blind: number } {
-  let ante = Math.max(0, blinds.ante)
+  const ante = anteOf(blinds)
   let blind = 0
-  if (position === 'SB') blind = Math.max(0, blinds.smallBlind)
-  if (position === 'BB') {
-    blind = Math.max(0, blinds.bigBlind)
-    ante += Math.max(0, blinds.bigBlindAnte)
-  }
+  if (position === 'SB') blind = smallBlindOf(blinds.bigBlind)
+  if (position === 'BB') blind = Math.max(0, blinds.bigBlind)
   return { ante, blind }
 }
 

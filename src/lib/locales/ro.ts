@@ -330,8 +330,6 @@ export const ro: Dictionary = {
     "Pe măsură ce cresc blindurile",
   "The bounty is a fixed amount of cash, so it buys fewer big blinds every level.":
     "Bounty-ul e o sumă fixă de bani, deci cumpără tot mai puține big blinds la fiecare nivel.",
-  "Big blind":
-    "Big blind",
   "Worth to a 30bb stack":
     "Cât valorează pentru un stack de 30bb",
   "What it does to a call":
@@ -1369,6 +1367,10 @@ export const ro: Dictionary = {
     "Bounty-ul scade ce îți trebuie de la {without}% la {with}%.",
 
   // ------------------------------------------------------------ the table --
+  "Ante": "Ante",
+  "of the big blind": "din big blind",
+  "Small blind is half of it: {n}": "Small blind-ul e jumătate din el: {n}",
+  "{n} from every seat": "{n} de la fiecare poziție",
   "How that is worked out":
     "Cum se calculează",
   "Bounty in chips":
@@ -1409,16 +1411,6 @@ export const ro: Dictionary = {
     "Prețul",
   "{n} to call":
     "{n} de call",
-  "Small blind":
-    "Small blind",
-  "BB ante":
-    "BB ante",
-  "Posted by the big blind":
-    "Pus de big blind",
-  "Ante each":
-    "Ante de fiecare",
-  "Posted by every seat":
-    "Pus de fiecare poziție",
   "Prices bounties in chips":
     "Transformă bounty-urile în chips",
   "Chips at buy-in":
