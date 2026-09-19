@@ -8,6 +8,7 @@ import { calculateEquity, marginOfErrorForEquity, type EquityResult } from '../.
 import { handEquities, type HandEquityGrid } from '../../lib/callingRange'
 import { countRangeCombosFromStates, type RangeCellStates } from '../../lib/equityRange'
 import { formatMoney } from '../../lib/formatNumber'
+import { useNumberField } from '../../lib/numberField'
 import { useT } from '../../lib/i18n'
 import { cellKey, type BoardCard, type RankIndex } from '../../types/poker'
 import {
@@ -60,6 +61,7 @@ function Num({
   className?: string
 }) {
   const t = useT()
+  const field = useNumberField(value, onChange)
   return (
     <label className={`block ${className}`}>
       <span className="mb-1 block text-[10px] uppercase tracking-wider text-slate-500">
@@ -67,8 +69,7 @@ function Num({
       </span>
       <input
         type="number"
-        value={Number.isFinite(value) ? value : 0}
-        onChange={(event) => onChange(Number(event.target.value) || 0)}
+        {...field}
         className="w-full rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1.5 text-sm tabular-nums text-slate-200 focus:border-indigo-600 focus:outline-none"
       />
       {hint && <span className="mt-0.5 block text-[10px] text-slate-600">{t(hint)}</span>}

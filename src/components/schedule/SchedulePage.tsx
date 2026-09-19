@@ -5,6 +5,7 @@ import { formatMoney } from '../../lib/formatNumber'
 import { FEATURE_SESSION_PUBLISHED, SESSION_VARIABLE } from '../../lib/featureFlags'
 import { LocalOnlyBanner } from '../LocalOnlyBanner'
 import { useT } from '../../lib/i18n'
+import { useNumberField } from '../../lib/numberField'
 import {
   committed,
   committedBySite,
@@ -62,6 +63,22 @@ function beep() {
   } catch {
     // No audio available — the on-screen banner still fires.
   }
+}
+
+/** A clearable number cell in the schedule table. */
+function NumberCell({
+  label,
+  value,
+  onChange,
+  className,
+}: {
+  label: string
+  value: number
+  onChange: (value: number) => void
+  className: string
+}) {
+  const field = useNumberField(value, onChange)
+  return <input type="number" aria-label={label} {...field} className={className} />
 }
 
 function localInputValue(date: Date): string {
@@ -526,24 +543,18 @@ export function SchedulePage() {
                           />
                         </td>
                         <td className="py-2">
-                          <input
-                            type="number"
-                            aria-label={t('Buy-in')}
+                          <NumberCell
+                            label={t('Buy-in')}
                             value={view.buyIn}
-                            onChange={(event) =>
-                              update(view.id, { buyIn: Number(event.target.value) || 0 })
-                            }
+                            onChange={(buyIn) => update(view.id, { buyIn })}
                             className="w-16 rounded border border-slate-700 bg-slate-950/60 px-1.5 py-0.5 text-right text-xs tabular-nums text-slate-200"
                           />
                         </td>
                         <td className="py-2">
-                          <input
-                            type="number"
-                            aria-label={t('Late reg minutes')}
+                          <NumberCell
+                            label={t('Late reg minutes')}
                             value={view.lateRegMinutes}
-                            onChange={(event) =>
-                              update(view.id, { lateRegMinutes: Number(event.target.value) || 0 })
-                            }
+                            onChange={(lateRegMinutes) => update(view.id, { lateRegMinutes })}
                             className="w-16 rounded border border-slate-700 bg-slate-950/60 px-1.5 py-0.5 text-right text-xs tabular-nums text-slate-200"
                           />
                           <span className="ml-1 text-[10px] text-slate-600">{t('min')}</span>

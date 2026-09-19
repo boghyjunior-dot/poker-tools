@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { useT } from '../../lib/i18n'
+import { useNumberField } from '../../lib/numberField'
 import { RANKS, type BoardCard, type SuitId } from '../../types/poker'
 import {
   formatAmount,
@@ -107,12 +108,12 @@ function SeatInput({
   value: number
   onChange: (value: number) => void
 }) {
+  const field = useNumberField(value, onChange)
   return (
     <input
       type="number"
       aria-label={label}
-      value={Number.isFinite(value) ? value : 0}
-      onChange={(event) => onChange(Number(event.target.value) || 0)}
+      {...field}
       className="w-full rounded border border-slate-600 bg-slate-950/70 px-1 py-0.5 text-center text-[10px] font-semibold tabular-nums text-white [appearance:textfield] focus:border-indigo-500 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
     />
   )
