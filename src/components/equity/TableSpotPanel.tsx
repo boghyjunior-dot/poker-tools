@@ -203,7 +203,7 @@ export function TableSpotPanel({
   }, [rangeJump])
 
   const allIn = (index: number) => {
-    patch(index, { action: 'shove' })
+    patch(index, { action: 'shove', committed: null })
     setSelected(index)
     setRangeJump((count) => count + 1)
   }
@@ -443,9 +443,12 @@ export function TableSpotPanel({
           {!seat.isHero && (
             <>
               <Num label="Bounty" value={seat.bountyAmount} onChange={(v) => patch(selected, { bountyAmount: v })} hint="In buy-in currency" />
-              {seat.action === 'raise' && (
-                <Num label="Raise to" value={seat.raiseTo} onChange={(v) => patch(selected, { raiseTo: v })} />
-              )}
+              <Num
+                label="Chips in"
+                value={spot.seats[selected]?.inFront ?? 0}
+                onChange={(v) => patch(selected, { committed: v })}
+                hint="What they put in"
+              />
             </>
           )}
         </div>
@@ -460,7 +463,7 @@ export function TableSpotPanel({
                 <button
                   key={action}
                   type="button"
-                  onClick={() => patch(selected, { action })}
+                  onClick={() => patch(selected, { action, committed: null })}
                   className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                     seat.action === action
                       ? 'bg-indigo-600 text-white'

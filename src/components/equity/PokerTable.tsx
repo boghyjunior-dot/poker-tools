@@ -224,7 +224,19 @@ export function PokerTable({
             className={`mt-0.5 block rounded px-1 py-px text-[9px] font-semibold leading-tight ${ACTION_STYLE[seat.action]}`}
           >
             {t(ACTION_LABEL[seat.action])}
-            {seat.action === 'raise' && seat.raiseTo > 0 ? ` ${amount(seat.raiseTo)}` : ''}
+          </span>
+        )
+
+        // What this seat has in the middle, drawn the way a client draws the
+        // chips in front of a player — including a folded seat, whose money
+        // stays in the pot even though the seat is done with the hand.
+        const inFront = seat.inFront > 0 && (
+          <span
+            className={`mt-0.5 block text-[10px] font-semibold tabular-nums leading-tight ${
+              seat.isActive ? 'text-amber-300' : 'text-slate-500 line-through'
+            }`}
+          >
+            {amount(seat.inFront)}
           </span>
         )
 
@@ -253,6 +265,13 @@ export function PokerTable({
                 onChange={(value) => onPatch(index, { stack: value })}
               />
               {actionChip}
+              {!seat.isHero && (
+                <SeatInput
+                  label={t('Chips in')}
+                  value={seat.inFront}
+                  onChange={(value) => onPatch(index, { committed: value })}
+                />
+              )}
               {!seat.isHero && (
                 <span className="flex items-center gap-0.5">
                   <span aria-hidden className="text-[9px]">
@@ -300,6 +319,7 @@ export function PokerTable({
               {amount(seat.stack)}
             </span>
             {actionChip}
+            {inFront}
             {seat.bountyAmount > 0 && !seat.isHero && (
               <span className="mt-0.5 block text-[9px] font-medium leading-tight text-fuchsia-300">
                 🎯{' '}

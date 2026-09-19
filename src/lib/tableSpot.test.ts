@@ -62,7 +62,7 @@ describe('what is in the middle', () => {
 
   it('keeps the antes and blinds of seats that folded', () => {
     const spot = deriveSpot(
-      table({ SB: { action: 'fold' }, BB: { isHero: true }, CO: { action: 'raise', raiseTo: 2200 } }),
+      table({ SB: { action: 'fold' }, BB: { isHero: true }, CO: { action: 'raise', committed: 2200 } }),
       BLINDS,
       100,
       25_000,
@@ -77,7 +77,7 @@ describe('what is in the middle', () => {
 describe('the price hero is being offered', () => {
   it('prices a call from the big blind against a raise', () => {
     const spot = deriveSpot(
-      table({ CO: { action: 'raise', raiseTo: 2200 }, BB: { isHero: true } }),
+      table({ CO: { action: 'raise', committed: 2200 }, BB: { isHero: true } }),
       BLINDS,
       100,
       25_000,
@@ -93,7 +93,7 @@ describe('the price hero is being offered', () => {
 
   it('states the odds the way they get said out loud', () => {
     const spot = deriveSpot(
-      table({ CO: { action: 'raise', raiseTo: 2200 }, BB: { isHero: true } }),
+      table({ CO: { action: 'raise', committed: 2200 }, BB: { isHero: true } }),
       BLINDS,
       100,
       25_000,
@@ -116,8 +116,8 @@ describe('the price hero is being offered', () => {
   it('takes the largest bet when two seats came in', () => {
     const spot = deriveSpot(
       table({
-        CO: { action: 'raise', raiseTo: 2200 },
-        BTN: { action: 'raise', raiseTo: 6800 },
+        CO: { action: 'raise', committed: 2200 },
+        BTN: { action: 'raise', committed: 6800 },
         BB: { isHero: true },
       }),
       BLINDS,
@@ -132,7 +132,7 @@ describe('the price hero is being offered', () => {
   it('lets a caller match the raise rather than the blind', () => {
     const spot = deriveSpot(
       table({
-        CO: { action: 'raise', raiseTo: 2200 },
+        CO: { action: 'raise', committed: 2200 },
         BTN: { action: 'call' },
         BB: { isHero: true },
       }),
@@ -316,5 +316,83 @@ describe('what a bounty is worth in blinds', () => {
     expect(spot.capturableBountyAmount).toBe(70)
     // (20 + 50) × 250 ÷ 2 = 8,750 chips = 8.75 BB.
     expect(spot.capturableBountyBB).toBe(8.75)
+  })
+})
+
+describe('chips a seat already put in', () => {
+  it('keeps the money of a seat that raised and then folded', () => {
+    // The spot this exists for: CO opens, BTN 3-bets, CO gives up. Those 2,200
+    // are in the middle and hero is being paid them.
+    const spot = deriveSpot(
+      table({
+        CO: { action: 'fold', committed: 2200 },
+        BTN: { action: 'raise', committed: 6800 },
+        BB: { isHero: true },
+      }),
+      BLINDS,
+      100,
+      25_000,
+    )
+    const co = spot.seats.find((seat) => seat.position === 'CO')!
+    expect(co.inFront).toBe(2200)
+    expect(co.isActive).toBe(false)
+    // CO's 2,200 counts as dead, alongside the folded antes and small blind.
+    expect(spot.deadChips).toBe(4 * 100 + 600 + 2300)
+    // Antes 800 + SB 500 + BB 1,000 + CO 2,200 + BTN 6,800.
+    expect(spot.potBeforeCall).toBe(11_300)
+    expect(spot.heroCallAmount).toBe(5800)
+  })
+
+  it('lets a limp-caller stay a limper when a raise comes after', () => {
+    const spot = deriveSpot(
+      table({
+        // Called the big blind, then folded out when BTN raised — but a call
+        // left alone would have followed the raise up to 6,800.
+        CO: { action: 'call', committed: 1000 },
+        BTN: { action: 'raise', committed: 6800 },
+        BB: { isHero: true },
+      }),
+      BLINDS,
+      100,
+      25_000,
+    )
+    expect(spot.seats.find((seat) => seat.position === 'CO')!.inFront).toBe(1000)
+  })
+
+  it('still drags an untyped caller up to the largest bet', () => {
+    const spot = deriveSpot(
+      table({
+        CO: { action: 'call' },
+        BTN: { action: 'raise', committed: 6800 },
+        BB: { isHero: true },
+      }),
+      BLINDS,
+      100,
+      25_000,
+    )
+    expect(spot.seats.find((seat) => seat.position === 'CO')!.inFront).toBe(6800)
+  })
+
+  it('never lets a blind seat have less in than it was forced to post', () => {
+    const spot = deriveSpot(
+      table({ SB: { action: 'fold', committed: 0 }, BTN: { action: 'shove' }, BB: { isHero: true } }),
+      BLINDS,
+      100,
+      25_000,
+    )
+    expect(spot.seats.find((seat) => seat.position === 'SB')!.inFront).toBe(500)
+  })
+
+  it('caps what a seat can have in at the chips behind the ante', () => {
+    const spot = deriveSpot(
+      table({
+        CO: { action: 'raise', committed: 999_999, stack: 8000 },
+        BB: { isHero: true },
+      }),
+      BLINDS,
+      100,
+      25_000,
+    )
+    expect(spot.seats.find((seat) => seat.position === 'CO')!.inFront).toBe(7900)
   })
 })

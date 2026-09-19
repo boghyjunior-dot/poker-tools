@@ -61,8 +61,17 @@ export interface Seat {
   /** Bounty in tournament currency; only meaningful on villains. */
   bountyAmount: number
   action: SeatAction
-  /** Total chips committed on a raise. Ignored for every other action. */
-  raiseTo: number
+  /**
+   * Chips this seat has put in, when you know the number.
+   *
+   * null reads it off the action instead: a caller matches the bet, a shove
+   * is the stack, a fold leaves its blind. Typing a number overrides that,
+   * which is the only way to describe the spots the action alone cannot — a
+   * seat that raised and then folded to a 3-bet has money in the middle that
+   * no action name accounts for, and a limp-caller put in less than the raise
+   * that came after them.
+   */
+  committed: number | null
   /** What a villain shoves, raises or calls with. Hero does not get one. */
   range: RangeCellStates
   /**
@@ -113,6 +122,8 @@ export function anteOf(blinds: Blinds): number {
 export interface SeatView extends Seat {
   /** Chips this seat has put in, ante and dead blinds included. */
   contribution: number
+  /** The part of that which was bet rather than forced — what sits in front. */
+  inFront: number
   /** Ante this seat posted. Dead money: it buys no part of the current bet. */
   ante: number
   /** Blind this seat posted, which does count toward the bet. */
@@ -159,7 +170,7 @@ export function newSeat(position: Position, stack: number, bountyAmount = 0): Se
     stack,
     bountyAmount,
     action: 'fold',
-    raiseTo: 0,
+    committed: null,
     range: {},
     hand: null,
     isHero: false,
@@ -190,16 +201,23 @@ function forcedBets(position: Position, blinds: Blinds): { ante: number; blind: 
  */
 function betPartOf(seat: Seat, ante: number, blind: number, currentBet: number): number {
   const room = Math.max(0, Math.max(0, seat.stack) - ante)
+  const typed = seat.committed
+  // A seat can never have less in than the blind it was forced to post.
+  const atLeastBlind = (value: number) => Math.min(Math.max(value, blind), room)
+
   switch (seat.action) {
-    case 'fold':
-      // The blind is already in the middle and stays there.
-      return Math.min(blind, room)
     case 'shove':
       return room
+    case 'fold':
+      // Chips put in before folding stay in the middle; the blind is the floor.
+      return atLeastBlind(typed ?? blind)
     case 'raise':
-      return Math.min(Math.max(seat.raiseTo, blind), room)
+      return atLeastBlind(typed ?? blind)
     case 'call':
-      return Math.min(Math.max(currentBet, blind), room)
+      // Left to itself a caller matches whatever the largest bet turns out to
+      // be, so raising someone else later drags the call up with it. A typed
+      // number opts out of that, which is what a limp-call needs.
+      return atLeastBlind(typed ?? currentBet)
   }
 }
 
@@ -248,6 +266,7 @@ export function deriveSpot(
       ante: Math.min(ante, Math.max(0, seat.stack)),
       blind,
       contribution: Math.min(ante, Math.max(0, seat.stack)) + betPart,
+      inFront: betPart,
       isActive: seat.isHero || seat.action !== 'fold',
     }
   })
