@@ -751,6 +751,186 @@
           ]
         }
       ]
+    },
+    {
+      "id": "three-betting",
+      "name": "3-betting",
+      "description": "How the 3-bet range changes shape with stack depth, ICM, and what the opener holds.",
+      "cards": [
+        {
+          "type": "heuristic",
+          "title": "60BB: suited hands do the bluffing",
+          "body": "Deep, on the button against an early open, the extra 3-bets are suited broadways and suited connectors. Deep stacks mean the pot gets played across every street, and suited, connected hands are the ones that keep realising equity when the 3-bet gets called.",
+          "tags": [
+            "preflop",
+            "3bet"
+          ]
+        },
+        {
+          "type": "heuristic",
+          "title": "40BB: offsuit steps in, connectors step out",
+          "body": "At 40BB the 3-bet range turns more offsuit and carries far fewer suited connectors. The shallower the stack, the less a called 3-bet leaves to play for — so playability pays less, blockers pay more, and the offsuit broadways take the bluffing seats.",
+          "tags": [
+            "preflop",
+            "3bet"
+          ]
+        },
+        {
+          "type": "heuristic",
+          "title": "25BB: big and very polar",
+          "body": "At 25BB the 3-bet goes to 5.5–6 big blinds and the range splits to its ends: AA and KK for value, and bluffs chosen for blockers and a card to make — low Axs, KJs, KTs, QJs. The middle of the range flats or folds, because a 3-bet this size mostly gets jammed on or folded to, and hands in the middle hate both answers.",
+          "tags": [
+            "preflop",
+            "3bet"
+          ]
+        },
+        {
+          "type": "heuristic",
+          "title": "ICM: offsuit broadways, in position",
+          "body": "Under ICM pressure the extra 3-bets in position are offsuit broadways. They block the hands that can fight back, and the pressure does the rest — a covered opener cannot stack off wide when busting costs more than the chips.",
+          "tags": [
+            "preflop",
+            "3bet",
+            "icm"
+          ]
+        },
+        {
+          "type": "heuristic",
+          "title": "3-bet the suited rank under the offsuit opener",
+          "body": "Pick 3-bet bluffs one rank under the weakest offsuit hands the opener plays: against a range that opens Txo, 3-bet 9xs. Those hands are too weak to call but play well suited — and the domination runs the right way, because that opener holds Tx, not 9x.",
+          "tags": [
+            "preflop",
+            "3bet"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "BTN vs EP at 60BB — which hands join the 3-bet range?",
+          "back": "Suited broadways and suited connectors",
+          "tags": [
+            "preflop",
+            "3bet"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "What changes in the 3-bet range from 60BB to 40BB?",
+          "back": "More offsuit hands, far fewer suited connectors — blockers over playability",
+          "tags": [
+            "preflop",
+            "3bet"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "25BB 3-bet: the size and the shape",
+          "back": "To 5.5–6 big blinds, very polar: AA, KK — plus low Axs, KJs, KTs, QJs",
+          "tags": [
+            "preflop",
+            "3bet"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "3-bet bluffs under ICM, in position",
+          "back": "Offsuit broadways — blockers plus pressure the opener cannot stand up to",
+          "tags": [
+            "preflop",
+            "3bet",
+            "icm"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "Villain opens Txo. Which suited hands 3-bet?",
+          "back": "9xs — the suited rank under the offsuit opener, so their Tx never dominates you",
+          "tags": [
+            "preflop",
+            "3bet"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "At 60BB on the button against an early open, which hands do the extra 3-betting?",
+          "options": [
+            "Suited broadways and suited connectors",
+            "Offsuit broadways",
+            "Small pocket pairs",
+            "Low offsuit aces"
+          ],
+          "answer": "Suited broadways and suited connectors",
+          "explanation": "Deep stacks put every street in play, and suited, connected hands keep realising equity when the 3-bet gets called. The offsuit hands take over as stacks shorten.",
+          "tags": [
+            "preflop",
+            "3bet"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "Stacks drop from 60BB to 40BB. What happens to the 3-bet range?",
+          "options": [
+            "More offsuit hands, fewer suited connectors",
+            "More suited connectors, fewer broadways",
+            "It only gets tighter, same shape",
+            "It turns into limps"
+          ],
+          "answer": "More offsuit hands, fewer suited connectors",
+          "explanation": "A called 3-bet at 40BB leaves little stack to play for, so playability is worth less and blockers are worth more — the suited connectors step out and offsuit broadways step in.",
+          "tags": [
+            "preflop",
+            "3bet"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "What does a 25BB 3-bet look like?",
+          "options": [
+            "To 5.5–6 big blinds and very polar: AA, KK, low Axs, KJs, KTs, QJs",
+            "A small 3x, linear and merged",
+            "Always all-in",
+            "To 5.5–6 big blinds with every pocket pair"
+          ],
+          "answer": "To 5.5–6 big blinds and very polar: AA, KK, low Axs, KJs, KTs, QJs",
+          "explanation": "At this depth the 3-bet mostly gets jammed on or folded to, so the range holds its ends: the hands that welcome the jam, and blocker bluffs that lose little when the fold comes.",
+          "tags": [
+            "preflop",
+            "3bet"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "Final table, ICM pressure on, you are in position. Which class 3-bets more?",
+          "options": [
+            "Offsuit broadways",
+            "Suited connectors",
+            "Small pairs",
+            "Any two cards, ICM is a bluffing licence"
+          ],
+          "answer": "Offsuit broadways",
+          "explanation": "They block the continuing hands, and ICM does the rest — an opener who is covered cannot stack off wide. It is pressure with blockers, not a licence to 3-bet anything.",
+          "tags": [
+            "preflop",
+            "3bet",
+            "icm"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "Villain’s opening range goes down to Txo. Where do your suited 3-bet bluffs come from?",
+          "options": [
+            "9xs",
+            "Txs",
+            "Jxs",
+            "Any suited ace only"
+          ],
+          "answer": "9xs",
+          "explanation": "One rank under the offsuit opener: too weak to call, suited enough to play, and never dominated by the Tx the opener is full of. 3-bet the suited rank under the offsuit open.",
+          "tags": [
+            "preflop",
+            "3bet"
+          ]
+        }
+      ]
     }
   ]
 }
