@@ -5,6 +5,7 @@ import { RANKS, type BoardCard, type SuitId } from '../../types/poker'
 import {
   formatAmount,
   type AmountView,
+  type Position,
   type Seat,
   type SeatAction,
   type SeatView,
@@ -18,6 +19,21 @@ const ACTION_STYLE: Record<SeatAction, string> = {
 }
 
 const SUIT_GLYPH: Record<SuitId, string> = { s: '♠', h: '♥', d: '♦', c: '♣' }
+
+/**
+ * The discs a dealer puts in front of a seat.
+ *
+ * The button is white and the blinds are not, the way they look on a real
+ * table. They are worth drawing even though the seats are already labelled,
+ * because the seat that is yours reads "You" — so without these the one spot
+ * where you most need to know whether you are in the blinds is the one spot
+ * that does not say.
+ */
+const DISCS: Partial<Record<Position, { text: string; className: string }>> = {
+  BTN: { text: 'D', className: 'border-slate-300 bg-slate-100 text-slate-900' },
+  SB: { text: 'SB', className: 'border-slate-500 bg-slate-700 text-slate-100' },
+  BB: { text: 'BB', className: 'border-indigo-500 bg-indigo-800 text-indigo-50' },
+}
 
 /** Hero's cards on the seat card — A♠ K♥, red suits in red. */
 function HandGlyphs({ hand }: { hand?: [BoardCard | null, BoardCard | null] | null }) {
@@ -171,9 +187,6 @@ export function PokerTable({
   }
 
   const heroIndex = seats.findIndex((seat) => seat.isHero)
-  const buttonIndex = seats.findIndex((seat) => seat.position === 'BTN')
-  const dealerDisc =
-    buttonIndex >= 0 ? ringPosition(buttonIndex, seats.length, heroIndex, 26, 24) : null
   const amount = (chips: number) => formatAmount(chips, bigBlind, view)
   // What one typed unit is worth in chips, so the fields match the readouts.
   const chipScale = view === 'bb' && bigBlind > 0 ? bigBlind : 1
@@ -198,16 +211,22 @@ export function PokerTable({
         )}
       </div>
 
-      {/* The dealer button, sitting on the felt in front of the BTN seat. */}
-      {dealerDisc && (
-        <span
-          aria-hidden
-          style={{ left: `${dealerDisc.x}%`, top: `${dealerDisc.y}%` }}
-          className="absolute flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-slate-300 bg-slate-100 text-[10px] font-bold text-slate-900 shadow"
-        >
-          D
-        </span>
-      )}
+      {/* Button and blinds, on the felt in front of the seats that hold them. */}
+      {seats.map((seat, index) => {
+        const disc = DISCS[seat.position]
+        if (!disc) return null
+        const { x, y } = ringPosition(index, seats.length, heroIndex, 26, 24)
+        return (
+          <span
+            key={`disc-${seat.position}`}
+            aria-hidden
+            style={{ left: `${x}%`, top: `${y}%` }}
+            className={`absolute flex h-5 min-w-[20px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border px-1 text-[9px] font-bold shadow ${disc.className}`}
+          >
+            {disc.text}
+          </span>
+        )
+      })}
 
       {seats.map((seat, index) => {
         const { x, y } = ringPosition(index, seats.length, heroIndex, 40, 39)
@@ -270,13 +289,19 @@ export function PokerTable({
                 scale={chipScale}
               />
               {actionChip}
-              {!seat.isHero && (
+              {!seat.isHero ? (
                 <SeatInput
                   label={t('Chips in')}
                   value={seat.inFront}
                   onChange={(value) => onPatch(index, { committed: value })}
                   scale={chipScale}
                 />
+              ) : (
+                seat.inFront > 0 && (
+                  <span className="block text-[10px] font-semibold tabular-nums leading-tight text-amber-300">
+                    {amount(seat.inFront)}
+                  </span>
+                )
               )}
               {!seat.isHero && (
                 <span className="flex items-center gap-0.5">
