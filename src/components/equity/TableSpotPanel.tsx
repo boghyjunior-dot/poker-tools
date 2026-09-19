@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { EquityMatrix } from './EquityMatrix'
 import { HoleCardPicker } from './HoleCardPicker'
 import { PokerTable } from './PokerTable'
@@ -152,6 +152,26 @@ export function TableSpotPanel({
   const makeHero = (index: number) =>
     setSeats((prev) => prev.map((item, i) => ({ ...item, isHero: i === index })))
 
+  /**
+   * The all-in shortcut on a seat is only half an instruction — a shove
+   * without a range prices nothing. So pressing it sets the action, selects
+   * the seat, and carries the eye down to where the range gets chosen.
+   */
+  const editorRef = useRef<HTMLElement | null>(null)
+  const presetRef = useRef<HTMLSelectElement | null>(null)
+  const [rangeJump, setRangeJump] = useState(0)
+  useEffect(() => {
+    if (rangeJump === 0) return
+    editorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    presetRef.current?.focus({ preventScroll: true })
+  }, [rangeJump])
+
+  const allIn = (index: number) => {
+    patch(index, { action: 'shove' })
+    setSelected(index)
+    setRangeJump((count) => count + 1)
+  }
+
   const toggleCell = (row: RankIndex, col: RankIndex, remove?: boolean) => {
     const key = cellKey(row, col)
     patch(selected, {
@@ -275,6 +295,7 @@ export function TableSpotPanel({
           onSelect={setSelected}
           onPatch={patch}
           onMakeHero={makeHero}
+          onAllIn={allIn}
           potBeforeCall={spot.potBeforeCall}
           heroCallAmount={spot.heroCallAmount}
           bigBlind={blinds.bigBlind}
@@ -342,7 +363,7 @@ export function TableSpotPanel({
         </div>
       </section>
 
-      <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+      <section ref={editorRef} className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-semibold text-white">
             {seat.isHero ? t('You — {position}', { position: seat.position }) : seat.position}
@@ -398,6 +419,7 @@ export function TableSpotPanel({
           <div className="mt-3">
             <div className="mb-2 flex flex-wrap items-center gap-2">
               <select
+                ref={presetRef}
                 value=""
                 onChange={(event) => {
                   const preset = EQUITY_PRESET_RANGES.find((r) => r.id === event.target.value)

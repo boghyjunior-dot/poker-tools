@@ -71,6 +71,27 @@ function ringPosition(
 }
 
 /**
+ * The one-press version of the commonest villain action.
+ *
+ * Stops the click where it lands, so pressing it never doubles as selecting
+ * or claiming the seat underneath.
+ */
+function AllInChip({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={(event) => {
+        event.stopPropagation()
+        onPress()
+      }}
+      className="mt-0.5 w-full rounded border border-rose-700/70 bg-rose-950/40 px-1 py-px text-[9px] font-semibold uppercase leading-tight text-rose-300 transition-colors hover:bg-rose-900/60"
+    >
+      {label}
+    </button>
+  )
+}
+
+/**
  * A tiny number field that lives on a seat card.
  *
  * Always denominated in chips (bounties in buy-in currency), whatever the
@@ -103,6 +124,7 @@ export function PokerTable({
   onSelect,
   onPatch,
   onMakeHero,
+  onAllIn,
   potBeforeCall,
   heroCallAmount,
   bigBlind,
@@ -113,6 +135,7 @@ export function PokerTable({
   onSelect: (index: number) => void
   onPatch: (index: number, change: Partial<Seat>) => void
   onMakeHero: (index: number) => void
+  onAllIn: (index: number) => void
   potBeforeCall: number
   heroCallAmount: number
   bigBlind: number
@@ -241,17 +264,25 @@ export function PokerTable({
                   />
                 </span>
               )}
+              {!seat.isHero && <AllInChip label={t('All-in')} onPress={() => onAllIn(index)} />}
             </div>
           )
         }
 
         return (
-          <button
+          <div
             key={seat.position}
-            type="button"
+            role="button"
+            tabIndex={0}
             onClick={(event) => handleSeatClick(index, event)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                onSelect(index)
+              }
+            }}
             style={{ left: `${x}%`, top: `${y}%` }}
-            className={`absolute w-[74px] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-slate-700 bg-slate-900 px-1.5 py-1 text-center transition-colors hover:border-slate-500 sm:w-[86px] ${
+            className={`absolute w-[74px] -translate-x-1/2 -translate-y-1/2 cursor-pointer select-none rounded-lg border border-slate-700 bg-slate-900 px-1.5 py-1 text-center transition-colors hover:border-slate-500 sm:w-[86px] ${
               dimmed ? 'opacity-80' : ''
             }`}
           >
@@ -275,7 +306,8 @@ export function PokerTable({
                 {seat.bountyAmount % 1 === 0 ? seat.bountyAmount : seat.bountyAmount.toFixed(2)}
               </span>
             )}
-          </button>
+            {!seat.isHero && <AllInChip label={t('All-in')} onPress={() => onAllIn(index)} />}
+          </div>
         )
       })}
     </div>
