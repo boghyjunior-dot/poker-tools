@@ -95,20 +95,22 @@ function AllInChip({ label, onPress }: { label: string; onPress: () => void }) {
 /**
  * A tiny number field that lives on a seat card.
  *
- * Always denominated in chips (bounties in buy-in currency), whatever the
- * display view says — an input that silently rescaled with the toggle would
- * turn a glance at the settings into an edit of the spot.
+ * Chip amounts follow the chips/BB toggle, so the unit you read a stack in is
+ * the unit you type it in. A bounty is money rather than chips and keeps its
+ * own scale of 1 whatever the toggle says.
  */
 function SeatInput({
   label,
   value,
   onChange,
+  scale = 1,
 }: {
   label: string
   value: number
   onChange: (value: number) => void
+  scale?: number
 }) {
-  const field = useNumberField(value, onChange)
+  const field = useNumberField(value, onChange, scale)
   return (
     <input
       type="number"
@@ -173,6 +175,8 @@ export function PokerTable({
   const dealerDisc =
     buttonIndex >= 0 ? ringPosition(buttonIndex, seats.length, heroIndex, 26, 24) : null
   const amount = (chips: number) => formatAmount(chips, bigBlind, view)
+  // What one typed unit is worth in chips, so the fields match the readouts.
+  const chipScale = view === 'bb' && bigBlind > 0 ? bigBlind : 1
 
   return (
     <div className="relative mx-auto aspect-[3/2] w-full min-w-[300px] max-w-[560px]">
@@ -263,6 +267,7 @@ export function PokerTable({
                 label={t('Stack')}
                 value={seat.stack}
                 onChange={(value) => onPatch(index, { stack: value })}
+                scale={chipScale}
               />
               {actionChip}
               {!seat.isHero && (
@@ -270,6 +275,7 @@ export function PokerTable({
                   label={t('Chips in')}
                   value={seat.inFront}
                   onChange={(value) => onPatch(index, { committed: value })}
+                  scale={chipScale}
                 />
               )}
               {!seat.isHero && (

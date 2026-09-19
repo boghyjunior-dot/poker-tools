@@ -55,16 +55,19 @@ function Num({
   value,
   onChange,
   hint,
+  scale = 1,
   className = '',
 }: {
   label: string
   value: number
   onChange: (value: number) => void
   hint?: string
+  /** Chips per typed unit: the big blind when typing in big blinds. */
+  scale?: number
   className?: string
 }) {
   const t = useT()
-  const field = useNumberField(value, onChange)
+  const field = useNumberField(value, onChange, scale)
   return (
     <label className={`block ${className}`}>
       <span className="mb-1 block text-[10px] uppercase tracking-wider text-slate-500">
@@ -280,8 +283,11 @@ export function TableSpotPanel({
 
   const heroHandComplete = Boolean(spot.hero?.hand?.[0] && spot.hero?.hand?.[1])
   const ready = spot.problems.length === 0 && heroHandComplete
-  // One view for every number derived in chips; inputs stay in chips.
   const amount = (chips: number) => formatAmount(chips, blinds.bigBlind, view)
+  // Chip fields are typed in whatever unit they are read in. The big blind
+  // itself is exempt: it is the unit, so it can only be stated in chips.
+  const chipScale = view === 'bb' && blinds.bigBlind > 0 ? blinds.bigBlind : 1
+  const chipUnit = view === 'bb' ? t('in big blinds') : t('in chips')
 
   return (
     <div className="flex flex-col gap-4">
@@ -439,7 +445,13 @@ export function TableSpotPanel({
         </div>
 
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Num label="Stack" value={seat.stack} onChange={(v) => patch(selected, { stack: v })} />
+          <Num
+            label="Stack"
+            value={seat.stack}
+            onChange={(v) => patch(selected, { stack: v })}
+            scale={chipScale}
+            hint={chipUnit}
+          />
           {!seat.isHero && (
             <>
               <Num label="Bounty" value={seat.bountyAmount} onChange={(v) => patch(selected, { bountyAmount: v })} hint="In buy-in currency" />
@@ -447,7 +459,8 @@ export function TableSpotPanel({
                 label="Chips in"
                 value={spot.seats[selected]?.inFront ?? 0}
                 onChange={(v) => patch(selected, { committed: v })}
-                hint="What they put in"
+                scale={chipScale}
+                hint={chipUnit}
               />
             </>
           )}

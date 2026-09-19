@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseFieldNumber } from './numberField'
+import { parseFieldNumber, scaledFieldText } from './numberField'
 
 describe('what a half-typed field is worth', () => {
   it('reads an emptied box as zero rather than refusing', () => {
@@ -25,5 +25,26 @@ describe('what a half-typed field is worth', () => {
     expect(parseFieldNumber('1e')).toBe(0)
     expect(parseFieldNumber('Infinity')).toBe(0)
     expect(parseFieldNumber('NaN')).toBe(0)
+  })
+})
+
+describe('a field denominated in something else', () => {
+  it('shows chips as big blinds', () => {
+    expect(scaledFieldText(25_000, 1000)).toBe('25')
+    expect(scaledFieldText(8500, 1000)).toBe('8.5')
+  })
+
+  it('rounds an awkward stack rather than spilling decimals', () => {
+    expect(scaledFieldText(12_345, 1000)).toBe('12.35')
+  })
+
+  it('leaves an unscaled value exactly as stored', () => {
+    // A $2.50 bounty must not be rounded into a different bounty.
+    expect(scaledFieldText(2.5, 1)).toBe('2.5')
+    expect(scaledFieldText(25_000, 1)).toBe('25000')
+  })
+
+  it('has nothing to show for a value that is not a number', () => {
+    expect(scaledFieldText(Number.NaN, 1000)).toBe('')
   })
 })
