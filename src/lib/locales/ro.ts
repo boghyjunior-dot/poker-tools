@@ -1369,6 +1369,28 @@ export const ro: Dictionary = {
     "Bounty-ul scade ce îți trebuie de la {without}% la {with}%.",
 
   // ------------------------------------------------------------ the table --
+  "How that is worked out":
+    "Cum se calculează",
+  "Bounty in chips":
+    "Bounty în chips",
+  "Paid on the knockout":
+    "Plătit la eliminare",
+  "Bounty in big blinds":
+    "Bounty în big blinds",
+  "Share of the pot":
+    "Partea ta din pot",
+  "Less what you call":
+    "Minus ce dai call",
+  "Bounty, when you win it":
+    "Bounty, când îl câștigi",
+  "Calling is worth":
+    "Call-ul valorează",
+  "chips won, less the call":
+    "chips câștigați, minus call-ul",
+  "A call breaks even when your share of the pot covers what you put in, so the bar is what you call divided by what the pot pays. A bounty is extra reward on exactly the branch where you win, so it joins the pot on the bottom of that fraction and pulls the bar down.":
+    "Un call e la break-even când partea ta din pot acoperă ce ai băgat, deci pragul e cât dai call împărțit la cât plătește potul. Un bounty e recompensă în plus exact pe ramura în care câștigi, așa că se adaugă la pot sub linia de fracție și coboară pragul.",
+  "Your equity is the share of the pot you win on average, measured by dealing this spot {n} times. The bounty is added only on the runs you win outright, which is why it is multiplied by how often that happens rather than by your equity.":
+    "Equity-ul tău e partea din pot pe care o câștigi în medie, măsurată împărțind situația asta de {n} ori. Bounty-ul se adaugă doar pe rulările în care câștigi direct, de aia e înmulțit cu cât de des se întâmplă asta, nu cu equity-ul tău.",
   "Pick your two cards first.": "Alege-ți mai întâi cele două cărți.",
   "Your hand": "Mâna ta",
   "Click a seat to edit it. Double-click to make it yours.":

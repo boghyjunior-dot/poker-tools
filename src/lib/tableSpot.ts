@@ -114,6 +114,13 @@ export interface SpotDerived {
   /** The same threshold once bounties hero can actually win are counted. */
   requiredEquityWithBountyPct: number
   capturableBountyChips: number
+  /**
+   * The same money in big blinds, which is the unit a bounty is worth judging
+   * in: "$2.50" means nothing at the table until you know it is six blinds.
+   */
+  capturableBountyBB: number
+  /** Face value, in buy-in currency, of the bounties hero can actually win. */
+  capturableBountyAmount: number
   bountyBreakdown: BountyBreakdown[]
   /** "3.2 : 1" — the price, the way it gets said out loud. */
   potOdds: string
@@ -260,6 +267,10 @@ export function deriveSpot(
       )
     : []
   const capturableBountyChips = totalCapturableBountyChips(bountyBreakdown)
+  // Only bounties on players hero covers: the rest are not hero's to win.
+  const capturableBountyAmount = bountyBreakdown
+    .filter((row) => row.covered)
+    .reduce((sum, row) => sum + row.bountyAmount, 0)
 
   return {
     seats: views,
@@ -277,6 +288,9 @@ export function deriveSpot(
       capturableBountyChips,
     ),
     capturableBountyChips,
+    capturableBountyBB:
+      blinds.bigBlind > 0 ? capturableBountyChips / blinds.bigBlind : 0,
+    capturableBountyAmount,
     bountyBreakdown,
     potOdds: formatOdds(finalPot - heroCallAmount, heroCallAmount),
     problems,

@@ -7,6 +7,7 @@ import { EQUITY_PRESET_RANGES, parsePredefinedRange } from '../../lib/predefined
 import { calculateEquity, marginOfErrorForEquity, type EquityResult } from '../../lib/equity'
 import { handEquities, type HandEquityGrid } from '../../lib/callingRange'
 import { countRangeCombosFromStates, type RangeCellStates } from '../../lib/equityRange'
+import { formatMoney } from '../../lib/formatNumber'
 import { useT } from '../../lib/i18n'
 import { cellKey, type BoardCard, type RankIndex } from '../../types/poker'
 import {
@@ -82,6 +83,37 @@ function Stat({ label, value, tone = 'text-white', hint }: { label: string; valu
       <p className="text-[10px] uppercase tracking-wider text-slate-500">{t(label)}</p>
       <p className={`text-lg font-bold tabular-nums ${tone}`}>{value}</p>
       {hint && <p className="text-[10px] text-slate-500">{hint}</p>}
+    </div>
+  )
+}
+
+/**
+ * One line of shown working: the name of the step, the sum, and its answer.
+ *
+ * The sum is spelled out with the actual numbers substituted rather than as
+ * symbols, because the point is to let someone check the figure on the card
+ * above — a formula they still have to fill in themselves proves nothing.
+ */
+function Work({
+  label,
+  sum,
+  result,
+  tone = 'text-slate-100',
+}: {
+  label: string
+  sum: string
+  result: string
+  tone?: string
+}) {
+  return (
+    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 border-b border-slate-800/60 py-1 last:border-0">
+      <span className="w-full text-[10px] uppercase tracking-wider text-slate-500 sm:w-40 sm:shrink-0">
+        {label}
+      </span>
+      <span className="font-mono text-[11px] text-slate-400">{sum}</span>
+      <span className={`ml-auto font-mono text-xs font-semibold tabular-nums ${tone}`}>
+        {result}
+      </span>
     </div>
   )
 }
@@ -469,6 +501,51 @@ export function TableSpotPanel({
           />
         </div>
 
+        <div className="mt-3 rounded-md border border-slate-800 bg-slate-950/40 px-3 py-2">
+          <p className="mb-1 text-[10px] uppercase tracking-wider text-slate-500">
+            {t('How that is worked out')}
+          </p>
+
+          {spot.capturableBountyAmount > 0 && (
+            <>
+              <Work
+                label={t('Bounty in chips')}
+                sum={`${spot.capturableBountyAmount} × (${formatMoney(startingStack)} ÷ ${buyIn})`}
+                result={`${formatMoney(spot.capturableBountyAmount * (startingStack / buyIn))} ${t('chips')}`}
+              />
+              <Work
+                label={t('Paid on the knockout')}
+                sum={`${formatMoney(spot.capturableBountyAmount * (startingStack / buyIn))} × 50%`}
+                result={`${formatMoney(spot.capturableBountyChips)} ${t('chips')}`}
+              />
+              <Work
+                label={t('Bounty in big blinds')}
+                sum={`${formatMoney(spot.capturableBountyChips)} ÷ ${formatMoney(blinds.bigBlind)}`}
+                result={`${spot.capturableBountyBB.toFixed(1)} BB`}
+                tone="text-emerald-400"
+              />
+            </>
+          )}
+
+          <Work
+            label={t('Equity you need')}
+            sum={`${formatMoney(spot.heroCallAmount)} ÷ ${formatMoney(spot.finalPot)}`}
+            result={`${spot.requiredEquityPct.toFixed(1)}%`}
+          />
+          {spot.capturableBountyChips > 0 && (
+            <Work
+              label={t('With the bounty')}
+              sum={`${formatMoney(spot.heroCallAmount)} ÷ (${formatMoney(spot.finalPot)} + ${formatMoney(spot.capturableBountyChips)})`}
+              result={`${spot.requiredEquityWithBountyPct.toFixed(1)}%`}
+              tone="text-emerald-400"
+            />
+          )}
+          <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">
+            {t(
+              'A call breaks even when your share of the pot covers what you put in, so the bar is what you call divided by what the pot pays. A bounty is extra reward on exactly the branch where you win, so it joins the pot on the bottom of that fraction and pulls the bar down.',
+            )}
+          </p>
+        </div>
       </section>
 
       {result && (
@@ -524,6 +601,48 @@ export function TableSpotPanel({
                 {view === 'chips' ? ` ${t('chips')}` : ''}
               </span>
             </p>
+          )}
+          {result.callEv && result.potChips !== undefined && (
+            <div className="rounded-md border border-slate-800 bg-slate-950/40 px-3 py-2">
+              <p className="mb-1 text-[10px] uppercase tracking-wider text-slate-500">
+                {t('How that is worked out')}
+              </p>
+              <Work
+                label={t('Share of the pot')}
+                sum={`${result.players[0].equity.toFixed(1)}% × ${formatMoney(result.potChips)}`}
+                result={formatMoney((result.players[0].equity / 100) * result.potChips)}
+              />
+              <Work
+                label={t('Less what you call')}
+                sum={`− ${formatMoney(result.callEv.callAmount)}`}
+                result={`${result.callEv.chipEvChips >= 0 ? '+' : ''}${formatMoney(result.callEv.chipEvChips)}`}
+                tone={result.callEv.chipEvChips >= 0 ? 'text-emerald-400' : 'text-red-400'}
+              />
+              {result.callEv.bountyEvChips > 0 && (
+                <Work
+                  label={t('Bounty, when you win it')}
+                  sum={`${result.players[0].winPct.toFixed(1)}% × ${formatMoney(spot.capturableBountyChips)}`}
+                  result={`+${formatMoney(result.callEv.bountyEvChips)}`}
+                  tone="text-amber-400"
+                />
+              )}
+              <Work
+                label={t('Calling is worth')}
+                sum={
+                  result.callEv.bountyEvChips > 0
+                    ? `${formatMoney(result.callEv.chipEvChips)} + ${formatMoney(result.callEv.bountyEvChips)}`
+                    : t('chips won, less the call')
+                }
+                result={`${result.callEv.evChips >= 0 ? '+' : ''}${amount(result.callEv.evChips)}`}
+                tone={result.callEv.evChips >= 0 ? 'text-emerald-400' : 'text-red-400'}
+              />
+              <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">
+                {t(
+                  'Your equity is the share of the pot you win on average, measured by dealing this spot {n} times. The bounty is added only on the runs you win outright, which is why it is multiplied by how often that happens rather than by your equity.',
+                  { n: result.iterations.toLocaleString() },
+                )}
+              </p>
+            </div>
           )}
           {grid && (
             <CallingRangeSection
