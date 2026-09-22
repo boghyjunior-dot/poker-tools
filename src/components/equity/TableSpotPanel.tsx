@@ -36,7 +36,14 @@ const ACTION_LABEL: Record<SeatAction, string> = {
 }
 
 const DEFAULT_BLINDS: Blinds = { bigBlind: 1000, antePct: 0.1 }
-const DEFAULT_STACK = 25_000
+/**
+ * Seats start on the tournament's starting stack.
+ *
+ * It matches the starting-stack field on purpose. Bounties are priced through
+ * that field — bounty x (starting stack / buy-in) — so a table whose seats
+ * began somewhere else quietly valued every bounty against the wrong stack.
+ */
+const DEFAULT_STACK = 10_000
 
 /**
  * An opening table: everyone folded to the big blind, who is you, and every
