@@ -393,3 +393,18 @@ export function defaultBounty(listedBuyIn: number): number {
   if (!Number.isFinite(listedBuyIn) || listedBuyIn <= 0) return 0
   return Math.round((listedBuyIn / 1.08 / 4) * 100) / 100
 }
+
+/**
+ * A chip amount at a new blind level, keeping the depth it had.
+ *
+ * Depth is what a stack actually means — 10 BB plays the same whatever the
+ * chips say — so raising the level scales the chips rather than quietly
+ * shortening everyone. Returns the amount untouched when either level is
+ * missing, which is what a half-typed blind looks like.
+ */
+export function rescaleToBlind(chips: number, fromBigBlind: number, toBigBlind: number): number {
+  if (!Number.isFinite(chips)) return 0
+  if (!Number.isFinite(fromBigBlind) || fromBigBlind <= 0) return chips
+  if (!Number.isFinite(toBigBlind) || toBigBlind <= 0) return chips
+  return Math.round(chips * (toBigBlind / fromBigBlind))
+}

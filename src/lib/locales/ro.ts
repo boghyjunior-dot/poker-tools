@@ -1367,6 +1367,8 @@ export const ro: Dictionary = {
     "Bounty-ul scade ce îți trebuie de la {without}% la {with}%.",
 
   // ------------------------------------------------------------ the table --
+  "SB {n} · stacks keep their depth":
+    "SB {n} · stack-urile își păstrează adâncimea",
   "Stk": "Stk",
   "Knockout pays": "Eliminarea plătește",
   "What the knockout pays you": "Cât îți plătește eliminarea",
@@ -1375,7 +1377,6 @@ export const ro: Dictionary = {
   "Chips in": "Chips băgați",
   "Ante": "Ante",
   "of the big blind": "din big blind",
-  "Small blind is half of it: {n}": "Small blind-ul e jumătate din el: {n}",
   "{n} from every seat": "{n} de la fiecare poziție",
   "How that is worked out":
     "Cum se calculează",

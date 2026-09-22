@@ -5,6 +5,7 @@ import {
   deriveSpot,
   formatAmount,
   newSeat,
+  rescaleToBlind,
   seatsForTable,
   smallBlindOf,
   type Blinds,
@@ -466,5 +467,31 @@ describe('hero with chips of their own in', () => {
     expect(spot.hero!.inFront).toBe(7900)
     // Already all-in: there is nothing left to call with.
     expect(spot.heroCallAmount).toBe(0)
+  })
+})
+
+describe('stacks keep their depth when the level moves', () => {
+  it('doubles the chips when the big blind doubles', () => {
+    expect(rescaleToBlind(10_000, 1000, 2000)).toBe(20_000)
+    expect(rescaleToBlind(2200, 1000, 2000)).toBe(4400)
+  })
+
+  it('works downward too', () => {
+    expect(rescaleToBlind(10_000, 1000, 400)).toBe(4000)
+  })
+
+  it('keeps the depth it started with', () => {
+    const depth = 10_000 / 1000
+    expect(rescaleToBlind(10_000, 1000, 1500) / 1500).toBe(depth)
+  })
+
+  it('rounds to whole chips', () => {
+    expect(rescaleToBlind(10_000, 1000, 333)).toBe(3330)
+  })
+
+  it('leaves the amount alone when a level is missing', () => {
+    // What a half-typed blind looks like: scaling here would wipe the table.
+    expect(rescaleToBlind(10_000, 1000, 0)).toBe(10_000)
+    expect(rescaleToBlind(10_000, 0, 2000)).toBe(10_000)
   })
 })

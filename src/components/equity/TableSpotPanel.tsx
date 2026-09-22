@@ -18,6 +18,7 @@ import {
   deriveSpot,
   formatAmount,
   newSeat,
+  rescaleToBlind,
   seatsForTable,
   smallBlindOf,
   type AmountView,
@@ -61,6 +62,7 @@ function Num({
   label,
   value,
   onChange,
+  onCommit,
   hint,
   scale = 1,
   className = '',
@@ -68,6 +70,14 @@ function Num({
   label: string
   value: number
   onChange: (value: number) => void
+  /**
+   * Called when the field is finished with, rather than on every keystroke.
+   *
+   * Typing "2000" passes through 0, 2, 20 and 200 on the way, so anything
+   * that reacts to a value by rewriting other values has to wait for the end
+   * of the number or it will apply itself four times.
+   */
+  onCommit?: () => void
   hint?: string
   /** Chips per typed unit: the big blind when typing in big blinds. */
   scale?: number
@@ -83,6 +93,10 @@ function Num({
       <input
         type="number"
         {...field}
+        onBlur={() => {
+          field.onBlur()
+          onCommit?.()
+        }}
         className="w-full rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1.5 text-sm tabular-nums text-slate-200 focus:border-indigo-600 focus:outline-none"
       />
       {hint && <span className="mt-0.5 block text-[10px] text-slate-600">{t(hint)}</span>}
@@ -193,6 +207,30 @@ export function TableSpotPanel({
       prev.map((item) => (item.bountyAmount === previous ? { ...item, bountyAmount: next } : item)),
     )
     onBuyIn(value)
+  }
+
+  /**
+   * A new level moves the chips, not the depth.
+   *
+   * Only once the blind is finished being typed: the field reports 0, 2, 20
+   * and 200 on the way to 2,000, and scaling on each of those would multiply
+   * every stack by a thousand. The last settled blind is what the next scale
+   * measures from.
+   */
+  const settledBigBlindRef = useRef(DEFAULT_BLINDS.bigBlind)
+  const commitBigBlind = () => {
+    const from = settledBigBlindRef.current
+    const to = blinds.bigBlind
+    if (to > 0) settledBigBlindRef.current = to
+    if (from <= 0 || to <= 0 || from === to) return
+    setSeats((prev) =>
+      prev.map((item) => ({
+        ...item,
+        stack: rescaleToBlind(item.stack, from, to),
+        committed:
+          item.committed === null ? null : rescaleToBlind(item.committed, from, to),
+      })),
+    )
   }
 
   const makeHero = (index: number) =>
@@ -399,7 +437,10 @@ export function TableSpotPanel({
             label="Big blind"
             value={blinds.bigBlind}
             onChange={(v) => setBlinds({ ...blinds, bigBlind: v })}
-            hint={t('Small blind is half of it: {n}', { n: formatMoney(smallBlindOf(blinds.bigBlind)) })}
+            onCommit={commitBigBlind}
+            hint={t('SB {n} · stacks keep their depth', {
+              n: formatMoney(smallBlindOf(blinds.bigBlind)),
+            })}
           />
           <label className="block">
             <span className="mb-1 block text-[10px] uppercase tracking-wider text-slate-500">
