@@ -269,14 +269,24 @@ export function PokerTable({
 
         // Call and raise share a row; the shove gets its own, being the one
         // that ends the hand.
-        const quickActions = (seatIndex: number) => (
+        /**
+         * Hero gets raise and all-in but no call.
+         *
+         * A villain's call is a fact about the hand; hero's is the question
+         * the page exists to answer, and a hero who has already called has
+         * nothing left to price. Raise and all-in say what hero did on the
+         * way in, which is exactly what the chips in front of them mean.
+         */
+        const quickActions = (seatIndex: number, isHero: boolean) => (
           <span className="mt-0.5 block space-y-0.5">
             <span className="flex gap-0.5">
-              <ActionChip
-                label={t('Call')}
-                action="call"
-                onPress={() => onQuickAction(seatIndex, 'call')}
-              />
+              {!isHero && (
+                <ActionChip
+                  label={t('Call')}
+                  action="call"
+                  onPress={() => onQuickAction(seatIndex, 'call')}
+                />
+              )}
               <ActionChip
                 label={t('Raise')}
                 action="raise"
@@ -369,7 +379,7 @@ export function PokerTable({
                   onChange={(value) => onPatch(index, { bountyAmount: value })}
                 />
               )}
-              {!seat.isHero && quickActions(index)}
+              {quickActions(index, seat.isHero)}
             </div>
           )
         }
@@ -412,7 +422,7 @@ export function PokerTable({
                 {seat.bountyAmount % 1 === 0 ? seat.bountyAmount : seat.bountyAmount.toFixed(2)}
               </span>
             )}
-            {!seat.isHero && quickActions(index)}
+            {quickActions(index, seat.isHero)}
           </div>
         )
       })}

@@ -274,10 +274,20 @@ export function TableSpotPanel({
   }
 
   const quickAction = (index: number, action: 'call' | 'raise' | 'shove') => {
-    patch(index, {
-      action,
-      committed: action === 'raise' ? raiseTargetFor(index) : null,
-    })
+    const seat = seats[index]
+    if (seat.isHero) {
+      // Hero has no action to set — the chips in front are the whole
+      // statement — so the shortcut writes the amount and nothing else. A
+      // shove is capped to the stack behind the ante on the way through.
+      patch(index, {
+        committed: action === 'shove' ? seat.stack : raiseTargetFor(index),
+      })
+    } else {
+      patch(index, {
+        action,
+        committed: action === 'raise' ? raiseTargetFor(index) : null,
+      })
+    }
     setSelected(index)
     setRangeJump((count) => count + 1)
   }
