@@ -289,20 +289,14 @@ export function PokerTable({
                 scale={chipScale}
               />
               {actionChip}
-              {!seat.isHero ? (
-                <SeatInput
-                  label={t('Chips in')}
-                  value={seat.inFront}
-                  onChange={(value) => onPatch(index, { committed: value })}
-                  scale={chipScale}
-                />
-              ) : (
-                seat.inFront > 0 && (
-                  <span className="block text-[10px] font-semibold tabular-nums leading-tight text-amber-300">
-                    {amount(seat.inFront)}
-                  </span>
-                )
-              )}
+              {/* Hero edits this too: an open that gets 3-bet is the spot the
+                  field exists for. */}
+              <SeatInput
+                label={t('Chips in')}
+                value={seat.inFront}
+                onChange={(value) => onPatch(index, { committed: value })}
+                scale={chipScale}
+              />
               {!seat.isHero && (
                 <span className="flex items-center gap-0.5">
                   <span aria-hidden className="text-[9px]">

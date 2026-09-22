@@ -9,8 +9,8 @@
  * pot is derived, so the price cannot disagree with the action.
  *
  * Hero has no action of their own. Hero is the seat being asked whether to
- * call, so what hero has committed is the blind and ante they posted, and the
- * call is what it costs to match the largest bet.
+ * call, and the call is what it costs to match the largest bet from whatever
+ * hero already has in — a blind, or an open that has just been raised.
  */
 
 import {
@@ -221,6 +221,19 @@ function betPartOf(seat: Seat, ante: number, blind: number, currentBet: number):
   }
 }
 
+/**
+ * What hero already has in front of them.
+ *
+ * The blind by default, or whatever they typed — an open, a limp, a 3-bet.
+ * Hero never "calls" in this model, so there is nothing here that tracks the
+ * largest bet: hero's chips are the ones already committed, and the call is
+ * priced from them.
+ */
+function heroBetPart(seat: Seat, ante: number, blind: number): number {
+  const room = Math.max(0, Math.max(0, seat.stack) - ante)
+  return Math.min(Math.max(seat.committed ?? blind, blind), room)
+}
+
 function formatOdds(reward: number, risk: number): string {
   if (risk <= 0 || !Number.isFinite(reward / risk)) return '—'
   return `${(reward / risk).toFixed(1)} : 1`
@@ -246,20 +259,25 @@ export function deriveSpot(
   // aggressive actions can set it. A limped pot leaves it at the big blind.
   let currentBet = Math.max(0, blinds.bigBlind)
   seats.forEach((seat, index) => {
-    if (seat.isHero) return
+    const { ante, blind } = forced[index]
+    // Hero's own chips count here too: opening the pot sets the bar that the
+    // seats behind have to match, and hero facing a raise after opening is
+    // the whole reason hero is allowed chips beyond a blind.
+    if (seat.isHero) {
+      if (seat.committed !== null) {
+        currentBet = Math.max(currentBet, heroBetPart(seat, ante, blind))
+      }
+      return
+    }
     if (seat.action === 'shove' || seat.action === 'raise') {
-      currentBet = Math.max(
-        currentBet,
-        betPartOf(seat, forced[index].ante, forced[index].blind, currentBet),
-      )
+      currentBet = Math.max(currentBet, betPartOf(seat, ante, blind, currentBet))
     }
   })
 
   const views: SeatView[] = seats.map((seat, index) => {
     const { ante, blind } = forced[index]
-    // Hero has not acted: what hero has in is the ante and the blind, no more.
     const betPart = seat.isHero
-      ? Math.min(blind, Math.max(0, Math.max(0, seat.stack) - ante))
+      ? heroBetPart(seat, ante, blind)
       : betPartOf(seat, ante, blind, currentBet)
     return {
       ...seat,
@@ -286,11 +304,13 @@ export function deriveSpot(
     .filter((seat) => !seat.isHero && seat.action === 'fold')
     .reduce((sum, seat) => sum + seat.contribution, 0)
 
-  // What it costs to match the bet: the ante is already gone and buys nothing.
+  // What it costs to match the bet, from whatever hero already has in. The
+  // ante is gone and buys nothing; the open does count, which is what makes
+  // facing a 3-bet cost the difference rather than the whole raise.
   const heroCallAmount = hero
     ? Math.max(
         0,
-        Math.min(currentBet, Math.max(0, Math.max(0, hero.stack) - hero.ante)) - hero.blind,
+        Math.min(currentBet, Math.max(0, Math.max(0, hero.stack) - hero.ante)) - hero.inFront,
       )
     : 0
   const finalPot = potBeforeCall + heroCallAmount

@@ -396,3 +396,75 @@ describe('chips a seat already put in', () => {
     expect(spot.seats.find((seat) => seat.position === 'CO')!.inFront).toBe(7900)
   })
 })
+
+describe('hero with chips of their own in', () => {
+  it('charges hero only the difference when a 3-bet comes back', () => {
+    // Hero opens the cutoff to 2,200 and the button makes it 6,800.
+    const spot = deriveSpot(
+      table({
+        CO: { isHero: true, committed: 2200 },
+        BTN: { action: 'raise', committed: 6800 },
+      }),
+      BLINDS,
+      100,
+      25_000,
+    )
+    expect(spot.hero!.inFront).toBe(2200)
+    // 6,800 to match, 2,200 already in: the call is the gap, not the raise.
+    expect(spot.heroCallAmount).toBe(4600)
+    // Antes 800 + SB 500 + BB 1,000 + hero 2,200 + BTN 6,800.
+    expect(spot.potBeforeCall).toBe(11_300)
+    expect(spot.finalPot).toBe(15_900)
+  })
+
+  it('still asks for the whole raise when hero has only a blind in', () => {
+    const spot = deriveSpot(
+      table({ BB: { isHero: true }, BTN: { action: 'raise', committed: 6800 } }),
+      BLINDS,
+      100,
+      25_000,
+    )
+    expect(spot.heroCallAmount).toBe(5800)
+  })
+
+  it("lets hero's open set the bar the seats behind have to match", () => {
+    const spot = deriveSpot(
+      table({
+        CO: { isHero: true, committed: 2200 },
+        BTN: { action: 'call' },
+      }),
+      BLINDS,
+      100,
+      25_000,
+    )
+    expect(spot.currentBet).toBe(2200)
+    expect(spot.seats.find((seat) => seat.position === 'BTN')!.inFront).toBe(2200)
+    // Nobody raised hero, so there is nothing for hero to call.
+    expect(spot.heroCallAmount).toBe(0)
+  })
+
+  it('never lets hero have less in than the blind they posted', () => {
+    const spot = deriveSpot(
+      table({ BB: { isHero: true, committed: 0 }, BTN: { action: 'shove' } }),
+      BLINDS,
+      100,
+      25_000,
+    )
+    expect(spot.hero!.inFront).toBe(1000)
+  })
+
+  it('caps hero’s own chips at the stack behind the ante', () => {
+    const spot = deriveSpot(
+      table({
+        CO: { isHero: true, committed: 999_999, stack: 8000 },
+        BTN: { action: 'shove', stack: 40_000 },
+      }),
+      BLINDS,
+      100,
+      25_000,
+    )
+    expect(spot.hero!.inFront).toBe(7900)
+    // Already all-in: there is nothing left to call with.
+    expect(spot.heroCallAmount).toBe(0)
+  })
+})

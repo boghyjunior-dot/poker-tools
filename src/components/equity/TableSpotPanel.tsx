@@ -460,17 +460,17 @@ export function TableSpotPanel({
             hint={chipUnit}
           />
           {!seat.isHero && (
-            <>
-              <Num label="Bounty" value={seat.bountyAmount} onChange={(v) => patch(selected, { bountyAmount: v })} hint="What the knockout pays you" />
-              <Num
-                label="Chips in"
-                value={spot.seats[selected]?.inFront ?? 0}
-                onChange={(v) => patch(selected, { committed: v })}
-                scale={chipScale}
-                hint={chipUnit}
-              />
-            </>
+            <Num label="Bounty" value={seat.bountyAmount} onChange={(v) => patch(selected, { bountyAmount: v })} hint="What the knockout pays you" />
           )}
+          {/* Hero gets this as well: opening and then facing a 3-bet is the
+              reason a seat can hold chips beyond its blind. */}
+          <Num
+            label="Chips in"
+            value={spot.seats[selected]?.inFront ?? 0}
+            onChange={(v) => patch(selected, { committed: v })}
+            scale={chipScale}
+            hint={chipUnit}
+          />
         </div>
 
         {!seat.isHero && (
