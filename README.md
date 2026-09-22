@@ -146,6 +146,10 @@ against one or more opponents.
 - Preset opening ranges from top 10% through to the full range
 - Margin of error reported alongside every result, so you know how much to
   trust it
+- Four accuracy levels, each naming the error bar it buys — from ±0.44% in a
+  third of a second to ±0.05% in about four. One setting drives both engines,
+  since a single equity figure and the 169-hand grid cost very different
+  amounts per deal
 - Bounty-aware call EV, including whether you actually cover the player whose
   bounty you would be winning
 - **The calling range**: all 169 starting hands scored against the villain range

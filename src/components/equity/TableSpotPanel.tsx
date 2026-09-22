@@ -4,7 +4,14 @@ import { HoleCardPicker } from './HoleCardPicker'
 import { PokerTable } from './PokerTable'
 import { CallingRangeSection } from './CallingRangeSection'
 import { EQUITY_PRESET_RANGES, parsePredefinedRange } from '../../lib/predefinedRanges'
-import { calculateEquity, marginOfErrorForEquity, type EquityResult } from '../../lib/equity'
+import {
+  ACCURACY_LEVELS,
+  accuracyLevel,
+  calculateEquity,
+  marginOfErrorForEquity,
+  worstCaseMarginOfError,
+  type EquityResult,
+} from '../../lib/equity'
 import { handEquities, type HandEquityGrid } from '../../lib/callingRange'
 import { countRangeCombosFromStates, type RangeCellStates } from '../../lib/equityRange'
 import { formatMoney } from '../../lib/formatNumber'
@@ -156,13 +163,11 @@ function Work({
 export function TableSpotPanel({
   buyIn,
   startingStack,
-  iterations,
   onBuyIn,
   onStartingStack,
 }: {
   buyIn: number
   startingStack: number
-  iterations: number
   onBuyIn: (value: number) => void
   onStartingStack: (value: number) => void
 }) {
@@ -171,6 +176,7 @@ export function TableSpotPanel({
   const [seats, setSeats] = useState<Seat[]>(() => startingSeats(8, buyIn))
   const [blinds, setBlinds] = useState<Blinds>(DEFAULT_BLINDS)
   const [view, setView] = useState<AmountView>('chips')
+  const [accuracy, setAccuracy] = useState('normal')
   const [selected, setSelected] = useState(() => seatsForTable(8).length - 1)
   const [result, setResult] = useState<EquityResult | null>(null)
   const [grid, setGrid] = useState<HandEquityGrid | null>(null)
@@ -301,7 +307,11 @@ export function TableSpotPanel({
         if (!hasHand) {
           setResult(null)
           setGrid(
-            spot.activeVillains.length === 1 ? handEquities(spot.activeVillains[0].range) : null,
+            spot.activeVillains.length === 1
+              ? handEquities(spot.activeVillains[0].range, {
+                  iterations: level.gridIterations,
+                })
+              : null,
           )
           return
         }
@@ -331,7 +341,7 @@ export function TableSpotPanel({
 
         setResult(
           calculateEquity(players, {
-            iterations,
+            iterations: level.equityIterations,
             buyIn,
             startingStack,
             existingPot: Math.max(0, spot.finalPot - matched),
@@ -346,7 +356,9 @@ export function TableSpotPanel({
           }),
         )
         setGrid(
-          spot.activeVillains.length === 1 ? handEquities(spot.activeVillains[0].range) : null,
+          spot.activeVillains.length === 1
+            ? handEquities(spot.activeVillains[0].range, { iterations: level.gridIterations })
+            : null,
         )
       } catch (err) {
         setResult(null)
@@ -358,6 +370,7 @@ export function TableSpotPanel({
     }, 0)
   }
 
+  const level = accuracyLevel(accuracy)
   const heroHandComplete = Boolean(spot.hero?.hand?.[0] && spot.hero?.hand?.[1])
   // A hand is what hero's own equity needs, not what the spot needs.
   const ready = spot.problems.length === 0
@@ -438,6 +451,22 @@ export function TableSpotPanel({
               />
             </div>
           )}
+          <label className="flex flex-col gap-1 pb-1">
+            <span className="text-[10px] uppercase tracking-wider text-slate-500">
+              {t('Accuracy')}
+            </span>
+            <select
+              value={accuracy}
+              onChange={(event) => setAccuracy(event.target.value)}
+              className="rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1.5 text-sm text-slate-200 focus:border-indigo-600 focus:outline-none"
+            >
+              {ACCURACY_LEVELS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {t(option.label)} · ±{worstCaseMarginOfError(option.equityIterations).toFixed(2)}%
+                </option>
+              ))}
+            </select>
+          </label>
           <div className="flex flex-col gap-1 pb-1">
             <button
               type="button"
@@ -448,6 +477,11 @@ export function TableSpotPanel({
               {running ? t('Running…') : t('Work out the equity')}
             </button>
             {error && <p className="text-xs text-red-400">{t(error)}</p>}
+            <span className="text-[10px] text-slate-500">
+              {t('{n} hands simulated', {
+                n: level.equityIterations.toLocaleString(),
+              })}
+            </span>
           </div>
         </div>
 

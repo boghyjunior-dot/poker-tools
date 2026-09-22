@@ -1367,6 +1367,11 @@ export const ro: Dictionary = {
     "Bounty-ul scade ce îți trebuie de la {without}% la {with}%.",
 
   // ------------------------------------------------------------ the table --
+  "Accuracy": "Acuratețe",
+  "Fast": "Rapid",
+  "High": "Ridicată",
+  "Max": "Maximă",
+  "{n} hands simulated": "{n} mâini simulate",
   // "In" already means "registered" in the Schedule, and one key cannot
   // carry two meanings, so the chips in front of a seat are tagged Bet.
   "Bet": "Bet",

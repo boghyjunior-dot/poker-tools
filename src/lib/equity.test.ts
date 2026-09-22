@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { cardToIndex } from './cards'
 import { evaluate } from './handEvaluator'
-import { calculateEquity, formatMarginOfError, marginOfErrorForEquity, worstCaseMarginOfError } from './equity'
+import { ACCURACY_LEVELS, accuracyLevel, calculateEquity, formatMarginOfError, marginOfErrorForEquity, worstCaseMarginOfError } from './equity'
 import { cardFromRankSuit } from '../components/PlayingCard'
 import type { RankIndex } from '../types/poker'
 
@@ -153,5 +153,37 @@ describe('calculateEquity', () => {
     expect(result.callEv!.callAmount).toBe(8000)
     expect(result.callEv!.recommendation).toBe('call')
     expect(result.callEv!.evChips).toBeGreaterThan(0)
+  })
+})
+
+describe('accuracy levels', () => {
+  it('gets more accurate as it goes', () => {
+    for (let i = 1; i < ACCURACY_LEVELS.length; i++) {
+      expect(ACCURACY_LEVELS[i].equityIterations).toBeGreaterThan(
+        ACCURACY_LEVELS[i - 1].equityIterations,
+      )
+      expect(ACCURACY_LEVELS[i].gridIterations).toBeGreaterThan(
+        ACCURACY_LEVELS[i - 1].gridIterations,
+      )
+    }
+  })
+
+  it('asks the grid for fewer deals, each one being far more work', () => {
+    // A grid deal scores 169 hands; an equity deal scores two.
+    for (const level of ACCURACY_LEVELS) {
+      expect(level.gridIterations).toBeLessThan(level.equityIterations)
+    }
+  })
+
+  it('narrows the error bar at every step', () => {
+    const margins = ACCURACY_LEVELS.map((l) => worstCaseMarginOfError(l.equityIterations))
+    expect(margins[0]).toBeLessThan(0.5)
+    expect(margins[margins.length - 1]).toBeLessThan(0.06)
+    for (let i = 1; i < margins.length; i++) expect(margins[i]).toBeLessThan(margins[i - 1])
+  })
+
+  it('falls back to the middle when asked for a level it does not have', () => {
+    expect(accuracyLevel('nonsense').id).toBe('normal')
+    expect(accuracyLevel('max').id).toBe('max')
   })
 })

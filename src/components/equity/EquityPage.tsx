@@ -275,7 +275,6 @@ export function EquityPage() {
         <TableSpotPanel
           buyIn={resolvedBuyIn}
           startingStack={resolvedStartingStack}
-          iterations={iterations}
           onBuyIn={(value) => setBuyIn(String(value))}
           onStartingStack={(value) => setStartingStack(String(value))}
         />

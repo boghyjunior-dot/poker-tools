@@ -1,4 +1,3 @@
-import { fullDeckIndices } from './cards'
 import { evaluate } from './handEvaluator'
 import { expandRangeToCombos, holeCardsToCombo, type HoleCombo, type RangeCellStates } from './equityRange'
 import {
@@ -107,22 +106,6 @@ function buildComboPool(player: EquityPlayer, dead: ReadonlySet<number>): HoleCo
   return expandRangeToCombos(player.cellStates, dead)
 }
 
-function sampleCombo(pool: HoleCombo[]): HoleCombo {
-  return pool[Math.floor(Math.random() * pool.length)]
-}
-
-function dealBoard(deck: number[], used: Set<number>): number[] {
-  const remaining: number[] = []
-  for (const card of deck) {
-    if (!used.has(card)) remaining.push(card)
-  }
-  for (let i = remaining.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[remaining[i], remaining[j]] = [remaining[j], remaining[i]]
-  }
-  return remaining.slice(0, 5)
-}
-
 export function calculateEquity(players: EquityPlayer[], options: EquityOptions = {}): EquityResult {
   if (players.length < 2) throw new Error('Need at least 2 players')
 
@@ -138,49 +121,83 @@ export function calculateEquity(players: EquityPlayer[], options: EquityOptions 
     stackInfo !== undefined &&
     stackInfo.length === players.length
 
-  const deck = fullDeckIndices()
+  // Each player's combos, worked out once. Rebuilding these per iteration —
+  // 169 cells expanded and filtered against the dead cards, every time — was
+  // what held this to ten thousand hands a second, which made the accuracy
+  // settings the menu already offered unusable.
+  const pools = players.map((player) => buildComboPool(player, new Set()))
   const wins = new Array(players.length).fill(0)
   const ties = new Array(players.length).fill(0)
   const bountyChipsWon = new Array(players.length).fill(0)
-  const comboCounts = players.map((player) => {
-    if (player.type === 'hand') return 1
-    return buildComboPool(player, new Set()).length
-  })
+  const comboCounts = pools.map((pool, index) =>
+    players[index].type === 'hand' ? 1 : pool.length,
+  )
 
   let completed = 0
   let attempts = 0
   const maxAttempts = iterations * 20
 
+  // Reused across iterations so the hot loop allocates nothing.
+  const used = new Uint8Array(52)
+  const holes: HoleCombo[] = new Array(players.length)
+  const board = new Array<number>(5)
+  const seven = new Array<number>(7)
+  const scores = new Array<number>(players.length)
+  // A combo blocked by the cards already dealt is redrawn rather than
+  // filtered out beforehand, which samples the same hands and costs nothing.
+  const MAX_DRAWS = 200
+
   while (completed < iterations && attempts < maxAttempts) {
     attempts++
-    const used = new Set<number>()
-    const holes: HoleCombo[] = []
+    used.fill(0)
     let valid = true
 
-    for (const player of players) {
-      const pool = buildComboPool(player, used)
+    for (let index = 0; index < players.length; index++) {
+      const pool = pools[index]
       if (pool.length === 0) {
         valid = false
         break
       }
-      const combo = sampleCombo(pool)
-      if (used.has(combo[0]) || used.has(combo[1])) {
+      let combo: HoleCombo | null = null
+      for (let draw = 0; draw < MAX_DRAWS; draw++) {
+        const candidate = pool[Math.floor(Math.random() * pool.length)]
+        if (used[candidate[0]] === 0 && used[candidate[1]] === 0) {
+          combo = candidate
+          break
+        }
+      }
+      if (combo === null) {
         valid = false
         break
       }
-      holes.push(combo)
-      used.add(combo[0])
-      used.add(combo[1])
+      holes[index] = combo
+      used[combo[0]] = 1
+      used[combo[1]] = 1
     }
 
     if (!valid) continue
 
-    const board = dealBoard(deck, used)
-    const scores = holes.map((hole) => evaluate([hole[0], hole[1], ...board]))
-    const best = Math.max(...scores)
-    const winnerIndexes = scores
-      .map((score, index) => (score === best ? index : -1))
-      .filter((index) => index >= 0)
+    for (let i = 0; i < 5; i++) {
+      let card = Math.floor(Math.random() * 52)
+      while (used[card] === 1) card = Math.floor(Math.random() * 52)
+      used[card] = 1
+      board[i] = card
+    }
+
+    for (let i = 0; i < 5; i++) seven[i + 2] = board[i]
+    for (let index = 0; index < players.length; index++) {
+      seven[0] = holes[index][0]
+      seven[1] = holes[index][1]
+      scores[index] = evaluate(seven)
+    }
+    let best = scores[0]
+    for (let index = 1; index < scores.length; index++) {
+      if (scores[index] > best) best = scores[index]
+    }
+    const winnerIndexes: number[] = []
+    for (let index = 0; index < scores.length; index++) {
+      if (scores[index] === best) winnerIndexes.push(index)
+    }
 
     if (winnerIndexes.length === 1) {
       wins[winnerIndexes[0]]++
@@ -332,4 +349,32 @@ export function calculateEquity(players: EquityPlayer[], options: EquityOptions 
       }
     }),
   }
+}
+
+/**
+ * How hard to work, as one choice covering both engines.
+ *
+ * A single equity figure and the 169-hand grid cost very different amounts
+ * per iteration — the grid scores every hand against each board it deals —
+ * so one iteration count cannot serve both. These pair them by how long the
+ * answer takes rather than by a number that means different things in each.
+ */
+export interface AccuracyLevel {
+  id: 'fast' | 'normal' | 'high' | 'max'
+  label: string
+  /** Hands dealt for a single equity figure. */
+  equityIterations: number
+  /** Boards dealt for the grid, each scored against all 169 hands. */
+  gridIterations: number
+}
+
+export const ACCURACY_LEVELS: AccuracyLevel[] = [
+  { id: 'fast', label: 'Fast', equityIterations: 50_000, gridIterations: 10_000 },
+  { id: 'normal', label: 'Normal', equityIterations: 200_000, gridIterations: 25_000 },
+  { id: 'high', label: 'High', equityIterations: 1_000_000, gridIterations: 60_000 },
+  { id: 'max', label: 'Max', equityIterations: 4_000_000, gridIterations: 150_000 },
+]
+
+export function accuracyLevel(id: string): AccuracyLevel {
+  return ACCURACY_LEVELS.find((level) => level.id === id) ?? ACCURACY_LEVELS[1]
 }
