@@ -381,6 +381,17 @@ export function TableSpotPanel({
   }
 
   const level = accuracyLevel(accuracy)
+
+  const runButton = (className: string) => (
+    <button
+      type="button"
+      onClick={run}
+      disabled={!ready || running}
+      className={`rounded-lg bg-indigo-600 font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-500 ${className}`}
+    >
+      {running ? t('Running…') : t('Work out the equity')}
+    </button>
+  )
   const heroHandComplete = Boolean(spot.hero?.hand?.[0] && spot.hero?.hand?.[1])
   // A hand is what hero's own equity needs, not what the spot needs.
   const ready = spot.problems.length === 0
@@ -478,14 +489,7 @@ export function TableSpotPanel({
             </select>
           </label>
           <div className="flex flex-col gap-1 pb-1">
-            <button
-              type="button"
-              onClick={run}
-              disabled={!ready || running}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-500"
-            >
-              {running ? t('Running…') : t('Work out the equity')}
-            </button>
+            {runButton('px-4 py-2 text-sm')}
             {error && <p className="text-xs text-red-400">{t(error)}</p>}
             <span className="text-[10px] text-slate-500">
               {t('{n} hands simulated', {
@@ -639,6 +643,7 @@ export function TableSpotPanel({
               <span className="text-xs text-slate-500">
                 {t('{n} combos', { n: countRangeCombosFromStates(seat.range) })}
               </span>
+              {runButton('ml-auto px-3 py-1 text-xs')}
             </div>
             <EquityMatrix
               cellStates={seat.range}
