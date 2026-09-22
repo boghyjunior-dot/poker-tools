@@ -9,7 +9,6 @@ import {
   callEvChips,
   computeShowdownPot,
   heroCoversVillain,
-  PKO_IMMEDIATE_CAPTURE,
   totalCapturableBountyChips,
   totalEquityWithBounty,
 } from './equityBounty'
@@ -30,10 +29,11 @@ describe('equityBounty', () => {
       { stack: 8000, bountyAmount: 5 },
       { stack: 15_000, bountyAmount: 10 },
     ])
+    // The bounty entered is what the knockout pays, so it is not halved again.
     expect(breakdown[0].bountyChips).toBe(5000)
-    expect(breakdown[0].captureChips).toBe(PKO_IMMEDIATE_CAPTURE * 5000)
+    expect(breakdown[0].captureChips).toBe(5000)
     expect(breakdown[1].captureChips).toBe(0)
-    expect(totalCapturableBountyChips(breakdown)).toBe(2500)
+    expect(totalCapturableBountyChips(breakdown)).toBe(5000)
   })
 
   it('expresses bounty EV as added equity percent of the pot', () => {

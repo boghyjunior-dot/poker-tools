@@ -1367,6 +1367,8 @@ export const ro: Dictionary = {
     "Bounty-ul scade ce îți trebuie de la {without}% la {with}%.",
 
   // ------------------------------------------------------------ the table --
+  "Knockout pays": "Eliminarea plătește",
+  "What the knockout pays you": "Cât îți plătește eliminarea",
   "in big blinds": "în big blinds",
   "in chips": "în chips",
   "Chips in": "Chips băgați",
@@ -1376,10 +1378,6 @@ export const ro: Dictionary = {
   "{n} from every seat": "{n} de la fiecare poziție",
   "How that is worked out":
     "Cum se calculează",
-  "Bounty in chips":
-    "Bounty în chips",
-  "Paid on the knockout":
-    "Plătit la eliminare",
   "Bounty in big blinds":
     "Bounty în big blinds",
   "Share of the pot":
@@ -1422,8 +1420,6 @@ export const ro: Dictionary = {
     "Tu — {position}",
   "This seat is mine":
     "Locul ăsta e al meu",
-  "In buy-in currency":
-    "În moneda buy-in-ului",
   "To call":
     "De call",
   "on pot odds alone":

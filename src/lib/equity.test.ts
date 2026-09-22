@@ -85,7 +85,8 @@ describe('calculateEquity', () => {
       },
     )
 
-    expect(result.capturableBountyChips).toBe(5000)
+    // $10 knockout x (10,000 / 10) = 10,000 chips, paid in full to the captor.
+    expect(result.capturableBountyChips).toBe(10_000)
     expect(result.players[0].bountyEvChips).toBeGreaterThan(0)
     expect(result.players[0].bountyEquityAdd).toBeGreaterThan(0)
     expect(result.players[0].totalEquity).toBeGreaterThan(result.players[0].equity)

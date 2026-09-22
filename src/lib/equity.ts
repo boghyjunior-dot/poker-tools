@@ -9,7 +9,6 @@ import {
   buildCallEvResult,
   computeShowdownPot,
   heroCoversVillain,
-  PKO_IMMEDIATE_CAPTURE,
   totalCapturableBountyChips,
   requiredEquityPct,
   totalEquityWithBounty,
@@ -196,7 +195,7 @@ export function calculateEquity(players: EquityPlayer[], options: EquityOptions 
             const bountyAmount = villainInfo.bountyAmount ?? 0
             if (bountyAmount <= 0) continue
             if (!heroCoversVillain(stackInfo![heroIndex].stack, villainInfo.stack)) continue
-            iterationBounty += PKO_IMMEDIATE_CAPTURE * bountyAmountToChips(bountyAmount, buyIn!, startingStack!)
+            iterationBounty += bountyAmountToChips(bountyAmount, buyIn!, startingStack!)
           }
           bountyChipsWon[heroIndex] += iterationBounty
         }

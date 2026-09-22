@@ -14,7 +14,6 @@ import {
   bountyAmountToChips,
   buildBountyBreakdown,
   computeShowdownPot,
-  PKO_IMMEDIATE_CAPTURE,
 } from '../../lib/equityBounty'
 import { cellKey, type BoardCard, type RankIndex } from '../../types/poker'
 import { handEquities, type HandEquityGrid } from '../../lib/callingRange'
@@ -456,8 +455,8 @@ export function EquityPage() {
           </div>
           <p className="text-xs text-slate-500 mt-2">
             {t('Showdown pot = existing pot + sum of all-in contributions (matched to effective stack).')}
-            Bounty chips = bounty × (starting stack ÷ buy-in). PKO capture uses{' '}
-            {Math.round(PKO_IMMEDIATE_CAPTURE * 100)}% when you cover an opponent and win outright.
+            Bounty chips = bounty × (starting stack ÷ buy-in), where the bounty is what
+            the knockout pays you. It counts when you cover an opponent and win outright.
             Total equity = chip equity + bounty equity (bounty EV as % of the pot).
           </p>
         </div>

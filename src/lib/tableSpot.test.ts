@@ -271,7 +271,7 @@ describe('the default bounty', () => {
 })
 
 describe('what a bounty is worth in blinds', () => {
-  it('converts face value through the starting stack, then halves it', () => {
+  it('converts what the knockout pays through the starting stack', () => {
     const spot = deriveSpot(
       table({
         BTN: { action: 'shove', stack: 12_000, bountyAmount: 50 },
@@ -281,10 +281,10 @@ describe('what a bounty is worth in blinds', () => {
       100,
       25_000,
     )
-    // $50 × (25,000 ÷ 100) = 12,500 chips; half of it is paid on the knockout.
-    expect(spot.capturableBountyChips).toBe(6250)
-    // 6,250 chips at a 1,000 big blind.
-    expect(spot.capturableBountyBB).toBe(6.25)
+    // A $50 knockout × (25,000 ÷ 100) = 12,500 chips, all of it hero's.
+    expect(spot.capturableBountyChips).toBe(12_500)
+    // 12,500 chips at a 1,000 big blind.
+    expect(spot.capturableBountyBB).toBe(12.5)
     expect(spot.capturableBountyAmount).toBe(50)
   })
 
@@ -314,8 +314,8 @@ describe('what a bounty is worth in blinds', () => {
       25_000,
     )
     expect(spot.capturableBountyAmount).toBe(70)
-    // (20 + 50) × 250 ÷ 2 = 8,750 chips = 8.75 BB.
-    expect(spot.capturableBountyBB).toBe(8.75)
+    // (20 + 50) × 250 = 17,500 chips = 17.5 BB.
+    expect(spot.capturableBountyBB).toBe(17.5)
   })
 })
 

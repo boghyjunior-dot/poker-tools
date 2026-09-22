@@ -1,5 +1,11 @@
-/** PKO: fraction of opponent bounty paid immediately when you eliminate them. */
-export const PKO_IMMEDIATE_CAPTURE = 0.5
+/**
+ * A bounty is entered as what you are paid for the knockout.
+ *
+ * That is the figure a room puts next to a player, so it is the one people
+ * read off the table and type in. In a PKO half of a head goes to the captor
+ * and half onto their own head; this is the captor's half, already — so
+ * nothing here halves it again.
+ */
 
 /** Convert a tournament bounty ($) to chip EV using buy-in and starting stack. */
 export function bountyAmountToChips(
@@ -19,7 +25,7 @@ export function heroCoversVillain(heroStack: number, villainStack: number): bool
 
 export interface StackBountyInput {
   stack: number
-  /** Opponent bounty in tournament currency (e.g. dollars). */
+  /** What eliminating this opponent pays, in tournament currency. */
   bountyAmount?: number
 }
 
@@ -45,7 +51,7 @@ export function buildBountyBreakdown(
       villainIndex: index,
       bountyAmount,
       bountyChips,
-      captureChips: covered ? PKO_IMMEDIATE_CAPTURE * bountyChips : 0,
+      captureChips: covered ? bountyChips : 0,
       covered,
     }
   })

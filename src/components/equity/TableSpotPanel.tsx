@@ -461,7 +461,7 @@ export function TableSpotPanel({
           />
           {!seat.isHero && (
             <>
-              <Num label="Bounty" value={seat.bountyAmount} onChange={(v) => patch(selected, { bountyAmount: v })} hint="In buy-in currency" />
+              <Num label="Bounty" value={seat.bountyAmount} onChange={(v) => patch(selected, { bountyAmount: v })} hint="What the knockout pays you" />
               <Num
                 label="Chips in"
                 value={spot.seats[selected]?.inFront ?? 0}
@@ -559,13 +559,8 @@ export function TableSpotPanel({
           {spot.capturableBountyAmount > 0 && (
             <>
               <Work
-                label={t('Bounty in chips')}
+                label={t('Knockout pays')}
                 sum={`${spot.capturableBountyAmount} × (${formatMoney(startingStack)} ÷ ${buyIn})`}
-                result={`${formatMoney(spot.capturableBountyAmount * (startingStack / buyIn))} ${t('chips')}`}
-              />
-              <Work
-                label={t('Paid on the knockout')}
-                sum={`${formatMoney(spot.capturableBountyAmount * (startingStack / buyIn))} × 50%`}
                 result={`${formatMoney(spot.capturableBountyChips)} ${t('chips')}`}
               />
               <Work
