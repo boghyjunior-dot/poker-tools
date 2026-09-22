@@ -3,6 +3,8 @@ import { BackToMenu } from '../BackToMenu'
 import { Footer } from '../Footer'
 import bundledDeckFile from '../../content/quizDecks.json'
 import { useT } from '../../lib/i18n'
+import { LocalOnlyBanner } from '../LocalOnlyBanner'
+import { FEATURE_KNOWLEDGE_PUBLISHED, KNOWLEDGE_VARIABLE } from '../../lib/featureFlags'
 import {
   collectTags,
   mergeDecks,
@@ -244,6 +246,11 @@ export function QuizPage() {
         <p className="mb-6 text-sm text-slate-400">
           {t('Heuristics, flashcards and questions. Study the bundled decks or import your own file.')}
         </p>
+
+        <LocalOnlyBanner
+          published={FEATURE_KNOWLEDGE_PUBLISHED}
+          variable={KNOWLEDGE_VARIABLE}
+        />
 
         <div className="flex flex-col gap-4">
           <Panel>

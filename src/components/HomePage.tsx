@@ -1,4 +1,6 @@
 import {
+  FEATURE_KNOWLEDGE_ENABLED,
+  FEATURE_KNOWLEDGE_PUBLISHED,
   FEATURE_PRACTICE_ENABLED,
   FEATURE_REVIEW_ENABLED,
   FEATURE_REVIEW_PUBLISHED,
@@ -380,6 +382,7 @@ const SECTIONS: Section[] = [
         href: 'charts.html',
         icon: <ChartsIcon />,
         title: 'Preflop Charts',
+        ...local(FEATURE_KNOWLEDGE_ENABLED, FEATURE_KNOWLEDGE_PUBLISHED),
         description:
           'MTT ranges by position and stack depth, typed in as strings — then drill yourself on them hand by hand.',
         accent: 'border-teal-800/60 hover:border-teal-600/80',
@@ -389,6 +392,7 @@ const SECTIONS: Section[] = [
         href: 'quiz.html',
         icon: <QuizIcon />,
         title: 'Quiz Me',
+        ...local(FEATURE_KNOWLEDGE_ENABLED, FEATURE_KNOWLEDGE_PUBLISHED),
         description:
           'Heuristics, flashcards and questions to drill the numbers. Study the bundled decks or import your own file.',
         accent: 'border-amber-800/60 hover:border-amber-600/80',

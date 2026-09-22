@@ -5,6 +5,8 @@ import { ChartLegend, ChartMatrix } from './ChartMatrix'
 import { useT } from '../../lib/i18n'
 import starterFile from '../../content/preflopCharts.json'
 import { formatRange, parseRangeString } from '../../lib/rangeParser'
+import { LocalOnlyBanner } from '../LocalOnlyBanner'
+import { FEATURE_KNOWLEDGE_PUBLISHED, KNOWLEDGE_VARIABLE } from '../../lib/featureFlags'
 import {
   COLOR_CLASSES,
   FOLD_ANSWER,
@@ -237,6 +239,11 @@ export function PreflopChartsPage() {
         <p className="mb-6 text-sm text-slate-400">
           {t('MTT ranges by position and stack depth. Type a range, then drill yourself on it.')}
         </p>
+
+        <LocalOnlyBanner
+          published={FEATURE_KNOWLEDGE_PUBLISHED}
+          variable={KNOWLEDGE_VARIABLE}
+        />
 
         <div className="flex flex-col gap-4">
           <Panel>

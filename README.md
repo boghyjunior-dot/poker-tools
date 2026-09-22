@@ -17,8 +17,8 @@ anything you save stays in your own `localStorage`.
 | [Mystery Bounty](#mystery-bounty) | What is a knockout worth right now? | In review · local only |
 | [Bankroll](#bankroll) | What stakes can I afford to play? | Done |
 | [MTT Variance](#mtt-variance) | How bad can a downswing get? | Done |
-| [Preflop Charts](#preflop-charts) | What do I open from here? | In progress |
-| [Quiz Me](#quiz-me) | Do I know the numbers cold? | In progress |
+| [Preflop Charts](#preflop-charts) | What do I open from here? | In progress · local only |
+| [Quiz Me](#quiz-me) | Do I know the numbers cold? | In progress · local only |
 | [Randomizer](#randomizer) | Which branch of a mixed strategy do I take? | Done |
 | [Leak Finder](#leak-finder) | What should I fix first? | Done |
 
@@ -247,14 +247,15 @@ Import a positional export from **PokerTracker**, **Hold'em Manager** or
 
 ## Local-only pages
 
-Four pages run in the dev server but are left out of the published site, in
-three groups that ship independently:
+Six pages run in the dev server but are left out of the published site, in
+four groups that ship independently:
 
 | Variable | Pages |
 | --- | --- |
 | `VITE_PUBLISH_ROADMAP` | Roadmap |
 | `VITE_PUBLISH_IN_REVIEW` | Mystery Bounty |
 | `VITE_PUBLISH_SESSION` | Schedule, Bankroll Tracker |
+| `VITE_PUBLISH_KNOWLEDGE` | Preflop Charts, Quiz Me |
 
 They are not merely hidden. The build drops the entry entirely, so no HTML
 reaches `dist`, there is no URL to stumble onto, nothing in the sitemap, and

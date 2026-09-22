@@ -21,14 +21,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://snapper.poker/charts.html</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://snapper.poker/quiz.html</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://snapper.poker/variance.html</loc>
     <priority>0.8</priority>
   </url>
