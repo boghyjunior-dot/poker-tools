@@ -1367,6 +1367,9 @@ export const ro: Dictionary = {
     "Bounty-ul scade ce îți trebuie de la {without}% la {with}%.",
 
   // ------------------------------------------------------------ the table --
+  // "In" already means "registered" in the Schedule, and one key cannot
+  // carry two meanings, so the chips in front of a seat are tagged Bet.
+  "Bet": "Bet",
   "No cards picked, so this gives the range that can call, not your own equity.":
     "Fără cărți alese, primești range-ul care poate da call, nu equity-ul tău.",
   "SB {n} · stacks keep their depth":

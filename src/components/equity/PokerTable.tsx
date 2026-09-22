@@ -87,13 +87,28 @@ function ringPosition(
   }
 }
 
+const CHIP_STYLE: Record<'call' | 'raise' | 'shove', string> = {
+  call: 'border-sky-700/70 bg-sky-950/40 text-sky-300 hover:bg-sky-900/60',
+  raise: 'border-amber-700/70 bg-amber-950/40 text-amber-300 hover:bg-amber-900/60',
+  shove: 'border-rose-700/70 bg-rose-950/40 text-rose-300 hover:bg-rose-900/60',
+}
+
 /**
- * The one-press version of the commonest villain action.
+ * The one-press version of an action.
  *
  * Stops the click where it lands, so pressing it never doubles as selecting
- * or claiming the seat underneath.
+ * or claiming the seat underneath. Coloured like the action chip it produces,
+ * so pressing one and reading the result are the same colour.
  */
-function AllInChip({ label, onPress }: { label: string; onPress: () => void }) {
+function ActionChip({
+  label,
+  action,
+  onPress,
+}: {
+  label: string
+  action: 'call' | 'raise' | 'shove'
+  onPress: () => void
+}) {
   return (
     <button
       type="button"
@@ -101,7 +116,7 @@ function AllInChip({ label, onPress }: { label: string; onPress: () => void }) {
         event.stopPropagation()
         onPress()
       }}
-      className="mt-0.5 w-full rounded border border-rose-700/70 bg-rose-950/40 px-1 py-px text-[9px] font-semibold uppercase leading-tight text-rose-300 transition-colors hover:bg-rose-900/60"
+      className={`w-full rounded border px-1 py-px text-[9px] font-semibold uppercase leading-tight transition-colors ${CHIP_STYLE[action]}`}
     >
       {label}
     </button>
@@ -162,7 +177,7 @@ export function PokerTable({
   onSelect,
   onPatch,
   onMakeHero,
-  onAllIn,
+  onQuickAction,
   potBeforeCall,
   heroCallAmount,
   bigBlind,
@@ -173,7 +188,8 @@ export function PokerTable({
   onSelect: (index: number) => void
   onPatch: (index: number, change: Partial<Seat>) => void
   onMakeHero: (index: number) => void
-  onAllIn: (index: number) => void
+  /** Set a seat's action and carry the eye to where its range gets chosen. */
+  onQuickAction: (index: number, action: 'call' | 'raise' | 'shove') => void
   potBeforeCall: number
   heroCallAmount: number
   bigBlind: number
@@ -251,6 +267,30 @@ export function PokerTable({
         const { x, y } = ringPosition(index, seats.length, heroIndex, 40, 39)
         const dimmed = !seat.isActive
 
+        // Call and raise share a row; the shove gets its own, being the one
+        // that ends the hand.
+        const quickActions = (seatIndex: number) => (
+          <span className="mt-0.5 block space-y-0.5">
+            <span className="flex gap-0.5">
+              <ActionChip
+                label={t('Call')}
+                action="call"
+                onPress={() => onQuickAction(seatIndex, 'call')}
+              />
+              <ActionChip
+                label={t('Raise')}
+                action="raise"
+                onPress={() => onQuickAction(seatIndex, 'raise')}
+              />
+            </span>
+            <ActionChip
+              label={t('All-in')}
+              action="shove"
+              onPress={() => onQuickAction(seatIndex, 'shove')}
+            />
+          </span>
+        )
+
         const positionLabel = (
           <span
             className={`block text-[10px] font-semibold uppercase leading-tight sm:text-[11px] ${
@@ -314,7 +354,7 @@ export function PokerTable({
                   field exists for. */}
               <SeatInput
                 label={t('Chips in')}
-                tag={t('In')}
+                tag={t('Bet')}
                 tone="text-amber-300"
                 value={seat.inFront}
                 onChange={(value) => onPatch(index, { committed: value })}
@@ -329,7 +369,7 @@ export function PokerTable({
                   onChange={(value) => onPatch(index, { bountyAmount: value })}
                 />
               )}
-              {!seat.isHero && <AllInChip label={t('All-in')} onPress={() => onAllIn(index)} />}
+              {!seat.isHero && quickActions(index)}
             </div>
           )
         }
@@ -372,7 +412,7 @@ export function PokerTable({
                 {seat.bountyAmount % 1 === 0 ? seat.bountyAmount : seat.bountyAmount.toFixed(2)}
               </span>
             )}
-            {!seat.isHero && <AllInChip label={t('All-in')} onPress={() => onAllIn(index)} />}
+            {!seat.isHero && quickActions(index)}
           </div>
         )
       })}

@@ -250,8 +250,28 @@ export function TableSpotPanel({
     presetRef.current?.focus({ preventScroll: true })
   }, [rangeJump])
 
-  const allIn = (index: number) => {
-    patch(index, { action: 'shove', committed: null })
+  /**
+   * What a raise on this seat would be going to.
+   *
+   * Two and a half times the bet it is facing, which lands on an ordinary
+   * open in an unopened pot, an ordinary 3-bet over an open, and an ordinary
+   * 4-bet over that — one rule that happens to be right three times. A seat's
+   * own chips are left out of what it is facing, so pressing raise twice
+   * re-sizes rather than compounding.
+   */
+  const raiseTargetFor = (index: number) => {
+    const facing = spot.seats.reduce(
+      (most, other, i) => (i === index || !other.isActive ? most : Math.max(most, other.inFront)),
+      blinds.bigBlind,
+    )
+    return Math.round(facing * 2.5)
+  }
+
+  const quickAction = (index: number, action: 'call' | 'raise' | 'shove') => {
+    patch(index, {
+      action,
+      committed: action === 'raise' ? raiseTargetFor(index) : null,
+    })
     setSelected(index)
     setRangeJump((count) => count + 1)
   }
@@ -395,7 +415,7 @@ export function TableSpotPanel({
           onSelect={setSelected}
           onPatch={patch}
           onMakeHero={makeHero}
-          onAllIn={allIn}
+          onQuickAction={quickAction}
           potBeforeCall={spot.potBeforeCall}
           heroCallAmount={spot.heroCallAmount}
           bigBlind={blinds.bigBlind}
