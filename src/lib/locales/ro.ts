@@ -1367,6 +1367,8 @@ export const ro: Dictionary = {
     "Bounty-ul scade ce îți trebuie de la {without}% la {with}%.",
 
   // ------------------------------------------------------------ the table --
+  "No cards picked, so this gives the range that can call, not your own equity.":
+    "Fără cărți alese, primești range-ul care poate da call, nu equity-ul tău.",
   "SB {n} · stacks keep their depth":
     "SB {n} · stack-urile își păstrează adâncimea",
   "Stk": "Stk",
@@ -1396,7 +1398,6 @@ export const ro: Dictionary = {
     "Un call e la break-even când partea ta din pot acoperă ce ai băgat, deci pragul e cât dai call împărțit la cât plătește potul. Un bounty e recompensă în plus exact pe ramura în care câștigi, așa că se adaugă la pot sub linia de fracție și coboară pragul.",
   "Your equity is the share of the pot you win on average, measured by dealing this spot {n} times. The bounty is added only on the runs you win outright, which is why it is multiplied by how often that happens rather than by your equity.":
     "Equity-ul tău e partea din pot pe care o câștigi în medie, măsurată împărțind situația asta de {n} ori. Bounty-ul se adaugă doar pe rulările în care câștigi direct, de aia e înmulțit cu cât de des se întâmplă asta, nu cu equity-ul tău.",
-  "Pick your two cards first.": "Alege-ți mai întâi cele două cărți.",
   "Your hand": "Mâna ta",
   "Click a seat to edit it. Double-click to make it yours.":
     "Dă click pe un loc ca să-l editezi. Dublu click ca să fie al tău.",

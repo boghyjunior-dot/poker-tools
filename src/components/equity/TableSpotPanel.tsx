@@ -272,13 +272,24 @@ export function TableSpotPanel({
         if (!hero) throw new Error('Pick which seat is yours.')
         if (spot.activeVillains.length === 0) throw new Error('Nobody is in the hand with you.')
         const heroCards = hero.hand
-        if (!heroCards?.[0] || !heroCards?.[1]) throw new Error('Pick your two cards first.')
+        const hasHand = Boolean(heroCards?.[0] && heroCards?.[1])
+
+        // Without a hand there is no hero equity to measure, but the grid —
+        // which hands could call at this price — never depended on hero's
+        // cards. So the run stops short rather than refusing.
+        if (!hasHand) {
+          setResult(null)
+          setGrid(
+            spot.activeVillains.length === 1 ? handEquities(spot.activeVillains[0].range) : null,
+          )
+          return
+        }
 
         const players = [
           {
             type: 'hand' as const,
             name: t('You'),
-            cards: [heroCards[0], heroCards[1]] as [BoardCard, BoardCard],
+            cards: [heroCards![0]!, heroCards![1]!] as [BoardCard, BoardCard],
           },
           ...spot.activeVillains.map((villain) => ({
             type: 'range' as const,
@@ -327,7 +338,8 @@ export function TableSpotPanel({
   }
 
   const heroHandComplete = Boolean(spot.hero?.hand?.[0] && spot.hero?.hand?.[1])
-  const ready = spot.problems.length === 0 && heroHandComplete
+  // A hand is what hero's own equity needs, not what the spot needs.
+  const ready = spot.problems.length === 0
   const amount = (chips: number) => formatAmount(chips, blinds.bigBlind, view)
   // Chip fields are typed in whatever unit they are read in. The big blind
   // itself is exempt: it is the unit, so it can only be stated in chips.
@@ -429,7 +441,9 @@ export function TableSpotPanel({
           </ul>
         )}
         {spot.problems.length === 0 && !heroHandComplete && (
-          <p className="mt-2 text-xs text-amber-400">{t('Pick your two cards first.')}</p>
+          <p className="mt-2 text-xs text-slate-500">
+            {t('No cards picked, so this gives the range that can call, not your own equity.')}
+          </p>
         )}
 
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -633,6 +647,16 @@ export function TableSpotPanel({
           </p>
         </div>
       </section>
+
+      {!result && grid && (
+        <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+          <CallingRangeSection
+            grid={grid}
+            thresholdPct={spot.requiredEquityWithBountyPct}
+            noBountyThresholdPct={spot.requiredEquityPct}
+          />
+        </section>
+      )}
 
       {result && (
         <section className="flex flex-col gap-3 rounded-lg border border-slate-800 bg-slate-900/60 p-4">
