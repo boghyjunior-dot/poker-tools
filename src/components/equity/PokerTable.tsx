@@ -111,29 +111,48 @@ function AllInChip({ label, onPress }: { label: string; onPress: () => void }) {
 /**
  * A tiny number field that lives on a seat card.
  *
+ * Carries a tag and a colour, because a selected seat holds up to three of
+ * these and they are otherwise identical boxes of digits. The colours are the
+ * ones the seat already uses when it is not being edited — white behind,
+ * amber in front, fuchsia for the bounty — so editing a seat looks like the
+ * seat it was rather than a form that replaced it.
+ *
  * Chip amounts follow the chips/BB toggle, so the unit you read a stack in is
  * the unit you type it in. A bounty is money rather than chips and keeps its
  * own scale of 1 whatever the toggle says.
  */
 function SeatInput({
   label,
+  tag,
+  tone,
   value,
   onChange,
   scale = 1,
 }: {
   label: string
+  /** Two or three characters, shown beside the box. */
+  tag: string
+  tone: string
   value: number
   onChange: (value: number) => void
   scale?: number
 }) {
   const field = useNumberField(value, onChange, scale)
   return (
-    <input
-      type="number"
-      aria-label={label}
-      {...field}
-      className="w-full rounded border border-slate-600 bg-slate-950/70 px-1 py-0.5 text-center text-[10px] font-semibold tabular-nums text-white [appearance:textfield] focus:border-indigo-500 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-    />
+    <span className="flex items-center gap-0.5">
+      <span
+        aria-hidden
+        className={`w-[15px] shrink-0 text-left text-[8px] font-bold uppercase leading-none ${tone}`}
+      >
+        {tag}
+      </span>
+      <input
+        type="number"
+        aria-label={label}
+        {...field}
+        className={`w-full min-w-0 rounded border border-slate-600 bg-slate-950/70 px-1 py-0.5 text-center text-[10px] font-semibold tabular-nums [appearance:textfield] focus:border-indigo-500 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${tone}`}
+      />
+    </span>
   )
 }
 
@@ -284,6 +303,8 @@ export function PokerTable({
               {seat.isHero && <HandGlyphs hand={seat.hand} />}
               <SeatInput
                 label={t('Stack')}
+                tag={t('Stk')}
+                tone="text-slate-100"
                 value={seat.stack}
                 onChange={(value) => onPatch(index, { stack: value })}
                 scale={chipScale}
@@ -293,21 +314,20 @@ export function PokerTable({
                   field exists for. */}
               <SeatInput
                 label={t('Chips in')}
+                tag={t('In')}
+                tone="text-amber-300"
                 value={seat.inFront}
                 onChange={(value) => onPatch(index, { committed: value })}
                 scale={chipScale}
               />
               {!seat.isHero && (
-                <span className="flex items-center gap-0.5">
-                  <span aria-hidden className="text-[9px]">
-                    🎯
-                  </span>
-                  <SeatInput
-                    label={t('Bounty')}
-                    value={seat.bountyAmount}
-                    onChange={(value) => onPatch(index, { bountyAmount: value })}
-                  />
-                </span>
+                <SeatInput
+                  label={t('Bounty')}
+                  tag="🎯"
+                  tone="text-fuchsia-300"
+                  value={seat.bountyAmount}
+                  onChange={(value) => onPatch(index, { bountyAmount: value })}
+                />
               )}
               {!seat.isHero && <AllInChip label={t('All-in')} onPress={() => onAllIn(index)} />}
             </div>

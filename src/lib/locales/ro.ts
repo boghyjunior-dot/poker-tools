@@ -1367,6 +1367,7 @@ export const ro: Dictionary = {
     "Bounty-ul scade ce îți trebuie de la {without}% la {with}%.",
 
   // ------------------------------------------------------------ the table --
+  "Stk": "Stk",
   "Knockout pays": "Eliminarea plătește",
   "What the knockout pays you": "Cât îți plătește eliminarea",
   "in big blinds": "în big blinds",
