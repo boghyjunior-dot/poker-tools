@@ -44,16 +44,18 @@ function emptyRange(): RangeCellStates {
   return {}
 }
 
-function toggleCell(
+function setCellWeight(
   states: RangeCellStates,
   row: RankIndex,
   col: RankIndex,
-  remove = false,
+  weight: number,
 ): RangeCellStates {
   const key = cellKey(row, col)
   const next = { ...states }
-  if (remove || next[key] === 'in') delete next[key]
-  else next[key] = 'in'
+  // A hand played never is absent rather than present-at-zero, so a cleared
+  // cell leaves a range that looks the way an untouched one does.
+  if (weight <= 0) delete next[key]
+  else next[key] = weight
   return next
 }
 
@@ -296,7 +298,9 @@ export function EquityPage() {
               <PresetSelect onLoad={(id) => loadPreset(id, 'hero')} />
               <EquityMatrix
                 cellStates={heroRange}
-                onToggle={(row, col, remove) => setHeroRange((prev) => toggleCell(prev, row, col, remove))}
+                onSetWeight={(row, col, weight) =>
+                  setHeroRange((prev) => setCellWeight(prev, row, col, weight))
+                }
                 onClear={() => setHeroRange(emptyRange())}
               />
             </>
@@ -372,9 +376,9 @@ export function EquityPage() {
                   <PresetSelect onLoad={(id) => loadPreset(id, 'villain')} />
                   <EquityMatrix
                     cellStates={currentVillain.range}
-                    onToggle={(row, col, remove) =>
+                    onSetWeight={(row, col, weight) =>
                       updateVillain(activeVillain, {
-                        range: toggleCell(currentVillain.range, row, col, remove),
+                        range: setCellWeight(currentVillain.range, row, col, weight),
                       })
                     }
                     onClear={() => updateVillain(activeVillain, { range: emptyRange() })}

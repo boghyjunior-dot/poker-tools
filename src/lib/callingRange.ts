@@ -21,7 +21,7 @@ import { cardToIndex } from './cards'
 import { evaluate } from './handEvaluator'
 import { mulberry32 } from './mttVariance'
 import { cellKey } from '../types/poker'
-import type { RangeCellStates, HoleCombo } from './equityRange'
+import { cellWeight, type RangeCellStates, type HoleCombo } from './equityRange'
 
 export type CallVerdict = 'call' | 'fold'
 
@@ -94,8 +94,10 @@ const CELL_PLANS: CellPlan[] = ALL_CELLS.map((cell) => ({
 function villainPool(states: RangeCellStates): HoleCombo[] {
   const pool: HoleCombo[] = []
   for (const plan of CELL_PLANS) {
-    if (states[cellKey(plan.cell.row, plan.cell.col)] !== 'in') continue
-    pool.push(...plan.combos)
+    // A hand at half frequency goes in half as many times, which is what
+    // makes picking uniformly from this pool respect the frequencies.
+    const copies = Math.round(cellWeight(states, cellKey(plan.cell.row, plan.cell.col)) / 25)
+    for (let copy = 0; copy < copies; copy++) pool.push(...plan.combos)
   }
   return pool
 }

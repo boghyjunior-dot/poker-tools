@@ -256,11 +256,12 @@ export function TableSpotPanel({
     setRangeJump((count) => count + 1)
   }
 
-  const toggleCell = (row: RankIndex, col: RankIndex, remove?: boolean) => {
+  const setCellWeight = (row: RankIndex, col: RankIndex, weight: number) => {
     const key = cellKey(row, col)
-    patch(selected, {
-      range: { ...seat.range, [key]: remove ? 'out' : 'in' },
-    })
+    const range = { ...seat.range }
+    if (weight <= 0) delete range[key]
+    else range[key] = weight
+    patch(selected, { range })
   }
 
   const run = () => {
@@ -577,7 +578,7 @@ export function TableSpotPanel({
             </div>
             <EquityMatrix
               cellStates={seat.range}
-              onToggle={toggleCell}
+              onSetWeight={setCellWeight}
               onClear={() => patch(selected, { range: {} })}
             />
           </div>

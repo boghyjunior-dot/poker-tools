@@ -139,6 +139,9 @@ against one or more opponents.
 - Antes are kept separate from blinds, because an ante is dead money and buys
   no part of the current bet — a big blind facing a raise still owes the raise
   less their blind alone
+- Ranges carry frequencies: clicking a hand cycles it through 100, 75, 50, 25
+  and 0 per cent, and a part-frequency hand is sampled that much less often, so
+  a mixed strategy weighs what it should rather than being in or out
 - Hand vs range, range vs range, and multiway
 - Preset opening ranges from top 10% through to the full range
 - Margin of error reported alongside every result, so you know how much to
