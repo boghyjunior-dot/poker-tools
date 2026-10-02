@@ -1628,6 +1628,10 @@ export const ro: Dictionary = {
     "Încasat",
   "Bounties":
     "Bounty-uri",
+  "{n} in front":
+    "{n} în față",
+  "{n} left in the pot":
+    "{n} rămași în pot",
   "No bounties":
     "Fără bounty-uri",
   "Add result":

@@ -90,6 +90,27 @@ function ringPosition(
   }
 }
 
+/**
+ * Which edge of a seat card faces the middle, so its chips sit in front of it.
+ *
+ * Hung off the card rather than placed on its own ring: the felt is fluid and
+ * the cards are a fixed width, so at a narrow table any ring close enough to
+ * read as "in front of that seat" is already underneath it. An edge cannot
+ * collide with the thing it is an edge of.
+ */
+function betAnchor(x: number, y: number): React.CSSProperties {
+  // The two seats level with the middle have nothing above or below them to
+  // aim at, so their chips go beside the card, on the side the pot is.
+  if (y > 46 && y < 54) {
+    return x > 50
+      ? { right: '100%', top: '50%', transform: 'translate(-4px, -50%)' }
+      : { left: '100%', top: '50%', transform: 'translate(4px, -50%)' }
+  }
+  return y > 50
+    ? { bottom: '100%', left: '50%', transform: 'translate(-50%, -3px)' }
+    : { top: '100%', left: '50%', transform: 'translate(-50%, 3px)' }
+}
+
 const CHIP_STYLE: Record<'call' | 'raise' | 'shove' | 'raiseFold', string> = {
   call: 'border-sky-700/70 bg-sky-950/40 text-sky-300 hover:bg-sky-900/60',
   raise: 'border-amber-700/70 bg-amber-950/40 text-amber-300 hover:bg-amber-900/60',
@@ -345,17 +366,34 @@ export function PokerTable({
           </span>
         )
 
-        // What this seat has in the middle, drawn the way a client draws the
-        // chips in front of a player — including a folded seat, whose money
-        // stays in the pot even though the seat is done with the hand.
+        // What this seat has in the middle, drawn the way a client draws it:
+        // chips pushed out in front of the player rather than a number written
+        // on them. A seat that folded keeps its money there — it is in the pot
+        // whether or not the seat still is — so it stays, struck through.
+        //
+        // The screen-reader copy is the same number for anyone reading the
+        // seat rather than looking at it: a seat that announced a stack and an
+        // action but not what it bet would be missing the half that matters.
         const inFront = seat.inFront > 0 && (
-          <span
-            className={`mt-0.5 block text-[10px] font-semibold tabular-nums leading-tight ${
-              seat.isActive ? 'text-amber-300' : 'text-slate-500 line-through'
-            }`}
-          >
-            {amount(seat.inFront)}
-          </span>
+          <>
+            <span
+              aria-hidden
+              style={betAnchor(x, y)}
+              className={`absolute !mt-0 flex items-center gap-0.5 whitespace-nowrap rounded-full border px-1.5 py-px text-[9px] font-bold tabular-nums shadow-md ${
+                seat.isActive
+                  ? 'border-amber-600/60 bg-amber-950 text-amber-200'
+                  : 'border-slate-700 bg-slate-950 text-slate-500 line-through'
+              }`}
+            >
+              <span className={seat.isActive ? 'text-amber-400' : 'text-slate-600'}>●</span>
+              {amount(seat.inFront)}
+            </span>
+            <span className="sr-only">
+              {seat.isActive
+                ? t('{n} in front', { n: amount(seat.inFront) })
+                : t('{n} left in the pot', { n: amount(seat.inFront) })}
+            </span>
+          </>
         )
 
         // The seat you have picked edits in place: its stack and bounty turn
@@ -377,6 +415,7 @@ export function PokerTable({
                 </span>
               )}
               {seat.isHero && <HandGlyphs hand={seat.hand} />}
+              {inFront}
               <SeatInput
                 label={t('Stack')}
                 tag={t('Stk')}
