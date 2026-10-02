@@ -231,6 +231,78 @@ export function filterBySite(
   return views.filter((view) => sites.has(view.site.trim()))
 }
 
+/** An empty filter means every day; otherwise only the days named, 0 is Sunday. */
+export function filterByWeekday(
+  views: readonly TournamentView[],
+  days: ReadonlySet<number>,
+): TournamentView[] {
+  if (days.size === 0) return [...views]
+  return views.filter((view) => days.has(new Date(view.startsAt).getDay()))
+}
+
+/**
+ * Both ends inclusive, and both optional, as "YYYY-MM-DD".
+ *
+ * The bounds are read as local dates rather than UTC instants, because a date
+ * picker showing the 2nd means your evening of the 2nd. An event that starts at
+ * half past midnight is on the day the clock says, not the day the session it
+ * belongs to began — the day-of-week filter is there for anyone who disagrees.
+ */
+export function filterByDateRange(
+  views: readonly TournamentView[],
+  from: string,
+  to: string,
+): TournamentView[] {
+  const start = dayStart(from)
+  const end = dayStart(to)
+  if (start === null && end === null) return [...views]
+  return views.filter((view) => {
+    const at = new Date(view.startsAt).getTime()
+    if (start !== null && at < start) return false
+    if (end !== null && at >= end + DAY) return false
+    return true
+  })
+}
+
+const DAY = 24 * 60 * MINUTE
+
+/** Local midnight at the start of "YYYY-MM-DD", or null if that is not one. */
+function dayStart(text: string): number | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text.trim())
+  if (!match) return null
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+  return Number.isNaN(date.getTime()) ? null : date.getTime()
+}
+
+/** Where a date picker should open: the span the schedule actually covers. */
+export function dateSpan(tournaments: readonly Tournament[]): { first: string; last: string } {
+  const times = tournaments
+    .map((item) => new Date(item.startsAt).getTime())
+    .filter((time) => !Number.isNaN(time))
+  if (times.length === 0) return { first: '', last: '' }
+  return {
+    first: isoDay(new Date(Math.min(...times))),
+    last: isoDay(new Date(Math.max(...times))),
+  }
+}
+
+/** "YYYY-MM-DD" in local time, which is what a date input wants. */
+export function isoDay(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+/** Which days of the week the schedule touches, Monday first. */
+export function weekdaysInUse(tournaments: readonly Tournament[]): number[] {
+  const seen = new Set<number>()
+  for (const item of tournaments) {
+    const day = new Date(item.startsAt).getDay()
+    if (!Number.isNaN(day)) seen.add(day)
+  }
+  // Monday first: Sunday sorts last rather than leading the week.
+  return [...seen].sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7))
+}
+
 /** The whole schedule as JSON, so it can be backed up or shared. */
 export function toJson(tournaments: readonly Tournament[]): string {
   return JSON.stringify(tournaments, null, 2)

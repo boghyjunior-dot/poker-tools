@@ -11,7 +11,7 @@
  */
 
 import ggFriday from '../content/ggFriday.json'
-import { newTournamentId, type Tournament } from './schedule'
+import { loadSchedule, newTournamentId, type Tournament } from './schedule'
 
 export interface TemplateEvent {
   /** Local start time of day, "HH:MM". */
@@ -124,3 +124,38 @@ export const SCHEDULE_TEMPLATES: ScheduleTemplate[] = [
     events: ggFriday.events,
   },
 ]
+
+/**
+ * Set once the schedule has been seeded, so an empty page stays empty.
+ *
+ * Without it, deleting every row would hand the whole card straight back —
+ * "clear this" has to mean it.
+ */
+export const SEEDED_KEY = 'poker-tools:schedule:seeded'
+
+/** Every template on its next occurrence: what a first visit starts with. */
+export function defaultSchedule(from: Date = new Date()): Tournament[] {
+  return SCHEDULE_TEMPLATES.flatMap((template) =>
+    buildFromTemplate(template, nextWeekday(template.weekday, from)),
+  )
+}
+
+/**
+ * What the page opens with: your saved schedule, or the default on a first visit.
+ *
+ * Seeding happens once and is recorded, so this is the only moment the built-in
+ * card appears by itself. Everything it drops in is an ordinary row you can
+ * edit or delete.
+ */
+export function initialSchedule(): Tournament[] {
+  const saved = loadSchedule()
+  if (saved.length > 0) return saved
+  if (typeof localStorage === 'undefined') return defaultSchedule()
+  try {
+    if (localStorage.getItem(SEEDED_KEY)) return saved
+    localStorage.setItem(SEEDED_KEY, '1')
+  } catch {
+    // Private mode: seed anyway, it just will not be remembered.
+  }
+  return defaultSchedule()
+}

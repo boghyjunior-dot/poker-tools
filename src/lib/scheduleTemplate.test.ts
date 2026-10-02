@@ -1,5 +1,6 @@
 import {
   buildFromTemplate,
+  defaultSchedule,
   lateRegGuess,
   nextWeekday,
   SCHEDULE_TEMPLATES,
@@ -104,5 +105,21 @@ describe('buildFromTemplate', () => {
     }
     const out = buildFromTemplate(broken, day)
     expect(out.map((item) => item.name)).toEqual(['Real'])
+  })
+})
+
+describe('defaultSchedule', () => {
+  it('puts every template on its next occurrence', () => {
+    // A Wednesday: the Friday card belongs two days out, not four days back.
+    const built = defaultSchedule(new Date(2026, 8, 30, 12, 0))
+    expect(built).toHaveLength(friday.events.length)
+    const first = new Date(built[0].startsAt)
+    expect(first.getDay()).toBe(5)
+    expect(first.getDate()).toBe(2)
+  })
+
+  it('never lands in the past when today is the day itself', () => {
+    const built = defaultSchedule(new Date(2026, 9, 2, 23, 0))
+    expect(new Date(built[0].startsAt).getDate()).toBe(2)
   })
 })

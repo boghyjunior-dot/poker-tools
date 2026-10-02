@@ -7,7 +7,12 @@ import {
   parseScheduleText,
   parseStored,
   committedBySite,
+  dateSpan,
+  filterByDateRange,
   filterBySite,
+  filterByWeekday,
+  isoDay,
+  weekdaysInUse,
   fromJson,
   SITES,
   sitesInUse,
@@ -266,6 +271,75 @@ describe('rooms', () => {
     expect(filterBySite(views, new Set()).map((v) => v.id)).toEqual(['g', 'c'])
     expect(filterBySite(views, new Set(['GGPoker'])).map((v) => v.id)).toEqual(['g'])
     expect(filterBySite(views, new Set(['GGPoker', 'CoinPoker']))).toHaveLength(2)
+  })
+})
+
+describe('days and dates', () => {
+  // Local times, because that is what the filters are written against: a date
+  // picker showing the 2nd means the evening you would be sitting down to play.
+  const at = (id: string, date: Date) =>
+    viewTournament(make({ id, startsAt: date.toISOString() }), NOW)
+
+  const friEvening = at('fri', new Date(2026, 9, 2, 21, 0))
+  const satSmallHours = at('sat-am', new Date(2026, 9, 3, 0, 10))
+  const satEvening = at('sat-pm', new Date(2026, 9, 3, 20, 0))
+  const nextFriday = at('fri-2', new Date(2026, 9, 9, 18, 0))
+  const all = [friEvening, satSmallHours, satEvening, nextFriday]
+
+  it('filters by day of the week, and shows everything when none are picked', () => {
+    expect(filterByWeekday(all, new Set()).map((v) => v.id)).toEqual([
+      'fri',
+      'sat-am',
+      'sat-pm',
+      'fri-2',
+    ])
+    expect(filterByWeekday(all, new Set([5])).map((v) => v.id)).toEqual(['fri', 'fri-2'])
+    expect(filterByWeekday(all, new Set([5, 6])).map((v) => v.id)).toHaveLength(4)
+  })
+
+  it('counts half past midnight as the day the clock says', () => {
+    expect(filterByWeekday(all, new Set([6])).map((v) => v.id)).toEqual(['sat-am', 'sat-pm'])
+  })
+
+  it('takes a date range with both ends inclusive', () => {
+    expect(filterByDateRange(all, '2026-10-03', '2026-10-03').map((v) => v.id)).toEqual([
+      'sat-am',
+      'sat-pm',
+    ])
+    expect(filterByDateRange(all, '2026-10-02', '2026-10-03')).toHaveLength(3)
+  })
+
+  it('leaves an open end open', () => {
+    expect(filterByDateRange(all, '2026-10-03', '').map((v) => v.id)).toEqual([
+      'sat-am',
+      'sat-pm',
+      'fri-2',
+    ])
+    expect(filterByDateRange(all, '', '2026-10-02').map((v) => v.id)).toEqual(['fri'])
+    expect(filterByDateRange(all, '', '')).toHaveLength(4)
+  })
+
+  it('ignores a date that is not one rather than filtering everything out', () => {
+    expect(filterByDateRange(all, 'tomorrow', '')).toHaveLength(4)
+  })
+
+  it('lists the days in use with Sunday last', () => {
+    const sunday = make({ id: 'sun', startsAt: new Date(2026, 9, 4, 19, 0).toISOString() })
+    const monday = make({ id: 'mon', startsAt: new Date(2026, 9, 5, 19, 0).toISOString() })
+    const friday = make({ id: 'fri', startsAt: new Date(2026, 9, 2, 19, 0).toISOString() })
+    expect(weekdaysInUse([sunday, friday, monday])).toEqual([1, 5, 0])
+  })
+
+  it('reports the span a date picker should open on', () => {
+    const items = all.map((view) => make({ id: view.id, startsAt: view.startsAt }))
+    expect(dateSpan(items)).toEqual({ first: '2026-10-02', last: '2026-10-09' })
+    expect(dateSpan([])).toEqual({ first: '', last: '' })
+  })
+
+  it('writes local days, not UTC ones', () => {
+    // 23:30 local on the 2nd is the 3rd in UTC east of Greenwich; the picker
+    // has to say the 2nd or picking "today" would miss tonight's lobby.
+    expect(isoDay(new Date(2026, 9, 2, 23, 30))).toBe('2026-10-02')
   })
 })
 

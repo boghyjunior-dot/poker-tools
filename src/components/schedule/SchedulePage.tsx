@@ -9,11 +9,13 @@ import { useNumberField } from '../../lib/numberField'
 import {
   committed,
   committedBySite,
+  dateSpan,
   dueAlarms,
+  filterByDateRange,
   filterBySite,
+  filterByWeekday,
   fromJson,
   formatCountdown,
-  loadSchedule,
   newTournamentId,
   parseScheduleText,
   saveSchedule,
@@ -22,14 +24,10 @@ import {
   sortByUrgency,
   toJson,
   viewTournament,
+  weekdaysInUse,
   type Tournament,
 } from '../../lib/schedule'
-import {
-  buildFromTemplate,
-  nextWeekday,
-  SCHEDULE_TEMPLATES,
-  type ScheduleTemplate,
-} from '../../lib/scheduleTemplate'
+import { initialSchedule } from '../../lib/scheduleTemplate'
 
 const MINUTE = 60_000
 
@@ -87,6 +85,47 @@ function NumberCell({
   return <input type="number" aria-label={label} {...field} className={className} />
 }
 
+/**
+ * "Fri" in whatever language the browser is set to.
+ *
+ * Taken off a real week rather than a list of names, so the day labels follow
+ * the reader's locale for free. 7 January 2024 was a Sunday, which is day 0.
+ */
+function weekdayLabel(day: number): string {
+  return new Date(2024, 0, 7 + day).toLocaleDateString([], { weekday: 'short' })
+}
+
+/** A small label above a row of filter controls. */
+function FilterLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-500">{children}</span>
+  )
+}
+
+/** The on/off pills the room and day filters are both made of. */
+function Pill({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+        active ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+      }`}
+    >
+      {children}
+    </button>
+  )
+}
+
 function localInputValue(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
@@ -94,7 +133,7 @@ function localInputValue(date: Date): string {
 
 export function SchedulePage() {
   const t = useT()
-  const [tournaments, setTournaments] = useState<Tournament[]>(() => loadSchedule())
+  const [tournaments, setTournaments] = useState<Tournament[]>(() => initialSchedule())
   // A ticking clock is what makes every countdown on the page live.
   const [now, setNow] = useState(() => Date.now())
   const [ringing, setRinging] = useState<Set<string>>(() => new Set())
@@ -106,6 +145,9 @@ export function SchedulePage() {
   const [note, setNote] = useState<string | null>(null)
   const [pasteSite, setPasteSite] = useState('')
   const [siteFilter, setSiteFilter] = useState<Set<string>>(() => new Set())
+  const [dayFilter, setDayFilter] = useState<Set<number>>(() => new Set())
+  const [fromDay, setFromDay] = useState('')
+  const [toDay, setToDay] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Alarms are checked inside the tick rather than in an effect on the
@@ -185,35 +227,6 @@ export function SchedulePage() {
     ])
   }
 
-  /**
-   * Drop a weekly card onto its next occurrence.
-   *
-   * Loading the same card twice is a slip rather than an intention, so rows
-   * already sitting at that exact name, room and start time are skipped — what
-   * you get is the events you were missing, not a second copy of the lot.
-   */
-  const loadTemplate = (template: ScheduleTemplate) => {
-    const day = nextWeekday(template.weekday)
-    const key = (item: Tournament) => `${item.site}|${item.name}|${item.startsAt}`
-    const seen = new Set(tournaments.map(key))
-    const built = buildFromTemplate(template, day)
-    const fresh = built.filter((item) => !seen.has(key(item)))
-    const skipped = built.length - fresh.length
-
-    if (fresh.length === 0) {
-      setNote(t('{label} is already on your schedule.', { label: t(template.label) }))
-      return
-    }
-    setTournaments((prev) => [...prev, ...fresh])
-    setNote(
-      t('Added {n} events for {date}{skipped}.', {
-        n: fresh.length,
-        date: day.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'short' }),
-        skipped: skipped > 0 ? t(' · {n} were already there', { n: skipped }) : '',
-      }),
-    )
-  }
-
   const applyPaste = () => {
     const { tournaments: parsed, errors } = parseScheduleText(pasteText, { site: pasteSite })
     if (parsed.length === 0) {
@@ -241,16 +254,31 @@ export function SchedulePage() {
   const ringingViews = views.filter((view) => ringing.has(view.id) && view.status !== 'closed')
 
   const rooms = sitesInUse(tournaments)
-  const shown = filterBySite(views, siteFilter)
+  const days = weekdaysInUse(tournaments)
+  const span = dateSpan(tournaments)
   const perSite = committedBySite(views)
 
-  const toggleSite = (site: string) =>
-    setSiteFilter((prev) => {
+  const shown = filterByDateRange(
+    filterByWeekday(filterBySite(views, siteFilter), dayFilter),
+    fromDay,
+    toDay,
+  )
+  const filtered = siteFilter.size > 0 || dayFilter.size > 0 || fromDay !== '' || toDay !== ''
+
+  const toggleIn = <T,>(set: (fn: (prev: Set<T>) => Set<T>) => void, value: T) =>
+    set((prev) => {
       const next = new Set(prev)
-      if (next.has(site)) next.delete(site)
-      else next.add(site)
+      if (next.has(value)) next.delete(value)
+      else next.add(value)
       return next
     })
+
+  const clearFilters = () => {
+    setSiteFilter(new Set())
+    setDayFilter(new Set())
+    setFromDay('')
+    setToDay('')
+  }
 
   const exportJson = () => {
     const blob = new Blob([toJson(tournaments)], { type: 'application/json' })
@@ -359,19 +387,6 @@ export function SchedulePage() {
                 >
                   {t('Paste a lobby')}
                 </button>
-                {SCHEDULE_TEMPLATES.map((template) => (
-                  <button
-                    key={template.id}
-                    type="button"
-                    onClick={() => loadTemplate(template)}
-                    title={t('Snapshot taken {date}. Buy-ins and late reg are worth a look.', {
-                      date: template.capturedOn,
-                    })}
-                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-slate-700"
-                  >
-                    {t(template.label)}
-                  </button>
-                ))}
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -454,58 +469,104 @@ export function SchedulePage() {
             )}
           </Panel>
 
-          {(perSite.length > 1 || rooms.length > 1) && (
+          {views.length > 0 && (
             <Panel>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-                {perSite.length > 1 && (
-                  <div className="flex flex-wrap items-center gap-4">
-                    <span className="text-[10px] uppercase tracking-wider text-slate-500">
-                      {t('Committed by room')}
-                    </span>
-                    {perSite.map((row) => (
-                      <span key={row.site} className="text-sm text-slate-300">
-                        {row.site}{' '}
-                        <span className="font-semibold tabular-nums text-white">
-                          ${formatMoney(row.amount)}
-                        </span>
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {rooms.length > 1 && (
+                {rooms.length > 0 && (
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-500">
-                      {t('Show')}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setSiteFilter(new Set())}
-                      className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                        siteFilter.size === 0
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                      }`}
-                    >
+                    <FilterLabel>{t('Room')}</FilterLabel>
+                    <Pill active={siteFilter.size === 0} onClick={() => setSiteFilter(new Set())}>
                       {t('All')}
-                    </button>
+                    </Pill>
                     {rooms.map((room) => (
-                      <button
+                      <Pill
                         key={room}
-                        type="button"
-                        onClick={() => toggleSite(room)}
-                        aria-pressed={siteFilter.has(room)}
-                        className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                          siteFilter.has(room)
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                        }`}
+                        active={siteFilter.has(room)}
+                        onClick={() => toggleIn(setSiteFilter, room)}
                       >
                         {room}
-                      </button>
+                      </Pill>
                     ))}
                   </div>
                 )}
+
+                {days.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <FilterLabel>{t('Day')}</FilterLabel>
+                    <Pill active={dayFilter.size === 0} onClick={() => setDayFilter(new Set())}>
+                      {t('All')}
+                    </Pill>
+                    {days.map((day) => (
+                      <Pill
+                        key={day}
+                        active={dayFilter.has(day)}
+                        onClick={() => toggleIn(setDayFilter, day)}
+                      >
+                        {weekdayLabel(day)}
+                      </Pill>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <FilterLabel>{t('Dates')}</FilterLabel>
+                  <input
+                    type="date"
+                    aria-label={t('From')}
+                    value={fromDay}
+                    min={span.first}
+                    max={span.last}
+                    onChange={(event) => setFromDay(event.target.value)}
+                    className="rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1 text-xs text-slate-200 [color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                  />
+                  <span className="text-xs text-slate-600">–</span>
+                  <input
+                    type="date"
+                    aria-label={t('To')}
+                    value={toDay}
+                    min={fromDay || span.first}
+                    max={span.last}
+                    onChange={(event) => setToDay(event.target.value)}
+                    className="rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1 text-xs text-slate-200 [color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                  />
+                </div>
+
+                {filtered && (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="rounded-md border border-slate-700 px-2.5 py-1 text-xs font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200"
+                  >
+                    {t('Clear filters')}
+                  </button>
+                )}
               </div>
+
+              {(filtered || perSite.length > 1) && (
+                <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-slate-800 pt-3">
+                  {filtered && (
+                    <span className="text-xs text-slate-400">
+                      {t('Showing {shown} of {total}.', {
+                        shown: shown.length,
+                        total: views.length,
+                      })}
+                    </span>
+                  )}
+                  {perSite.length > 1 && (
+                    <div className="flex flex-wrap items-center gap-4">
+                      <FilterLabel>{t('Committed by room')}</FilterLabel>
+                      {perSite.map((row) => (
+                        <span key={row.site} className="text-sm text-slate-300">
+                          {row.site}{' '}
+                          <span className="font-semibold tabular-nums text-white">
+                            ${formatMoney(row.amount)}
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </Panel>
           )}
 
@@ -514,21 +575,19 @@ export function SchedulePage() {
               <p className="text-sm text-slate-500">
                 {t('Nothing scheduled yet. Add a tournament or paste a few lines from a lobby.')}
               </p>
-              {SCHEDULE_TEMPLATES.length > 0 && (
-                <p className="mt-2 text-sm text-slate-500">
-                  {t('Or start from a card that runs every week:')}{' '}
-                  {SCHEDULE_TEMPLATES.map((template) => (
-                    <button
-                      key={template.id}
-                      type="button"
-                      onClick={() => loadTemplate(template)}
-                      className="font-semibold text-indigo-400 underline-offset-2 hover:underline"
-                    >
-                      {t(template.label)}
-                    </button>
-                  ))}
-                </p>
-              )}
+            </Panel>
+          ) : shown.length === 0 ? (
+            <Panel>
+              <p className="text-sm text-slate-500">
+                {t('Nothing matches these filters.')}{' '}
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="font-semibold text-indigo-400 underline-offset-2 hover:underline"
+                >
+                  {t('Clear filters')}
+                </button>
+              </p>
             </Panel>
           ) : (
             <Panel className="overflow-x-auto">
