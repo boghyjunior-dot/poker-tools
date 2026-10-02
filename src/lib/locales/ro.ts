@@ -1530,6 +1530,18 @@ export const ro: Dictionary = {
     "Adaugă turneu",
   "Paste a lobby":
     "Lipește un lobby",
+  "Friday on GGPoker":
+    "Vineri pe GGPoker",
+  "Snapshot taken {date}. Buy-ins and late reg are worth a look.":
+    "Instantaneu luat pe {date}. Merită verificate buy-in-urile și late reg.",
+  "Or start from a card that runs every week:":
+    "Sau pornește de la un program care se repetă săptămânal:",
+  "{label} is already on your schedule.":
+    "{label} e deja în programul tău.",
+  "Added {n} events for {date}{skipped}.":
+    "Am adăugat {n} turnee pentru {date}{skipped}.",
+  " · {n} were already there":
+    " · {n} erau deja acolo",
   "Enable notifications":
     "Activează notificările",
   "This browser has no notifications, so alarms appear on the page and beep.":

@@ -24,6 +24,12 @@ import {
   viewTournament,
   type Tournament,
 } from '../../lib/schedule'
+import {
+  buildFromTemplate,
+  nextWeekday,
+  SCHEDULE_TEMPLATES,
+  type ScheduleTemplate,
+} from '../../lib/scheduleTemplate'
 
 const MINUTE = 60_000
 
@@ -179,6 +185,35 @@ export function SchedulePage() {
     ])
   }
 
+  /**
+   * Drop a weekly card onto its next occurrence.
+   *
+   * Loading the same card twice is a slip rather than an intention, so rows
+   * already sitting at that exact name, room and start time are skipped — what
+   * you get is the events you were missing, not a second copy of the lot.
+   */
+  const loadTemplate = (template: ScheduleTemplate) => {
+    const day = nextWeekday(template.weekday)
+    const key = (item: Tournament) => `${item.site}|${item.name}|${item.startsAt}`
+    const seen = new Set(tournaments.map(key))
+    const built = buildFromTemplate(template, day)
+    const fresh = built.filter((item) => !seen.has(key(item)))
+    const skipped = built.length - fresh.length
+
+    if (fresh.length === 0) {
+      setNote(t('{label} is already on your schedule.', { label: t(template.label) }))
+      return
+    }
+    setTournaments((prev) => [...prev, ...fresh])
+    setNote(
+      t('Added {n} events for {date}{skipped}.', {
+        n: fresh.length,
+        date: day.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'short' }),
+        skipped: skipped > 0 ? t(' · {n} were already there', { n: skipped }) : '',
+      }),
+    )
+  }
+
   const applyPaste = () => {
     const { tournaments: parsed, errors } = parseScheduleText(pasteText, { site: pasteSite })
     if (parsed.length === 0) {
@@ -324,6 +359,19 @@ export function SchedulePage() {
                 >
                   {t('Paste a lobby')}
                 </button>
+                {SCHEDULE_TEMPLATES.map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    onClick={() => loadTemplate(template)}
+                    title={t('Snapshot taken {date}. Buy-ins and late reg are worth a look.', {
+                      date: template.capturedOn,
+                    })}
+                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-slate-700"
+                  >
+                    {t(template.label)}
+                  </button>
+                ))}
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -466,6 +514,21 @@ export function SchedulePage() {
               <p className="text-sm text-slate-500">
                 {t('Nothing scheduled yet. Add a tournament or paste a few lines from a lobby.')}
               </p>
+              {SCHEDULE_TEMPLATES.length > 0 && (
+                <p className="mt-2 text-sm text-slate-500">
+                  {t('Or start from a card that runs every week:')}{' '}
+                  {SCHEDULE_TEMPLATES.map((template) => (
+                    <button
+                      key={template.id}
+                      type="button"
+                      onClick={() => loadTemplate(template)}
+                      className="font-semibold text-indigo-400 underline-offset-2 hover:underline"
+                    >
+                      {t(template.label)}
+                    </button>
+                  ))}
+                </p>
+              )}
             </Panel>
           ) : (
             <Panel className="overflow-x-auto">
