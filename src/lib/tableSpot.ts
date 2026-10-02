@@ -55,19 +55,13 @@ export function seatsForTable(size: TableSize): Position[] {
 /**
  * What a villain did. Hero has no action — see the module note.
  *
- * `raiseFold` is the seat that opened and then folded to a re-raise. It is a
- * fold — the seat cannot win the pot and has no range at showdown — but the
- * chips it put in stay in the middle, which is the whole reason it needs a
- * name of its own. A plain fold with a number typed in says the same thing;
- * this says it where the action is read, so the pot cannot quietly disagree
- * with the story of the hand.
+ * Folding does not take anything back. A seat that opened and then folded to
+ * a re-raise leaves its open in the middle, and so does every seat that
+ * called before someone shoved over the top: the chips are in the pot whether
+ * or not the seat still is. That is why a fold carries a number like every
+ * other action rather than being the absence of one.
  */
-export type SeatAction = 'fold' | 'raiseFold' | 'call' | 'raise' | 'shove'
-
-/** True for both ways out of the hand, whatever each left behind. */
-export function hasFolded(action: SeatAction): boolean {
-  return action === 'fold' || action === 'raiseFold'
-}
+export type SeatAction = 'fold' | 'call' | 'raise' | 'shove'
 
 export interface Seat {
   position: Position
@@ -253,17 +247,16 @@ function betPartOf(seat: Seat, ante: number, blind: number, currentBet: number):
     case 'shove':
       return room
     case 'fold':
-    case 'raiseFold':
       // Chips put in before folding stay in the middle; the blind is the floor.
-      // The two differ only in what they default to without a number, which is
-      // the caller's business: a raise that got away is sized, a fold is not.
       return atLeastBlind(typed ?? blind)
     case 'raise':
       return atLeastBlind(typed ?? blind)
     case 'call':
-      // Left to itself a caller matches whatever the largest bet turns out to
-      // be, so raising someone else later drags the call up with it. A typed
-      // number opts out of that, which is what a limp-call needs.
+      // A caller matches the bet it was facing — the largest one behind it in
+      // the order — and not whatever the bet later becomes. Someone shoving
+      // over the top does not reach back and take more off a seat that has
+      // already called. A typed number says the exact figure instead, which is
+      // what a limp-call needs.
       return atLeastBlind(typed ?? currentBet)
   }
 }
@@ -302,37 +295,46 @@ export function deriveSpot(
 
   const forced = seats.map((seat) => forcedBets(seat.position, blinds))
 
-  // The largest bet has to be known before a call can be priced, and only
-  // aggressive actions can set it. A limped pot leaves it at the big blind.
-  let currentBet = Math.max(0, blinds.bigBlind)
-  seats.forEach((seat, index) => {
+  // One pass round the table in acting order, carrying the bet as it stood at
+  // each seat's turn. That running figure is what a caller matches: priced
+  // against the final bet instead, a seat that called an open would have its
+  // chips quietly dragged up by a shove three seats later, which is money it
+  // never put in. A limped pot leaves the bet at the big blind.
+  let facing = Math.max(0, blinds.bigBlind)
+  let liveBet = Math.max(0, blinds.bigBlind)
+  const betParts = seats.map((seat, index) => {
     const { ante, blind } = forced[index]
-    // Hero's own chips count here too: opening the pot sets the bar that the
-    // seats behind have to match, and hero facing a raise after opening is
-    // the whole reason hero is allowed chips beyond a blind.
-    if (seat.isHero) {
-      if (seat.committed !== null) {
-        currentBet = Math.max(currentBet, heroBetPart(seat, ante, blind))
-      }
-      return
-    }
-    if (seat.action === 'shove' || seat.action === 'raise') {
-      currentBet = Math.max(currentBet, betPartOf(seat, ante, blind, currentBet))
-    }
+    const part = seat.isHero
+      ? heroBetPart(seat, ante, blind)
+      : betPartOf(seat, ante, blind, facing)
+
+    // Everything on the table when the next seat speaks, folded or not: a seat
+    // that opened and gave it up later was still the bet the seats behind it
+    // had to answer at the time, and folding cannot reach forward and make
+    // their calls smaller after the fact.
+    facing = Math.max(facing, part)
+
+    // What hero has to match is a different figure: only chips still being
+    // asked for. A seat that folded left its money in the pot, but nobody is
+    // owed it, so it is dead rather than a bet.
+    const live = seat.isHero ? seat.committed !== null : seat.action !== 'fold'
+    if (live) liveBet = Math.max(liveBet, part)
+
+    return part
   })
+
+  const currentBet = liveBet
 
   const views: SeatView[] = seats.map((seat, index) => {
     const { ante, blind } = forced[index]
-    const betPart = seat.isHero
-      ? heroBetPart(seat, ante, blind)
-      : betPartOf(seat, ante, blind, currentBet)
+    const betPart = betParts[index]
     return {
       ...seat,
       ante: Math.min(ante, Math.max(0, seat.stack)),
       blind,
       contribution: Math.min(ante, Math.max(0, seat.stack)) + betPart,
       inFront: betPart,
-      isActive: seat.isHero || !hasFolded(seat.action),
+      isActive: seat.isHero || seat.action !== 'fold',
     }
   })
 
@@ -341,14 +343,14 @@ export function deriveSpot(
   if (heroes.length > 1) problems.push('Only one seat can be yours.')
   const hero = heroes.length === 1 ? heroes[0] : null
 
-  const activeVillains = views.filter((seat) => !seat.isHero && !hasFolded(seat.action))
+  const activeVillains = views.filter((seat) => !seat.isHero && seat.action !== 'fold')
   if (hero && activeVillains.length === 0) {
     problems.push('Nobody is in the hand with you — give a seat an action other than fold.')
   }
 
   const potBeforeCall = views.reduce((sum, seat) => sum + seat.contribution, 0)
   const deadChips = views
-    .filter((seat) => !seat.isHero && hasFolded(seat.action))
+    .filter((seat) => !seat.isHero && seat.action === 'fold')
     .reduce((sum, seat) => sum + seat.contribution, 0)
 
   // What it costs to match the bet, from whatever hero already has in. The

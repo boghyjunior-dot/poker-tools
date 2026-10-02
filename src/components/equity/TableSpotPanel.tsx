@@ -24,7 +24,6 @@ import {
   defaultBounty,
   deriveSpot,
   formatAmount,
-  hasFolded,
   newSeat,
   rescaleToBlind,
   seatsForTable,
@@ -37,33 +36,15 @@ import {
   type TableSize,
 } from '../../lib/tableSpot'
 
-/**
- * Ordered the way a solver lists them: fold, then passive, then aggressive.
- *
- * Raise-fold is last rather than beside raise. It is the one action that is
- * not a decision facing this bet but a whole line already finished, so it reads
- * better out of the way of the four you reach for every hand.
- */
-const ACTIONS: SeatAction[] = ['fold', 'call', 'raise', 'shove', 'raiseFold']
+/** Ordered the way a solver lists them: fold, then passive, then aggressive. */
+const ACTIONS: SeatAction[] = ['fold', 'call', 'raise', 'shove']
 const ACTION_LABEL: Record<SeatAction, string> = {
   fold: 'Fold',
-  raiseFold: 'Raise-fold',
   call: 'Call',
   raise: 'Raise',
   shove: 'Shove',
 }
 
-/**
- * An ordinary open, for a seat whose raise is already behind it.
- *
- * Deliberately not the usual 2.5× the largest bet: by the time a seat is
- * raise-folding, something has re-raised over it, and sizing off that would
- * put more in the middle than the seat ever had in. An open is two and a half
- * blinds whatever happened afterwards, and the field stays editable.
- */
-function openSizeFor(bigBlind: number): number {
-  return Math.round(Math.max(0, bigBlind) * 2.5)
-}
 
 const DEFAULT_BLINDS: Blinds = { bigBlind: 1000, antePct: 0.1 }
 /**
@@ -287,7 +268,7 @@ export function TableSpotPanel({
   const [rangeJump, setRangeJump] = useState(0)
   useEffect(() => {
     if (rangeJump === 0) return
-    editorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    editorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     presetRef.current?.focus({ preventScroll: true })
   }, [rangeJump])
 
@@ -302,55 +283,68 @@ export function TableSpotPanel({
    */
   const raiseTargetFor = (index: number) => {
     const facing = spot.seats.reduce(
-      (most, other, i) => (i === index || !other.isActive ? most : Math.max(most, other.inFront)),
+      // Only the seats that act before this one. A raise answers the betting
+      // that has happened by the time it is made, so going back to an earlier
+      // seat has to size off what was in front of it then — otherwise setting
+      // the CO and then the UTG turns UTG's open into a 4-bet of the CO.
+      (most, other, i) => (i >= index ? most : Math.max(most, other.inFront)),
       blinds.bigBlind,
     )
     return Math.round(facing * 2.5)
   }
 
   /**
-   * Switch a seat's action, keeping the chips where keeping them is the point.
+   * Name a seat's action, which is the one way a line gets built.
    *
-   * Every other action re-derives what is in front from the action itself, so
-   * it clears the typed number. Raise-folding is the one case where the number
-   * *is* the statement: the seat is out, and all that is left of it is what it
-   * put in. Anything already in front beyond the blind is that raise, so it
-   * stays; a seat picked straight off a fold is given an ordinary open to hold.
+   * Called from both the chip on the felt and the button in the editor, so the
+   * two cannot come to differ. Calling and shoving re-derive what is in front
+   * from the action itself and clear any typed number; raising and folding
+   * write one, for opposite reasons — a raise needs a size, and a fold needs
+   * the chips it is walking away from pinned where they are.
    */
   const setAction = (index: number, action: SeatAction) => {
     const change: Partial<Seat> = { action, committed: null, acted: true }
-    if (action === 'raiseFold') {
-      const view = spot.seats[index]
-      const alreadyIn = view ? view.inFront : 0
-      const blind = view ? view.blind : 0
-      change.committed = alreadyIn > blind ? alreadyIn : openSizeFor(blinds.bigBlind)
+    if (action === 'fold') {
+      // Folding does not take the chips back. Whatever this seat has out is
+      // pinned to the number it is now, so it stays put while the bet in front
+      // of it goes on rising: that is how a seat that opened and folded to a
+      // 3-bet, or called and folded to a shove, leaves its money behind.
+      change.committed = spot.seats[index]?.inFront ?? null
+    }
+    if (action === 'raise') {
+      // A raise without a number is only its blind, which is not a raise. The
+      // field stays editable; this is the size you would have typed anyway.
+      change.committed = raiseTargetFor(index)
     }
     // Settling first, then patching, so the seat being named is not caught by
-    // its own rule — it is the one seat here whose action is not a fold.
+    // its own rule and loses the action it was just given.
     setSeats((prev) =>
       settleSeatsBefore(prev, index).map((item, i) => (i === index ? { ...item, ...change } : item)),
     )
   }
 
-  const quickAction = (index: number, action: 'call' | 'raise' | 'shove' | 'raiseFold') => {
+  const quickAction = (index: number, action: 'fold' | 'call' | 'raise' | 'shove') => {
     const seat = seats[index]
-    if (action === 'raiseFold') {
+    if (!seat.isHero) {
+      // One route for both ways of naming an action, so the chip on the felt
+      // and the button in the editor cannot come to differ about what folding
+      // does with the chips a seat has already pushed out.
       setAction(index, action)
       setSelected(index)
+      // Folding settles a seat rather than opening a question, so it is the one
+      // shortcut that does not go looking for a range.
+      if (action !== 'fold') setRangeJump((count) => count + 1)
       return
     }
-    // Sized against the table as it stands. Settling a seat that has not acted
-    // only writes the fold it was already showing, so nothing it does can move
-    // the bet this raise is measured against.
-    const change: Partial<Seat> = seat.isHero
-      ? // Hero has no action to set — the chips in front are the whole
-        // statement — so the shortcut writes the amount and nothing else. A
-        // shove is capped to the stack behind the ante on the way through.
-        { committed: action === 'shove' ? seat.stack : raiseTargetFor(index) }
-      : { action, committed: action === 'raise' ? raiseTargetFor(index) : null, acted: true }
 
+    // Hero has no action to set — the chips in front are the whole statement —
+    // so the shortcut writes the amount and nothing else. A shove is capped to
+    // the stack behind the ante on the way through.
+    const committed = action === 'shove' ? seat.stack : raiseTargetFor(index)
     setSeats((prev) =>
-      settleSeatsBefore(prev, index).map((item, i) => (i === index ? { ...item, ...change } : item)),
+      settleSeatsBefore(prev, index).map((item, i) =>
+        i === index ? { ...item, committed } : item,
+      ),
     )
     setSelected(index)
     setRangeJump((count) => count + 1)
@@ -712,7 +706,7 @@ export function TableSpotPanel({
           </div>
         )}
 
-        {!seat.isHero && !hasFolded(seat.action) && (
+        {!seat.isHero && seat.action !== 'fold' && (
           <div className="mt-3">
             <div className="mb-2 flex flex-wrap items-center gap-2">
               <select

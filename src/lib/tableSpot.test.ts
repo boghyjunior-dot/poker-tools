@@ -244,11 +244,11 @@ describe('naming an action settles the seats in front of it', () => {
   })
 })
 
-describe('a seat that raised and then folded', () => {
+describe('a seat that put chips in and then folded', () => {
   // UTG opens to 2,500, BTN 3-bets to 7,000, UTG folds. UTG's 2,500 stays.
   const threeBetPot = () =>
     table({
-      UTG: { action: 'raiseFold', committed: 2500 },
+      UTG: { action: 'fold', committed: 2500 },
       BTN: { action: 'raise', committed: 7000 },
       BB: { isHero: true },
     })
@@ -280,7 +280,7 @@ describe('a seat that raised and then folded', () => {
     // even when its number is the largest on the table.
     const spot = deriveSpot(
       table({
-        UTG: { action: 'raiseFold', committed: 9000 },
+        UTG: { action: 'fold', committed: 9000 },
         BTN: { action: 'raise', committed: 7000 },
         BB: { isHero: true },
       }),
@@ -305,9 +305,49 @@ describe('a seat that raised and then folded', () => {
     expect(left.requiredEquityPct).toBeLessThan(plain.requiredEquityPct)
   })
 
+  it('does not shrink a call when the seat it answered folds later', () => {
+    // UTG opens 2,500, CO calls it, then UTG folds to a shove behind. The CO
+    // still called 2,500: UTG giving up afterwards cannot reach forward and
+    // make the call smaller than the bet it was actually answering.
+    const spot = deriveSpot(
+      table({
+        UTG: { action: 'fold', committed: 2500 },
+        CO: { action: 'call' },
+        BTN: { action: 'shove', stack: 20_000 },
+        BB: { isHero: true, stack: 30_000 },
+      }),
+      BLINDS,
+      0,
+      25_000,
+    )
+    expect(spot.seats.find((seat) => seat.position === 'CO')!.inFront).toBe(2500)
+  })
+
+  it('keeps the chips of everyone who folded to a shove', () => {
+    // UTG opens 2,500, CO calls it, BTN shoves, both fold. Two seats' worth of
+    // dead money is the whole reason the price is worth looking at.
+    const spot = deriveSpot(
+      table({
+        UTG: { action: 'fold', committed: 2500 },
+        CO: { action: 'fold', committed: 2500 },
+        BTN: { action: 'shove', stack: 20_000 },
+        BB: { isHero: true, stack: 30_000 },
+      }),
+      BLINDS,
+      0,
+      25_000,
+    )
+    expect(spot.seats.find((seat) => seat.position === 'UTG')!.inFront).toBe(2500)
+    expect(spot.seats.find((seat) => seat.position === 'CO')!.inFront).toBe(2500)
+    expect(spot.activeVillains.map((seat) => seat.position)).toEqual(['BTN'])
+    // Both opens, both antes, the SB's blind and ante, and the three seats
+    // that folded for nothing but their ante.
+    expect(spot.deadChips).toBe(2 * 2600 + 600 + 3 * 100)
+  })
+
   it('still floors at the blind the seat was forced to post', () => {
     const spot = deriveSpot(
-      table({ SB: { action: 'raiseFold' }, BTN: { action: 'raise', committed: 7000 }, BB: { isHero: true } }),
+      table({ SB: { action: 'fold' }, BTN: { action: 'raise', committed: 7000 }, BB: { isHero: true } }),
       BLINDS,
       0,
       25_000,
@@ -524,7 +564,9 @@ describe('chips a seat already put in', () => {
     expect(spot.seats.find((seat) => seat.position === 'CO')!.inFront).toBe(1000)
   })
 
-  it('still drags an untyped caller up to the largest bet', () => {
+  it('does not let a later raise reach back and take more off a caller', () => {
+    // CO limps for the big blind, then the BTN raises behind it. The CO put in
+    // 1,000 and that is what is in front of it; the raise is not its problem.
     const spot = deriveSpot(
       table({
         CO: { action: 'call' },
@@ -535,7 +577,26 @@ describe('chips a seat already put in', () => {
       100,
       25_000,
     )
-    expect(spot.seats.find((seat) => seat.position === 'CO')!.inFront).toBe(6800)
+    expect(spot.seats.find((seat) => seat.position === 'CO')!.inFront).toBe(1000)
+    expect(spot.currentBet).toBe(6800)
+  })
+
+  it('matches a caller to the bet that was standing when it acted', () => {
+    // UTG opens 2,500, CO calls it, the BTN shoves over the top. The CO called
+    // 2,500 — the shove does not turn its call into a stack-off.
+    const spot = deriveSpot(
+      table({
+        UTG: { action: 'raise', committed: 2500 },
+        CO: { action: 'call' },
+        BTN: { action: 'shove', stack: 20_000 },
+        BB: { isHero: true, stack: 30_000 },
+      }),
+      BLINDS,
+      100,
+      25_000,
+    )
+    expect(spot.seats.find((seat) => seat.position === 'CO')!.inFront).toBe(2500)
+    expect(spot.currentBet).toBe(19_900)
   })
 
   it('never lets a blind seat have less in than it was forced to post', () => {

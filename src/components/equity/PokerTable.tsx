@@ -13,8 +13,6 @@ import {
 
 const ACTION_STYLE: Record<SeatAction, string> = {
   fold: 'bg-slate-800 text-slate-500',
-  // Out of the hand, but it left money behind: a fold wearing the raise's colour.
-  raiseFold: 'bg-amber-950/60 text-amber-200/60',
   call: 'bg-sky-900/70 text-sky-200',
   raise: 'bg-amber-900/70 text-amber-200',
   shove: 'bg-rose-900/70 text-rose-200',
@@ -60,7 +58,6 @@ function HandGlyphs({ hand }: { hand?: [BoardCard | null, BoardCard | null] | nu
 
 const ACTION_LABEL: Record<SeatAction, string> = {
   fold: 'Fold',
-  raiseFold: 'Raise-fold',
   call: 'Call',
   raise: 'Raise',
   shove: 'Shove',
@@ -111,11 +108,11 @@ function betAnchor(x: number, y: number): React.CSSProperties {
     : { top: '100%', left: '50%', transform: 'translate(-50%, 3px)' }
 }
 
-const CHIP_STYLE: Record<'call' | 'raise' | 'shove' | 'raiseFold', string> = {
+const CHIP_STYLE: Record<'fold' | 'call' | 'raise' | 'shove', string> = {
+  fold: 'border-slate-700 bg-slate-950/40 text-slate-400 hover:bg-slate-800',
   call: 'border-sky-700/70 bg-sky-950/40 text-sky-300 hover:bg-sky-900/60',
   raise: 'border-amber-700/70 bg-amber-950/40 text-amber-300 hover:bg-amber-900/60',
   shove: 'border-rose-700/70 bg-rose-950/40 text-rose-300 hover:bg-rose-900/60',
-  raiseFold: 'border-amber-900/60 bg-slate-950/40 text-amber-200/70 hover:bg-amber-950/50',
 }
 
 /**
@@ -131,7 +128,7 @@ function ActionChip({
   onPress,
 }: {
   label: string
-  action: 'call' | 'raise' | 'shove' | 'raiseFold'
+  action: 'fold' | 'call' | 'raise' | 'shove'
   onPress: () => void
 }) {
   return (
@@ -217,7 +214,7 @@ export function PokerTable({
   onPatch: (index: number, change: Partial<Seat>) => void
   onMakeHero: (index: number) => void
   /** Set a seat's action and carry the eye to where its range gets chosen. */
-  onQuickAction: (index: number, action: 'call' | 'raise' | 'shove' | 'raiseFold') => void
+  onQuickAction: (index: number, action: 'fold' | 'call' | 'raise' | 'shove') => void
   potBeforeCall: number
   heroCallAmount: number
   bigBlind: number
@@ -324,19 +321,19 @@ export function PokerTable({
               />
             </span>
             <span className="flex gap-0.5">
+              {/* Hero is the seat being asked, so hero never folds here. */}
+              {!isHero && (
+                <ActionChip
+                  label={t('Fold')}
+                  action="fold"
+                  onPress={() => onQuickAction(seatIndex, 'fold')}
+                />
+              )}
               <ActionChip
                 label={t('All-in')}
                 action="shove"
                 onPress={() => onQuickAction(seatIndex, 'shove')}
               />
-              {/* Hero never raise-folds: hero is the seat being asked. */}
-              {!isHero && (
-                <ActionChip
-                  label={t('R-fold')}
-                  action="raiseFold"
-                  onPress={() => onQuickAction(seatIndex, 'raiseFold')}
-                />
-              )}
             </span>
           </span>
         )
