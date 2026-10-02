@@ -97,6 +97,16 @@ export interface Seat {
    */
   hand?: [BoardCard | null, BoardCard | null] | null
   isHero: boolean
+  /**
+   * Whether this seat's action is a statement or just the default.
+   *
+   * A seat nobody has touched folds, because that is what a seat that has not
+   * entered the pot does. But "folded" and "not yet spoken for" are different
+   * things to read off a table, and only the difference makes a line out of a
+   * set of actions: naming one seat's action settles every seat before it, and
+   * this is what records that it has been settled.
+   */
+  acted: boolean
 }
 
 /**
@@ -188,7 +198,27 @@ export function newSeat(position: Position, stack: number, bountyAmount = 0): Se
     range: {},
     hand: null,
     isHero: false,
+    acted: false,
   }
+}
+
+/**
+ * Settle every seat that acts before this one.
+ *
+ * Preflop runs round the table once, so naming a seat's action says something
+ * about everyone in front of it too: they are done, and since they put nothing
+ * in, they folded. Seats already spoken for keep what they were given — an
+ * open that this seat is now raising over is the point of the line, not a
+ * leftover to tidy away. Seats behind are still to act and are left alone.
+ *
+ * `seats` is in acting order, so "before" is simply a lower index.
+ */
+export function settleSeatsBefore(seats: Seat[], index: number): Seat[] {
+  return seats.map((seat, i) =>
+    i < index && !seat.acted && !seat.isHero
+      ? { ...seat, action: 'fold' as const, committed: null, acted: true }
+      : seat,
+  )
 }
 
 /**

@@ -28,6 +28,7 @@ import {
   newSeat,
   rescaleToBlind,
   seatsForTable,
+  settleSeatsBefore,
   smallBlindOf,
   type AmountView,
   type Blinds,
@@ -36,7 +37,14 @@ import {
   type TableSize,
 } from '../../lib/tableSpot'
 
-const ACTIONS: SeatAction[] = ['fold', 'raiseFold', 'call', 'raise', 'shove']
+/**
+ * Ordered the way a solver lists them: fold, then passive, then aggressive.
+ *
+ * Raise-fold is last rather than beside raise. It is the one action that is
+ * not a decision facing this bet but a whole line already finished, so it reads
+ * better out of the way of the four you reach for every hand.
+ */
+const ACTIONS: SeatAction[] = ['fold', 'call', 'raise', 'shove', 'raiseFold']
 const ACTION_LABEL: Record<SeatAction, string> = {
   fold: 'Fold',
   raiseFold: 'Raise-fold',
@@ -310,17 +318,18 @@ export function TableSpotPanel({
    * stays; a seat picked straight off a fold is given an ordinary open to hold.
    */
   const setAction = (index: number, action: SeatAction) => {
-    if (action !== 'raiseFold') {
-      patch(index, { action, committed: null })
-      return
+    const change: Partial<Seat> = { action, committed: null, acted: true }
+    if (action === 'raiseFold') {
+      const view = spot.seats[index]
+      const alreadyIn = view ? view.inFront : 0
+      const blind = view ? view.blind : 0
+      change.committed = alreadyIn > blind ? alreadyIn : openSizeFor(blinds.bigBlind)
     }
-    const view = spot.seats[index]
-    const alreadyIn = view ? view.inFront : 0
-    const blind = view ? view.blind : 0
-    patch(index, {
-      action,
-      committed: alreadyIn > blind ? alreadyIn : openSizeFor(blinds.bigBlind),
-    })
+    // Settling first, then patching, so the seat being named is not caught by
+    // its own rule — it is the one seat here whose action is not a fold.
+    setSeats((prev) =>
+      settleSeatsBefore(prev, index).map((item, i) => (i === index ? { ...item, ...change } : item)),
+    )
   }
 
   const quickAction = (index: number, action: 'call' | 'raise' | 'shove' | 'raiseFold') => {
@@ -330,19 +339,19 @@ export function TableSpotPanel({
       setSelected(index)
       return
     }
-    if (seat.isHero) {
-      // Hero has no action to set — the chips in front are the whole
-      // statement — so the shortcut writes the amount and nothing else. A
-      // shove is capped to the stack behind the ante on the way through.
-      patch(index, {
-        committed: action === 'shove' ? seat.stack : raiseTargetFor(index),
-      })
-    } else {
-      patch(index, {
-        action,
-        committed: action === 'raise' ? raiseTargetFor(index) : null,
-      })
-    }
+    // Sized against the table as it stands. Settling a seat that has not acted
+    // only writes the fold it was already showing, so nothing it does can move
+    // the bet this raise is measured against.
+    const change: Partial<Seat> = seat.isHero
+      ? // Hero has no action to set — the chips in front are the whole
+        // statement — so the shortcut writes the amount and nothing else. A
+        // shove is capped to the stack behind the ante on the way through.
+        { committed: action === 'shove' ? seat.stack : raiseTargetFor(index) }
+      : { action, committed: action === 'raise' ? raiseTargetFor(index) : null, acted: true }
+
+    setSeats((prev) =>
+      settleSeatsBefore(prev, index).map((item, i) => (i === index ? { ...item, ...change } : item)),
+    )
     setSelected(index)
     setRangeJump((count) => count + 1)
   }
@@ -691,7 +700,7 @@ export function TableSpotPanel({
                   type="button"
                   onClick={() => setAction(selected, action)}
                   className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                    seat.action === action
+                    seat.acted && seat.action === action
                       ? 'bg-indigo-600 text-white'
                       : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                   }`}

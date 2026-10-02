@@ -7,6 +7,7 @@ import {
   newSeat,
   rescaleToBlind,
   seatsForTable,
+  settleSeatsBefore,
   smallBlindOf,
   type Blinds,
   type Seat,
@@ -188,6 +189,58 @@ describe('bounties change the bar', () => {
       25_000,
     )
     expect(spot.capturableBountyChips).toBe(0)
+  })
+})
+
+describe('naming an action settles the seats in front of it', () => {
+  const seats = () => seatsForTable(8).map((position) => newSeat(position, 25_000))
+  const at = (list: Seat[], position: string) => list.find((seat) => seat.position === position)!
+
+  it('folds everyone who has not acted yet', () => {
+    // CO is index 4 of UTG, UTG+1, LJ, HJ, CO, BTN, SB, BB.
+    const after = settleSeatsBefore(seats(), 4)
+    for (const position of ['UTG', 'UTG+1', 'LJ', 'HJ']) {
+      expect(at(after, position).acted).toBe(true)
+      expect(at(after, position).action).toBe('fold')
+    }
+  })
+
+  it('leaves the seats still to act alone', () => {
+    const after = settleSeatsBefore(seats(), 4)
+    for (const position of ['CO', 'BTN', 'SB', 'BB']) {
+      expect(at(after, position).acted).toBe(false)
+    }
+  })
+
+  it('keeps an action someone already gave', () => {
+    // An open this seat is about to raise over is the line, not a leftover.
+    const before = seats()
+    before[0] = { ...before[0], action: 'raise', committed: 2500, acted: true }
+    const after = settleSeatsBefore(before, 4)
+    expect(at(after, 'UTG').action).toBe('raise')
+    expect(at(after, 'UTG').committed).toBe(2500)
+  })
+
+  it('never settles hero', () => {
+    const before = seats()
+    before[2] = { ...before[2], isHero: true }
+    const after = settleSeatsBefore(before, 4)
+    expect(at(after, 'LJ').acted).toBe(false)
+  })
+
+  it('changes nothing when the first seat is the one acting', () => {
+    const before = seats()
+    expect(settleSeatsBefore(before, 0)).toEqual(before)
+  })
+
+  it('does not move a chip, because a seat that had not acted was folded anyway', () => {
+    const before = seats()
+    before[7] = { ...before[7], isHero: true }
+    const plain = deriveSpot(before, BLINDS, 0, 25_000)
+    const settled = deriveSpot(settleSeatsBefore(before, 4), BLINDS, 0, 25_000)
+    expect(settled.potBeforeCall).toBe(plain.potBeforeCall)
+    expect(settled.deadChips).toBe(plain.deadChips)
+    expect(settled.currentBet).toBe(plain.currentBet)
   })
 })
 

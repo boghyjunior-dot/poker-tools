@@ -330,11 +330,18 @@ export function PokerTable({
           </span>
         )
 
+        // A seat nobody has spoken for is folded as far as the pot is
+        // concerned, but saying "Fold" would claim a decision that has not
+        // been made. The dash is the difference you watch close up when
+        // naming a seat's action settles everyone in front of it.
         const actionChip = !seat.isHero && (
           <span
-            className={`mt-0.5 block rounded px-1 py-px text-[9px] font-semibold leading-tight ${ACTION_STYLE[seat.action]}`}
+            title={seat.acted ? undefined : t('No action yet — counts as a fold')}
+            className={`mt-0.5 block rounded px-1 py-px text-[9px] font-semibold leading-tight ${
+              seat.acted ? ACTION_STYLE[seat.action] : 'bg-slate-900 text-slate-600'
+            }`}
           >
-            {t(ACTION_LABEL[seat.action])}
+            {seat.acted ? t(ACTION_LABEL[seat.action]) : '—'}
           </span>
         )
 
