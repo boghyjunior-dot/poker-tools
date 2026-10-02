@@ -26,6 +26,12 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      # Ahead of the build, so a red suite stops the deploy rather than
+      # shipping over the top of it. The build itself runs tsc -b, which is
+      # the only typecheck that reads the project references: `tsc --noEmit`
+      # against the root config checks an empty file list and always passes.
+      - name: Test
+        run: npm test
       - name: Build
         run: npm run build
       - name: Setup Pages
