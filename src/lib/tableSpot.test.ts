@@ -191,6 +191,45 @@ describe('bounties change the bar', () => {
   })
 })
 
+describe('a tournament without bounties', () => {
+  // The panel turns bounties off by passing no buy-in, so this is the whole
+  // switch: nothing can be priced, and the bar is plain pot odds again.
+  const seats = table({
+    BTN: { action: 'shove', stack: 12_000, bountyAmount: 50 },
+    BB: { isHero: true, stack: 30_000 },
+  })
+
+  it('values every head at nothing', () => {
+    const spot = deriveSpot(seats, BLINDS, 0, 25_000)
+    expect(spot.capturableBountyChips).toBe(0)
+    expect(spot.capturableBountyBB).toBe(0)
+    expect(spot.bountyBreakdown.every((row) => row.bountyChips === 0)).toBe(true)
+  })
+
+  it('puts the bar back on pot odds alone', () => {
+    const spot = deriveSpot(seats, BLINDS, 0, 25_000)
+    expect(spot.requiredEquityWithBountyPct).toBeCloseTo(spot.requiredEquityPct, 10)
+  })
+
+  it('leaves the pot and the price untouched', () => {
+    // Switching bounties off must not move a single chip: the action is the
+    // same action, and only what winning pays changes.
+    const pko = deriveSpot(seats, BLINDS, 100, 25_000)
+    const plain = deriveSpot(seats, BLINDS, 0, 25_000)
+    expect(plain.finalPot).toBe(pko.finalPot)
+    expect(plain.heroCallAmount).toBe(pko.heroCallAmount)
+    expect(plain.deadChips).toBe(pko.deadChips)
+    expect(plain.potOdds).toBe(pko.potOdds)
+    expect(plain.requiredEquityPct).toBeCloseTo(pko.requiredEquityPct, 10)
+  })
+
+  it('is strictly the tighter call of the two', () => {
+    const pko = deriveSpot(seats, BLINDS, 100, 25_000)
+    const plain = deriveSpot(seats, BLINDS, 0, 25_000)
+    expect(plain.requiredEquityWithBountyPct).toBeGreaterThan(pko.requiredEquityWithBountyPct)
+  })
+})
+
 describe('spots that cannot be worked out', () => {
   it('asks for a hero', () => {
     const spot = deriveSpot(table({ BTN: { action: 'shove' } }), BLINDS, 100, 25_000)

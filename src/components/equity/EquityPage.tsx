@@ -248,7 +248,7 @@ export function EquityPage() {
         <BackToMenu className="mb-2" />
         <h1 className="text-2xl font-bold text-white">Equity Calculator</h1>
         <p className="text-sm text-slate-400 mt-1">
-          {t('Preflop equity via Monte Carlo — hand vs range, stacks, and PKO bounties.')}
+          {t('Preflop equity via Monte Carlo — hand vs range, stacks, with or without PKO bounties.')}
         </p>
       </header>
 

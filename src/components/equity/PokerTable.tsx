@@ -182,6 +182,7 @@ export function PokerTable({
   heroCallAmount,
   bigBlind,
   view,
+  bounties = true,
 }: {
   seats: SeatView[]
   selected: number
@@ -194,6 +195,8 @@ export function PokerTable({
   heroCallAmount: number
   bigBlind: number
   view: AmountView
+  /** False in a tournament without them: no heads to collect, so no field. */
+  bounties?: boolean
 }) {
   const t = useT()
 
@@ -370,7 +373,7 @@ export function PokerTable({
                 onChange={(value) => onPatch(index, { committed: value })}
                 scale={chipScale}
               />
-              {!seat.isHero && (
+              {bounties && !seat.isHero && (
                 <SeatInput
                   label={t('Bounty')}
                   tag="🎯"
@@ -415,7 +418,7 @@ export function PokerTable({
             </span>
             {actionChip}
             {inFront}
-            {seat.bountyAmount > 0 && !seat.isHero && (
+            {bounties && seat.bountyAmount > 0 && !seat.isHero && (
               <span className="mt-0.5 block text-[9px] font-medium leading-tight text-fuchsia-300">
                 🎯{' '}
                 {/* Money reads as money: 2.50, not 2.5 — but 50 stays 50. */}

@@ -176,6 +176,7 @@ export function TableSpotPanel({
   const [seats, setSeats] = useState<Seat[]>(() => startingSeats(8, buyIn))
   const [blinds, setBlinds] = useState<Blinds>(DEFAULT_BLINDS)
   const [view, setView] = useState<AmountView>('chips')
+  const [bounties, setBounties] = useState(true)
   const [accuracy, setAccuracy] = useState('normal')
   const [selected, setSelected] = useState(() => seatsForTable(8).length - 1)
   const [result, setResult] = useState<EquityResult | null>(null)
@@ -183,9 +184,21 @@ export function TableSpotPanel({
   const [error, setError] = useState<string | null>(null)
   const [running, setRunning] = useState(false)
 
+  /**
+   * One switch turns the whole bounty side of the spot off.
+   *
+   * A bounty is priced as bounty × (starting stack ÷ buy-in), so a buy-in of
+   * zero makes every head worth nothing in chips, and the required equity with
+   * bounties collapses onto plain pot odds by itself. Everything downstream —
+   * the grid's second threshold, the simulation's bounty EV — falls out of
+   * that rather than needing a flag of its own. Seats keep the bounties they
+   * were given, so switching back finds them where you left them.
+   */
+  const bountyBuyIn = bounties ? buyIn : 0
+
   const spot = useMemo(
-    () => deriveSpot(seats, blinds, buyIn, startingStack),
-    [seats, blinds, buyIn, startingStack],
+    () => deriveSpot(seats, blinds, bountyBuyIn, startingStack),
+    [seats, blinds, bountyBuyIn, startingStack],
   )
 
   const seat = seats[Math.min(selected, seats.length - 1)]
@@ -352,7 +365,7 @@ export function TableSpotPanel({
         setResult(
           calculateEquity(players, {
             iterations: level.equityIterations,
-            buyIn,
+            buyIn: bountyBuyIn,
             startingStack,
             existingPot: Math.max(0, spot.finalPot - matched),
             callAmount: spot.heroCallAmount,
@@ -407,6 +420,23 @@ export function TableSpotPanel({
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-sm font-semibold text-white">{t('The table')}</h2>
           <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-1" role="group" aria-label={t('Bounties')}>
+              {([true, false] as const).map((option) => (
+                <button
+                  key={String(option)}
+                  type="button"
+                  onClick={() => setBounties(option)}
+                  aria-pressed={bounties === option}
+                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                    bounties === option
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                  }`}
+                >
+                  {option ? t('Bounties') : t('No bounties')}
+                </button>
+              ))}
+            </div>
             <div className="flex items-center gap-1" role="group" aria-label={t('Show amounts as')}>
               {(['chips', 'bb'] as AmountView[]).map((option) => (
                 <button
@@ -454,6 +484,7 @@ export function TableSpotPanel({
           heroCallAmount={spot.heroCallAmount}
           bigBlind={blinds.bigBlind}
           view={view}
+          bounties={bounties}
         />
 
         <p className="mt-1 text-center text-[11px] text-slate-500">
@@ -548,15 +579,24 @@ export function TableSpotPanel({
           </label>
         </div>
 
-        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Num label="Buy-in" value={buyIn} onChange={changeBuyIn} hint="Prices bounties in chips" />
-          <Num
-            label="Starting stack"
-            value={startingStack}
-            onChange={onStartingStack}
-            hint="Chips at buy-in"
-          />
-        </div>
+        {/* Both fields exist only to price a bounty in chips, so without
+            bounties there is nothing for them to do. */}
+        {bounties && (
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <Num
+              label="Buy-in"
+              value={buyIn}
+              onChange={changeBuyIn}
+              hint="Prices bounties in chips"
+            />
+            <Num
+              label="Starting stack"
+              value={startingStack}
+              onChange={onStartingStack}
+              hint="Chips at buy-in"
+            />
+          </div>
+        )}
       </section>
 
       <section ref={editorRef} className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
@@ -583,7 +623,7 @@ export function TableSpotPanel({
             scale={chipScale}
             hint={chipUnit}
           />
-          {!seat.isHero && (
+          {bounties && !seat.isHero && (
             <Num label="Bounty" value={seat.bountyAmount} onChange={(v) => patch(selected, { bountyAmount: v })} hint="What the knockout pays you" />
           )}
           {/* Hero gets this as well: opening and then facing a 3-bet is the
@@ -662,18 +702,20 @@ export function TableSpotPanel({
           <Stat
             label="Equity you need"
             value={`${spot.requiredEquityPct.toFixed(1)}%`}
-            hint={t('on pot odds alone')}
+            hint={bounties ? t('on pot odds alone') : t('to break even on this call')}
           />
-          <Stat
-            label="With the bounty"
-            value={`${spot.requiredEquityWithBountyPct.toFixed(1)}%`}
-            tone={spot.capturableBountyChips > 0 ? 'text-emerald-400' : 'text-slate-500'}
-            hint={
-              spot.capturableBountyChips > 0
-                ? t('{n} capturable', { n: amount(spot.capturableBountyChips) })
-                : t('no bounty you can win')
-            }
-          />
+          {bounties && (
+            <Stat
+              label="With the bounty"
+              value={`${spot.requiredEquityWithBountyPct.toFixed(1)}%`}
+              tone={spot.capturableBountyChips > 0 ? 'text-emerald-400' : 'text-slate-500'}
+              hint={
+                spot.capturableBountyChips > 0
+                  ? t('{n} capturable', { n: amount(spot.capturableBountyChips) })
+                  : t('no bounty you can win')
+              }
+            />
+          )}
         </div>
 
         <div className="mt-3 rounded-md border border-slate-800 bg-slate-950/40 px-3 py-2">
@@ -681,7 +723,10 @@ export function TableSpotPanel({
             {t('How that is worked out')}
           </p>
 
-          {spot.capturableBountyAmount > 0 && (
+          {/* The chips, not the cash: a head nobody can price — bounties
+              switched off, or no starting stack given — works out to nothing,
+              and "2.31 × (10,000 ÷ 0) = 0 chips" explains nothing. */}
+          {spot.capturableBountyChips > 0 && (
             <>
               <Work
                 label={t('Knockout pays')}
@@ -711,9 +756,13 @@ export function TableSpotPanel({
             />
           )}
           <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">
-            {t(
-              'A call breaks even when your share of the pot covers what you put in, so the bar is what you call divided by what the pot pays. A bounty is extra reward on exactly the branch where you win, so it joins the pot on the bottom of that fraction and pulls the bar down.',
-            )}
+            {bounties
+              ? t(
+                  'A call breaks even when your share of the pot covers what you put in, so the bar is what you call divided by what the pot pays. A bounty is extra reward on exactly the branch where you win, so it joins the pot on the bottom of that fraction and pulls the bar down.',
+                )
+              : t(
+                  'A call breaks even when your share of the pot covers what you put in, so the bar is what you call divided by what the pot pays. Nothing but chips is at stake here, which is the whole of the price.',
+                )}
           </p>
         </div>
       </section>
@@ -817,10 +866,15 @@ export function TableSpotPanel({
                 tone={result.callEv.evChips >= 0 ? 'text-emerald-400' : 'text-red-400'}
               />
               <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">
-                {t(
-                  'Your equity is the share of the pot you win on average, measured by dealing this spot {n} times. The bounty is added only on the runs you win outright, which is why it is multiplied by how often that happens rather than by your equity.',
-                  { n: result.iterations.toLocaleString() },
-                )}
+                {bounties
+                  ? t(
+                      'Your equity is the share of the pot you win on average, measured by dealing this spot {n} times. The bounty is added only on the runs you win outright, which is why it is multiplied by how often that happens rather than by your equity.',
+                      { n: result.iterations.toLocaleString() },
+                    )
+                  : t(
+                      'Your equity is the share of the pot you win on average, measured by dealing this spot {n} times.',
+                      { n: result.iterations.toLocaleString() },
+                    )}
               </p>
             </div>
           )}

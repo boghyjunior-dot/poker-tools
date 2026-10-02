@@ -434,8 +434,8 @@ export const ro: Dictionary = {
     "Mâna următoare",
   "The chart appears once you answer.":
     "Chart-ul apare după ce răspunzi.",
-  "Preflop equity via Monte Carlo — hand vs range, stacks, and PKO bounties.":
-    "Equity preflop prin Monte Carlo — mână vs range, stack-uri și bounty-uri PKO.",
+  "Preflop equity via Monte Carlo — hand vs range, stacks, with or without PKO bounties.":
+    "Equity preflop prin Monte Carlo — mână vs range, stack-uri, cu sau fără bounty-uri PKO.",
   "Hero stack":
     "Stack-ul tău",
   "Tournament buy-in used to convert bounties to chips":
@@ -1435,6 +1435,12 @@ export const ro: Dictionary = {
     "De call",
   "on pot odds alone":
     "doar pe pot odds",
+  "A call breaks even when your share of the pot covers what you put in, so the bar is what you call divided by what the pot pays. Nothing but chips is at stake here, which is the whole of the price.":
+    "Un call iese pe zero când partea ta din pot acoperă ce ai băgat, deci ștacheta e cât plătești împărțit la cât plătește potul. Aici nu e în joc decât jetoane, și ăsta e tot prețul.",
+  "Your equity is the share of the pot you win on average, measured by dealing this spot {n} times.":
+    "Echitatea ta e partea din pot pe care o câștigi în medie, măsurată împărțind acest spot de {n} ori.",
+  "to break even on this call":
+    "ca să ieși pe zero la acest call",
   "With the bounty":
     "Cu bounty-ul",
   "no bounty you can win":
@@ -1622,6 +1628,8 @@ export const ro: Dictionary = {
     "Încasat",
   "Bounties":
     "Bounty-uri",
+  "No bounties":
+    "Fără bounty-uri",
   "Add result":
     "Adaugă rezultatul",
   "Cost":
