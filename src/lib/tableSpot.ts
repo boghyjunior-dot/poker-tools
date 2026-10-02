@@ -365,7 +365,16 @@ export function deriveSpot(
   const finalPot = potBeforeCall + heroCallAmount
 
   if (hero && heroCallAmount === 0 && activeVillains.length > 0) {
-    problems.push('There is nothing to call — no seat has bet more than you have posted.')
+    // Nothing to call has two quite different causes, and a reader who is
+    // told the wrong one goes looking in the wrong place. Being all in
+    // already is the one people arrive at by accident — a seat handed its
+    // own shove — and is fixed on hero's own seat rather than the villains'.
+    const heroRoom = Math.max(0, Math.max(0, hero.stack) - hero.ante)
+    problems.push(
+      hero.inFront >= heroRoom
+        ? 'You are already all in, so there is nothing left to call.'
+        : 'There is nothing to call — no seat has bet more than you have posted.',
+    )
   }
 
   const bountyBreakdown = hero

@@ -1463,6 +1463,8 @@ export const ro: Dictionary = {
     "Nimeni nu e în mână cu tine.",
   "There is nothing to call — no seat has bet more than you have posted.":
     "Nu ai ce da call — niciun loc nu a pariat mai mult decât ai pus tu.",
+  "You are already all in, so there is nothing left to call.":
+    "Ești deja all in, deci nu mai ai ce să plătești.",
 
   // -------------------------------------------------------- calling range --
   "Hands you can call with":

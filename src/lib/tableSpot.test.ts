@@ -395,6 +395,52 @@ describe('a tournament without bounties', () => {
   })
 })
 
+describe('hero facing a table of shoves', () => {
+  const shoved = (hero: Partial<Seat>) =>
+    table({
+      CO: { action: 'shove' },
+      BTN: { action: 'shove' },
+      SB: { action: 'shove' },
+      BB: { isHero: true, ...hero },
+    })
+
+  it('prices the call against three all-ins', () => {
+    const spot = deriveSpot(shoved({}), BLINDS, 0, 10_000)
+    expect(spot.activeVillains).toHaveLength(3)
+    // 25,000 behind the ante, less the big blind already posted.
+    expect(spot.heroCallAmount).toBe(24_900 - 1000)
+    expect(spot.problems).toEqual([])
+  })
+
+  it('says hero is all in rather than blaming the villains', () => {
+    // The trap: a seat that shoved is handed to hero, or hero's own all-in
+    // shortcut is pressed. Hero has nothing to call because hero is all in,
+    // which is a different thing from nobody having bet.
+    const spot = deriveSpot(shoved({ committed: 25_000 }), BLINDS, 0, 10_000)
+    expect(spot.heroCallAmount).toBe(0)
+    expect(spot.problems).toEqual(['You are already all in, so there is nothing left to call.'])
+  })
+
+  it('still blames the betting when hero has chips behind', () => {
+    // Everyone shoves for less than the big blind hero has already posted.
+    const spot = deriveSpot(
+      table({
+        CO: { action: 'shove', stack: 800 },
+        BTN: { action: 'shove', stack: 800 },
+        SB: { action: 'shove', stack: 800 },
+        BB: { isHero: true },
+      }),
+      BLINDS,
+      0,
+      10_000,
+    )
+    expect(spot.heroCallAmount).toBe(0)
+    expect(spot.problems).toEqual([
+      'There is nothing to call — no seat has bet more than you have posted.',
+    ])
+  })
+})
+
 describe('spots that cannot be worked out', () => {
   it('asks for a hero', () => {
     const spot = deriveSpot(table({ BTN: { action: 'shove' } }), BLINDS, 100, 25_000)

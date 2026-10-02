@@ -255,8 +255,24 @@ export function TableSpotPanel({
     )
   }
 
+  /**
+   * Hand a seat to the player.
+   *
+   * Whatever that seat did as a villain does not come with it. Hero has no
+   * action in this model, so a seat that was shoving would arrive already all
+   * in — nothing left to call, and the whole spot priced at nothing. The seat
+   * handed back loses its chips for the same reason: they were hero's blind or
+   * hero's raise, not a villain's. Both end up unspoken for, and the raise
+   * shortcut is there to put chips in again on purpose.
+   */
   const makeHero = (index: number) =>
-    setSeats((prev) => prev.map((item, i) => ({ ...item, isHero: i === index })))
+    setSeats((prev) =>
+      prev.map((item, i) =>
+        i === index || item.isHero
+          ? { ...item, isHero: i === index, action: 'fold' as const, committed: null, acted: false }
+          : item,
+      ),
+    )
 
   /**
    * The all-in shortcut on a seat is only half an instruction — a shove
