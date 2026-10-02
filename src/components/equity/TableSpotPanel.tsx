@@ -24,6 +24,7 @@ import {
   defaultBounty,
   deriveSpot,
   formatAmount,
+  hasFolded,
   newSeat,
   rescaleToBlind,
   seatsForTable,
@@ -35,12 +36,25 @@ import {
   type TableSize,
 } from '../../lib/tableSpot'
 
-const ACTIONS: SeatAction[] = ['fold', 'call', 'raise', 'shove']
+const ACTIONS: SeatAction[] = ['fold', 'raiseFold', 'call', 'raise', 'shove']
 const ACTION_LABEL: Record<SeatAction, string> = {
   fold: 'Fold',
+  raiseFold: 'Raise-fold',
   call: 'Call',
   raise: 'Raise',
   shove: 'Shove',
+}
+
+/**
+ * An ordinary open, for a seat whose raise is already behind it.
+ *
+ * Deliberately not the usual 2.5× the largest bet: by the time a seat is
+ * raise-folding, something has re-raised over it, and sizing off that would
+ * put more in the middle than the seat ever had in. An open is two and a half
+ * blinds whatever happened afterwards, and the field stays editable.
+ */
+function openSizeFor(bigBlind: number): number {
+  return Math.round(Math.max(0, bigBlind) * 2.5)
 }
 
 const DEFAULT_BLINDS: Blinds = { bigBlind: 1000, antePct: 0.1 }
@@ -286,8 +300,36 @@ export function TableSpotPanel({
     return Math.round(facing * 2.5)
   }
 
-  const quickAction = (index: number, action: 'call' | 'raise' | 'shove') => {
+  /**
+   * Switch a seat's action, keeping the chips where keeping them is the point.
+   *
+   * Every other action re-derives what is in front from the action itself, so
+   * it clears the typed number. Raise-folding is the one case where the number
+   * *is* the statement: the seat is out, and all that is left of it is what it
+   * put in. Anything already in front beyond the blind is that raise, so it
+   * stays; a seat picked straight off a fold is given an ordinary open to hold.
+   */
+  const setAction = (index: number, action: SeatAction) => {
+    if (action !== 'raiseFold') {
+      patch(index, { action, committed: null })
+      return
+    }
+    const view = spot.seats[index]
+    const alreadyIn = view ? view.inFront : 0
+    const blind = view ? view.blind : 0
+    patch(index, {
+      action,
+      committed: alreadyIn > blind ? alreadyIn : openSizeFor(blinds.bigBlind),
+    })
+  }
+
+  const quickAction = (index: number, action: 'call' | 'raise' | 'shove' | 'raiseFold') => {
     const seat = seats[index]
+    if (action === 'raiseFold') {
+      setAction(index, action)
+      setSelected(index)
+      return
+    }
     if (seat.isHero) {
       // Hero has no action to set — the chips in front are the whole
       // statement — so the shortcut writes the amount and nothing else. A
@@ -647,7 +689,7 @@ export function TableSpotPanel({
                 <button
                   key={action}
                   type="button"
-                  onClick={() => patch(selected, { action, committed: null })}
+                  onClick={() => setAction(selected, action)}
                   className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                     seat.action === action
                       ? 'bg-indigo-600 text-white'
@@ -661,7 +703,7 @@ export function TableSpotPanel({
           </div>
         )}
 
-        {!seat.isHero && seat.action !== 'fold' && (
+        {!seat.isHero && !hasFolded(seat.action) && (
           <div className="mt-3">
             <div className="mb-2 flex flex-wrap items-center gap-2">
               <select

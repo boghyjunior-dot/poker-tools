@@ -52,8 +52,22 @@ export function seatsForTable(size: TableSize): Position[] {
   return [...SEATS_BY_SIZE[size]]
 }
 
-/** What a villain did. Hero has no action — see the module note. */
-export type SeatAction = 'fold' | 'call' | 'raise' | 'shove'
+/**
+ * What a villain did. Hero has no action — see the module note.
+ *
+ * `raiseFold` is the seat that opened and then folded to a re-raise. It is a
+ * fold — the seat cannot win the pot and has no range at showdown — but the
+ * chips it put in stay in the middle, which is the whole reason it needs a
+ * name of its own. A plain fold with a number typed in says the same thing;
+ * this says it where the action is read, so the pot cannot quietly disagree
+ * with the story of the hand.
+ */
+export type SeatAction = 'fold' | 'raiseFold' | 'call' | 'raise' | 'shove'
+
+/** True for both ways out of the hand, whatever each left behind. */
+export function hasFolded(action: SeatAction): boolean {
+  return action === 'fold' || action === 'raiseFold'
+}
 
 export interface Seat {
   position: Position
@@ -209,7 +223,10 @@ function betPartOf(seat: Seat, ante: number, blind: number, currentBet: number):
     case 'shove':
       return room
     case 'fold':
+    case 'raiseFold':
       // Chips put in before folding stay in the middle; the blind is the floor.
+      // The two differ only in what they default to without a number, which is
+      // the caller's business: a raise that got away is sized, a fold is not.
       return atLeastBlind(typed ?? blind)
     case 'raise':
       return atLeastBlind(typed ?? blind)
@@ -285,7 +302,7 @@ export function deriveSpot(
       blind,
       contribution: Math.min(ante, Math.max(0, seat.stack)) + betPart,
       inFront: betPart,
-      isActive: seat.isHero || seat.action !== 'fold',
+      isActive: seat.isHero || !hasFolded(seat.action),
     }
   })
 
@@ -294,14 +311,14 @@ export function deriveSpot(
   if (heroes.length > 1) problems.push('Only one seat can be yours.')
   const hero = heroes.length === 1 ? heroes[0] : null
 
-  const activeVillains = views.filter((seat) => !seat.isHero && seat.action !== 'fold')
+  const activeVillains = views.filter((seat) => !seat.isHero && !hasFolded(seat.action))
   if (hero && activeVillains.length === 0) {
     problems.push('Nobody is in the hand with you — give a seat an action other than fold.')
   }
 
   const potBeforeCall = views.reduce((sum, seat) => sum + seat.contribution, 0)
   const deadChips = views
-    .filter((seat) => !seat.isHero && seat.action === 'fold')
+    .filter((seat) => !seat.isHero && hasFolded(seat.action))
     .reduce((sum, seat) => sum + seat.contribution, 0)
 
   // What it costs to match the bet, from whatever hero already has in. The

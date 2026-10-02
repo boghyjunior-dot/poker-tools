@@ -13,6 +13,8 @@ import {
 
 const ACTION_STYLE: Record<SeatAction, string> = {
   fold: 'bg-slate-800 text-slate-500',
+  // Out of the hand, but it left money behind: a fold wearing the raise's colour.
+  raiseFold: 'bg-amber-950/60 text-amber-200/60',
   call: 'bg-sky-900/70 text-sky-200',
   raise: 'bg-amber-900/70 text-amber-200',
   shove: 'bg-rose-900/70 text-rose-200',
@@ -58,6 +60,7 @@ function HandGlyphs({ hand }: { hand?: [BoardCard | null, BoardCard | null] | nu
 
 const ACTION_LABEL: Record<SeatAction, string> = {
   fold: 'Fold',
+  raiseFold: 'Raise-fold',
   call: 'Call',
   raise: 'Raise',
   shove: 'Shove',
@@ -87,10 +90,11 @@ function ringPosition(
   }
 }
 
-const CHIP_STYLE: Record<'call' | 'raise' | 'shove', string> = {
+const CHIP_STYLE: Record<'call' | 'raise' | 'shove' | 'raiseFold', string> = {
   call: 'border-sky-700/70 bg-sky-950/40 text-sky-300 hover:bg-sky-900/60',
   raise: 'border-amber-700/70 bg-amber-950/40 text-amber-300 hover:bg-amber-900/60',
   shove: 'border-rose-700/70 bg-rose-950/40 text-rose-300 hover:bg-rose-900/60',
+  raiseFold: 'border-amber-900/60 bg-slate-950/40 text-amber-200/70 hover:bg-amber-950/50',
 }
 
 /**
@@ -106,7 +110,7 @@ function ActionChip({
   onPress,
 }: {
   label: string
-  action: 'call' | 'raise' | 'shove'
+  action: 'call' | 'raise' | 'shove' | 'raiseFold'
   onPress: () => void
 }) {
   return (
@@ -116,7 +120,9 @@ function ActionChip({
         event.stopPropagation()
         onPress()
       }}
-      className={`w-full rounded border px-1 py-px text-[9px] font-semibold uppercase leading-tight transition-colors ${CHIP_STYLE[action]}`}
+      // Nowrap: sharing a row halves the width, and left to itself the browser
+      // breaks "All-in" at its hyphen into two lines taller than the seat.
+      className={`w-full whitespace-nowrap rounded border px-1 py-px text-[9px] font-semibold uppercase leading-tight transition-colors ${CHIP_STYLE[action]}`}
     >
       {label}
     </button>
@@ -190,7 +196,7 @@ export function PokerTable({
   onPatch: (index: number, change: Partial<Seat>) => void
   onMakeHero: (index: number) => void
   /** Set a seat's action and carry the eye to where its range gets chosen. */
-  onQuickAction: (index: number, action: 'call' | 'raise' | 'shove') => void
+  onQuickAction: (index: number, action: 'call' | 'raise' | 'shove' | 'raiseFold') => void
   potBeforeCall: number
   heroCallAmount: number
   bigBlind: number
@@ -296,11 +302,21 @@ export function PokerTable({
                 onPress={() => onQuickAction(seatIndex, 'raise')}
               />
             </span>
-            <ActionChip
-              label={t('All-in')}
-              action="shove"
-              onPress={() => onQuickAction(seatIndex, 'shove')}
-            />
+            <span className="flex gap-0.5">
+              <ActionChip
+                label={t('All-in')}
+                action="shove"
+                onPress={() => onQuickAction(seatIndex, 'shove')}
+              />
+              {/* Hero never raise-folds: hero is the seat being asked. */}
+              {!isHero && (
+                <ActionChip
+                  label={t('R-fold')}
+                  action="raiseFold"
+                  onPress={() => onQuickAction(seatIndex, 'raiseFold')}
+                />
+              )}
+            </span>
           </span>
         )
 

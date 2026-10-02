@@ -191,6 +191,78 @@ describe('bounties change the bar', () => {
   })
 })
 
+describe('a seat that raised and then folded', () => {
+  // UTG opens to 2,500, BTN 3-bets to 7,000, UTG folds. UTG's 2,500 stays.
+  const threeBetPot = () =>
+    table({
+      UTG: { action: 'raiseFold', committed: 2500 },
+      BTN: { action: 'raise', committed: 7000 },
+      BB: { isHero: true },
+    })
+
+  it('leaves the raise in the pot', () => {
+    const spot = deriveSpot(threeBetPot(), BLINDS, 0, 25_000)
+    const utg = spot.seats.find((seat) => seat.position === 'UTG')!
+    expect(utg.inFront).toBe(2500)
+    // 100 of ante on top of the chips it bet.
+    expect(utg.contribution).toBe(2600)
+  })
+
+  it('counts those chips as dead', () => {
+    const spot = deriveSpot(threeBetPot(), BLINDS, 0, 25_000)
+    // Everything from seats that are out: UTG's 2,500 + its ante, the SB's
+    // 500 blind + ante, and an ante each from UTG+1, LJ, HJ and CO.
+    expect(spot.deadChips).toBe(2600 + 600 + 4 * 100)
+  })
+
+  it('takes the seat out of the hand', () => {
+    const spot = deriveSpot(threeBetPot(), BLINDS, 0, 25_000)
+    const utg = spot.seats.find((seat) => seat.position === 'UTG')!
+    expect(utg.isActive).toBe(false)
+    expect(spot.activeVillains.map((seat) => seat.position)).toEqual(['BTN'])
+  })
+
+  it('does not let the abandoned raise set the price', () => {
+    // A seat that folded to a re-raise is not the bet anyone has to match,
+    // even when its number is the largest on the table.
+    const spot = deriveSpot(
+      table({
+        UTG: { action: 'raiseFold', committed: 9000 },
+        BTN: { action: 'raise', committed: 7000 },
+        BB: { isHero: true },
+      }),
+      BLINDS,
+      0,
+      25_000,
+    )
+    expect(spot.currentBet).toBe(7000)
+    expect(spot.heroCallAmount).toBe(6000)
+  })
+
+  it('offers a better price than the same seat folding for nothing', () => {
+    const left = deriveSpot(threeBetPot(), BLINDS, 0, 25_000)
+    const plain = deriveSpot(
+      table({ BTN: { action: 'raise', committed: 7000 }, BB: { isHero: true } }),
+      BLINDS,
+      0,
+      25_000,
+    )
+    expect(left.heroCallAmount).toBe(plain.heroCallAmount)
+    expect(left.finalPot).toBe(plain.finalPot + 2500)
+    expect(left.requiredEquityPct).toBeLessThan(plain.requiredEquityPct)
+  })
+
+  it('still floors at the blind the seat was forced to post', () => {
+    const spot = deriveSpot(
+      table({ SB: { action: 'raiseFold' }, BTN: { action: 'raise', committed: 7000 }, BB: { isHero: true } }),
+      BLINDS,
+      0,
+      25_000,
+    )
+    expect(spot.seats.find((seat) => seat.position === 'SB')!.inFront).toBe(500)
+  })
+})
+
 describe('a tournament without bounties', () => {
   // The panel turns bounties off by passing no buy-in, so this is the whole
   // switch: nothing can be priced, and the bar is plain pot odds again.
