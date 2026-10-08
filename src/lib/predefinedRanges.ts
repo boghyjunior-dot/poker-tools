@@ -395,10 +395,12 @@ export const SPOT_RANGES: PredefinedRange[] = [
     label: 'Wo Top Range Resteal BB in ICM',
     category: 'Spots',
     description:
-      'Restealing from the big blind under ICM, with the top of the range held back for a slower line — small and middling pairs, wheel aces suited and offsuit for the blocker, suited broadways and the big offsuit aces (168 combos · 12.7%)',
+      'Restealing from the big blind under ICM, with the top of the range held back for a slower line — small and middling pairs, every suited ace short of AKs, suited broadways, the wheel aces offsuit for the blocker and the big offsuit aces (196 combos · 14.8%)',
+    // Suited aces are spelled out rather than written A2s+, which would reach
+    // AKs: the hand the name says is being held back.
     tokens: [
       '22', '33', '44', '55', '66', '77', '88', '99',
-      'A2s', 'A3s', 'A4s', 'A5s',
+      'A2s', 'A3s', 'A4s', 'A5s', 'A6s', 'A7s', 'A8s', 'A9s', 'ATs', 'AJs', 'AQs',
       'JTs', 'QTs', 'KTs', 'KJs', 'KQs',
       'A2o', 'A3o', 'A4o', 'A5o',
       'AJo', 'AQo', 'AKo',

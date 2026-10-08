@@ -54,7 +54,7 @@ describe('the BB resteal range under ICM', () => {
     expect([...hands].sort()).toEqual(
       [
         '22', '33', '44', '55', '66', '77', '88', '99',
-        'A2s', 'A3s', 'A4s', 'A5s',
+        'A2s', 'A3s', 'A4s', 'A5s', 'A6s', 'A7s', 'A8s', 'A9s', 'ATs', 'AJs', 'AQs',
         'JTs', 'QTs', 'KTs', 'KJs', 'KQs',
         'A2o', 'A3o', 'A4o', 'A5o',
         'AJo', 'AQo', 'AKo',
@@ -62,16 +62,25 @@ describe('the BB resteal range under ICM', () => {
     )
   })
 
-  it('comes to 168 combos, a shade under 13% of the deck', () => {
+  it('comes to 196 combos, a shade under 15% of the deck', () => {
     const combos = countRangeCombos(parsePredefinedRange(range))
-    // 8 pairs at 6, 9 suited at 4, 7 offsuit at 12.
-    expect(combos).toBe(8 * 6 + 9 * 4 + 7 * 12)
-    expect(combos).toBe(168)
-    expect((combos / TOTAL_DECK_COMBOS) * 100).toBeCloseTo(12.7, 1)
+    // 8 pairs at 6, 16 suited at 4, 7 offsuit at 12.
+    expect(combos).toBe(8 * 6 + 16 * 4 + 7 * 12)
+    expect(combos).toBe(196)
+    expect((combos / TOTAL_DECK_COMBOS) * 100).toBeCloseTo(14.8, 1)
+  })
+
+  it('takes every suited ace but stops short of AKs', () => {
+    // A2s+ would have been shorter and would have swept up the one hand the
+    // name says is being held back.
+    for (const ace of ['A2s', 'A5s', 'A9s', 'ATs', 'AJs', 'AQs']) {
+      expect(hands.has(ace), ace).toBe(true)
+    }
+    expect(hands.has('AKs')).toBe(false)
   })
 
   it('leaves out the top of the range, which is the point of the name', () => {
-    for (const premium of ['AA', 'KK', 'QQ', 'JJ', 'TT', 'AKs', 'AQs']) {
+    for (const premium of ['AA', 'KK', 'QQ', 'JJ', 'TT', 'AKs']) {
       expect(hands.has(premium), premium).toBe(false)
     }
   })
