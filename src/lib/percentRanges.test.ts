@@ -3,6 +3,7 @@ import { TOTAL_DECK_COMBOS } from './matrix'
 import {
   EQUITY_PRESET_RANGES,
   PERCENT_RANGES,
+  SPOT_RANGES,
   countRangeCombos,
   expandRangeTokens,
   parsePredefinedRange,
@@ -43,10 +44,11 @@ describe('top-X% preset ranges', () => {
     }
   })
 
-  it('is the whole of what the equity calculator offers', () => {
+  it('leads the equity dropdown, with spots after it', () => {
+    expect(EQUITY_PRESET_RANGES.slice(0, PERCENT_RANGES.length)).toEqual(PERCENT_RANGES)
+    expect(EQUITY_PRESET_RANGES.slice(PERCENT_RANGES.length)).toEqual(SPOT_RANGES)
     // The positional presets live on for the tools built around them, but a
     // range named for a position has no business on a seat that already has one.
-    expect(EQUITY_PRESET_RANGES).toEqual(PERCENT_RANGES)
     expect(EQUITY_PRESET_RANGES.some((range) => range.id.startsWith('40bb-'))).toBe(false)
   })
 

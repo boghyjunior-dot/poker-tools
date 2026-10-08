@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { EQUITY_PRESET_RANGES, parsePredefinedRange } from '../../lib/predefinedRanges'
+import { EQUITY_PRESET_CATEGORIES, EQUITY_PRESET_RANGES, parsePredefinedRange } from '../../lib/predefinedRanges'
 import {
   calculateEquity,
   formatMarginOfError,
@@ -627,13 +627,24 @@ function PresetSelect({ onLoad }: { onLoad: (id: string) => void }) {
       className="w-full rounded-md border border-slate-600 bg-slate-800 text-slate-200 text-xs px-2 py-1.5"
     >
       <option value="">Load preset range…</option>
-      {/* One ladder, so no grouping: an optgroup over a single category is a
-          heading for a list that has nothing to be distinguished from. */}
-      {EQUITY_PRESET_RANGES.map((range) => (
-        <option key={range.id} value={range.id} title={range.description}>
-          {range.label}
-        </option>
-      ))}
+      {/* Grouped only once there is more than one kind of thing in here: an
+          optgroup over a single category is a heading for a list that has
+          nothing to be distinguished from. */}
+      {EQUITY_PRESET_CATEGORIES.length > 1
+        ? EQUITY_PRESET_CATEGORIES.map((category) => (
+            <optgroup key={category} label={category}>
+              {EQUITY_PRESET_RANGES.filter((range) => range.category === category).map((range) => (
+                <option key={range.id} value={range.id} title={range.description}>
+                  {range.label}
+                </option>
+              ))}
+            </optgroup>
+          ))
+        : EQUITY_PRESET_RANGES.map((range) => (
+            <option key={range.id} value={range.id} title={range.description}>
+              {range.label}
+            </option>
+          ))}
     </select>
   )
 }

@@ -381,7 +381,33 @@ export const PERCENT_RANGES: PredefinedRange[] = [
 ]
 
 /**
- * Presets offered by the equity calculator: the top-X% ladder, nothing else.
+ * Ranges for a named spot rather than a slice off the top of the deck.
+ *
+ * A percentage is the strongest N% of hands; these are not that shape at all.
+ * A resteal is polarised — hands that want the pot now, plus the blockers that
+ * make it likelier nobody else has one — so it runs down into the small pairs
+ * and wheel aces while leaving out hands a percentage would have taken first.
+ * There is no ladder to put them on, so they sit in their own group.
+ */
+export const SPOT_RANGES: PredefinedRange[] = [
+  {
+    id: 'resteal-bb-icm',
+    label: 'Wo Top Range Resteal BB in ICM',
+    category: 'Spots',
+    description:
+      'Restealing from the big blind under ICM, with the top of the range held back for a slower line — small and middling pairs, wheel aces suited and offsuit for the blocker, suited broadways and the big offsuit aces (168 combos · 12.7%)',
+    tokens: [
+      '22', '33', '44', '55', '66', '77', '88', '99',
+      'A2s', 'A3s', 'A4s', 'A5s',
+      'JTs', 'QTs', 'KTs', 'KJs', 'KQs',
+      'A2o', 'A3o', 'A4o', 'A5o',
+      'AJo', 'AQo', 'AKo',
+    ],
+  },
+]
+
+/**
+ * Presets offered by the equity calculator: the top-X% ladder, plus spots.
  *
  * The positional ranges are still here for the tools built around them, but
  * they do not belong in this dropdown. A villain in this calculator is a seat
@@ -390,7 +416,12 @@ export const PERCENT_RANGES: PredefinedRange[] = [
  * seat) is a question about which one wins, and the answer never mattered. A
  * percentage is the one thing you can read off a seat without contradicting it.
  */
-export const EQUITY_PRESET_RANGES: PredefinedRange[] = PERCENT_RANGES
+export const EQUITY_PRESET_RANGES: PredefinedRange[] = [...PERCENT_RANGES, ...SPOT_RANGES]
+
+/** The categories in the equity dropdown, in the order they are offered. */
+export const EQUITY_PRESET_CATEGORIES: string[] = [
+  ...new Set(EQUITY_PRESET_RANGES.map((range) => range.category)),
+]
 
 export function getPredefinedRange(id: string): PredefinedRange | undefined {
   return PREDEFINED_RANGES.find((range) => range.id === id)

@@ -3,7 +3,7 @@ import { EquityMatrix } from './EquityMatrix'
 import { HoleCardPicker } from './HoleCardPicker'
 import { PokerTable } from './PokerTable'
 import { CallingRangeSection } from './CallingRangeSection'
-import { EQUITY_PRESET_RANGES, parsePredefinedRange } from '../../lib/predefinedRanges'
+import { EQUITY_PRESET_CATEGORIES, EQUITY_PRESET_RANGES, parsePredefinedRange } from '../../lib/predefinedRanges'
 import {
   ACCURACY_LEVELS,
   accuracyLevel,
@@ -849,10 +849,16 @@ export function TableSpotPanel({
                 className="rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1 text-xs text-slate-300 focus:outline-none"
               >
                 <option value="">{t('Load preset range…')}</option>
-                {EQUITY_PRESET_RANGES.map((preset) => (
-                  <option key={preset.id} value={preset.id} title={preset.description}>
-                    {preset.label}
-                  </option>
+                {EQUITY_PRESET_CATEGORIES.map((category) => (
+                  <optgroup key={category} label={t(category)}>
+                    {EQUITY_PRESET_RANGES.filter((preset) => preset.category === category).map(
+                      (preset) => (
+                        <option key={preset.id} value={preset.id} title={preset.description}>
+                          {preset.label}
+                        </option>
+                      ),
+                    )}
+                  </optgroup>
                 ))}
               </select>
               <span className="text-xs text-slate-500">
