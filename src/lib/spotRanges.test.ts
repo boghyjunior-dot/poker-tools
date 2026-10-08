@@ -55,19 +55,25 @@ describe('the BB resteal range under ICM', () => {
       [
         '22', '33', '44', '55', '66', '77', '88', '99',
         'A2s', 'A3s', 'A4s', 'A5s', 'A6s', 'A7s', 'A8s', 'A9s', 'ATs', 'AJs', 'AQs',
-        'JTs', 'QTs', 'KTs', 'KJs', 'KQs',
+        'JTs', 'QTs', 'QJs', 'KTs', 'KJs', 'KQs',
         'A2o', 'A3o', 'A4o', 'A5o',
         'AJo', 'AQo', 'AKo',
       ].sort(),
     )
   })
 
-  it('comes to 196 combos, a shade under 15% of the deck', () => {
+  it('comes to 200 combos, a shade over 15% of the deck', () => {
     const combos = countRangeCombos(parsePredefinedRange(range))
-    // 8 pairs at 6, 16 suited at 4, 7 offsuit at 12.
-    expect(combos).toBe(8 * 6 + 16 * 4 + 7 * 12)
-    expect(combos).toBe(196)
-    expect((combos / TOTAL_DECK_COMBOS) * 100).toBeCloseTo(14.8, 1)
+    // 8 pairs at 6, 17 suited at 4, 7 offsuit at 12.
+    expect(combos).toBe(8 * 6 + 17 * 4 + 7 * 12)
+    expect(combos).toBe(200)
+    expect((combos / TOTAL_DECK_COMBOS) * 100).toBeCloseTo(15.1, 1)
+  })
+
+  it('has the suited broadways whole, with no gap in the middle', () => {
+    for (const broadway of ['JTs', 'QTs', 'QJs', 'KTs', 'KJs', 'KQs']) {
+      expect(hands.has(broadway), broadway).toBe(true)
+    }
   })
 
   it('takes every suited ace but stops short of AKs', () => {
