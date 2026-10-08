@@ -1400,6 +1400,14 @@ export const ro: Dictionary = {
     "Bounty, când îl câștigi",
   "Calling is worth":
     "Call-ul valorează",
+  "Your equity":
+    "Echitatea ta",
+  "You need":
+    "Ai nevoie de",
+  "Too close":
+    "Prea aproape",
+  "The table has changed since this ran. Work it out again.":
+    "Masa s-a schimbat de când a rulat. Calculează din nou.",
   "chips won, less the call":
     "chips câștigați, minus call-ul",
   "A call breaks even when your share of the pot covers what you put in, so the bar is what you call divided by what the pot pays. A bounty is extra reward on exactly the branch where you win, so it joins the pot on the bottom of that fraction and pulls the bar down.":

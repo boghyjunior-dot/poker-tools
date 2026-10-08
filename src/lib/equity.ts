@@ -82,6 +82,31 @@ export function marginOfErrorForEquity(equityPct: number, iterations: number): n
   return Z_95 * Math.sqrt((p * (1 - p)) / iterations) * 100
 }
 
+export type CallVerdict = 'call' | 'fold' | 'tooClose'
+
+/**
+ * Call, fold, or not enough simulation to say.
+ *
+ * The decision comes from the expected value rather than from comparing the
+ * two percentages, because the EV already counts the bounty on the branch
+ * where it is actually won. Without one — no hand priced, no bounty — the
+ * comparison is all there is, and it says the same thing.
+ *
+ * The margin is what keeps this honest. A run is a sample, so calling on
+ * 38.1% against a bar of 38.0% at ±0.9 is inventing an edge out of noise:
+ * inside the margin there is no answer at this accuracy, and saying so is
+ * more use than a coin flip dressed as a verdict.
+ */
+export function callVerdict(
+  equityPct: number,
+  neededPct: number,
+  marginPct: number,
+  evChips: number | null,
+): CallVerdict {
+  if (Math.abs(equityPct - neededPct) <= Math.max(0, marginPct)) return 'tooClose'
+  return (evChips ?? equityPct - neededPct) >= 0 ? 'call' : 'fold'
+}
+
 export function formatMarginOfError(marginPct: number): string {
   if (marginPct >= 1) return `±${marginPct.toFixed(1)}%`
   return `±${marginPct.toFixed(2)}%`

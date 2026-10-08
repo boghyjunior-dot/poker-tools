@@ -8,6 +8,7 @@ import {
   ACCURACY_LEVELS,
   accuracyLevel,
   calculateEquity,
+  callVerdict,
   marginOfErrorForEquity,
   worstCaseMarginOfError,
   type EquityResult,
@@ -35,6 +36,13 @@ import {
   type SeatAction,
   type TableSize,
 } from '../../lib/tableSpot'
+
+const VERDICT_LABEL = { call: 'Call', fold: 'Fold', tooClose: 'Too close' } as const
+const VERDICT_TONE = {
+  call: 'text-emerald-400',
+  fold: 'text-red-400',
+  tooClose: 'text-amber-400',
+} as const
 
 /** Ordered the way a solver lists them: fold, then passive, then aggressive. */
 const ACTIONS: SeatAction[] = ['fold', 'call', 'raise', 'shove']
@@ -183,6 +191,8 @@ export function TableSpotPanel({
   const [accuracy, setAccuracy] = useState('normal')
   const [selected, setSelected] = useState(() => seatsForTable(8).length - 1)
   const [result, setResult] = useState<EquityResult | null>(null)
+  /** The bar the last run was measured against, and the table it ran on. */
+  const [snapshot, setSnapshot] = useState<{ needed: number; key: string } | null>(null)
   const [grid, setGrid] = useState<HandEquityGrid | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [running, setRunning] = useState(false)
@@ -377,6 +387,11 @@ export function TableSpotPanel({
   const run = () => {
     setError(null)
     setRunning(true)
+    // A result is a photograph of one table, so the bar it was measured
+    // against is taken with it. Reading today's required equity next to
+    // yesterday's simulated equity is how you get a verdict neither number
+    // supports, and the table goes on being edited after the run.
+    setSnapshot({ needed: spot.requiredEquityWithBountyPct, key: spotKey })
     setTimeout(() => {
       try {
         const hero = spot.hero
@@ -467,6 +482,40 @@ export function TableSpotPanel({
     </button>
   )
   const heroHandComplete = Boolean(spot.hero?.hand?.[0] && spot.hero?.hand?.[1])
+
+  /**
+   * Everything a run depends on, in one string.
+   *
+   * Compared against the copy taken when the run started, it says whether the
+   * table has moved underneath the answer. Cheap enough at eight seats, and
+   * cheaper than being wrong about whether a verdict still holds.
+   */
+  // Left unmemoized on purpose: the React Compiler caches it off the same
+  // inputs, and wrapping it by hand makes the compiler give up on the whole
+  // component, which costs far more than one stringify of eight seats.
+  const spotKey = JSON.stringify({ seats, blinds, accuracy, bounties })
+  const stale = snapshot !== null && snapshot.key !== spotKey
+
+  /**
+   * The headline: what hero's hand is worth against what it has to beat.
+   *
+   * The reading of it — what beats what, and how much of that is sampling
+   * noise — is `callVerdict`, so the rule can be tested without a browser.
+   */
+  const heroEquity = useMemo(() => {
+    const player = result?.players[0]
+    if (!result || !player || !snapshot) return null
+    const margin = marginOfErrorForEquity(player.equity, result.iterations)
+    const needed = snapshot.needed
+    const evChips = result.callEv ? result.callEv.evChips : null
+    return {
+      equity: player.equity,
+      margin,
+      needed,
+      evChips,
+      verdict: callVerdict(player.equity, needed, margin, evChips),
+    }
+  }, [result, snapshot])
   // A hand is what hero's own equity needs, not what the spot needs.
   const ready = spot.problems.length === 0
   const amount = (chips: number) => formatAmount(chips, blinds.bigBlind, view)
@@ -590,6 +639,71 @@ export function TableSpotPanel({
             </span>
           </div>
         </div>
+
+        {/* The answer, next to the cards it is about. The full breakdown is
+            still further down; this is the one line you came for, put where
+            you were looking when you pressed the button rather than a scroll
+            away at the bottom of the page. */}
+        {heroEquity && (
+          <div
+            className={`mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-md border px-3 py-2 ${
+              stale
+                ? 'border-slate-800 bg-slate-950/30 opacity-50'
+                : 'border-slate-800 bg-slate-950/50'
+            }`}
+          >
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-slate-500">
+                {t('Your equity')}
+              </p>
+              <p className="text-2xl font-bold tabular-nums text-white">
+                {heroEquity.equity.toFixed(1)}%
+                <span className="ml-1 text-[11px] font-normal text-slate-500">
+                  ±{heroEquity.margin.toFixed(1)}
+                </span>
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-slate-500">
+                {t('You need')}
+              </p>
+              <p className="text-2xl font-bold tabular-nums text-slate-400">
+                {heroEquity.needed.toFixed(1)}%
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-slate-500">
+                {t('Verdict')}
+              </p>
+              <p className={`text-2xl font-bold ${VERDICT_TONE[heroEquity.verdict]}`}>
+                {t(VERDICT_LABEL[heroEquity.verdict])}
+              </p>
+            </div>
+            {heroEquity.evChips !== null && (
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500">
+                  {t('Calling is worth')}
+                </p>
+                <p
+                  className={`text-2xl font-bold tabular-nums ${
+                    heroEquity.evChips >= 0 ? 'text-emerald-400' : 'text-red-400'
+                  }`}
+                >
+                  {heroEquity.evChips >= 0 ? '+' : ''}
+                  {amount(heroEquity.evChips)}
+                </p>
+              </div>
+            )}
+            {/* A verdict is a stronger claim than a chart, so when the table
+                has moved under it the whole strip dims and says so rather
+                than quietly going on being read. */}
+            {stale && (
+              <p className="basis-full text-[11px] text-amber-400">
+                {t('The table has changed since this ran. Work it out again.')}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Whatever is stopping the run, said next to the button that runs. */}
         {spot.problems.length > 0 && (

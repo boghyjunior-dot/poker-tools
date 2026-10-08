@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { cardToIndex } from './cards'
 import { evaluate } from './handEvaluator'
-import { ACCURACY_LEVELS, accuracyLevel, calculateEquity, formatMarginOfError, marginOfErrorForEquity, worstCaseMarginOfError } from './equity'
+import { ACCURACY_LEVELS, accuracyLevel, calculateEquity, callVerdict, formatMarginOfError, marginOfErrorForEquity, worstCaseMarginOfError } from './equity'
 import { cardFromRankSuit } from '../components/PlayingCard'
 import type { RankIndex } from '../types/poker'
 
@@ -38,6 +38,37 @@ describe('margin of error', () => {
 
   it('uses lower margin away from 50% equity', () => {
     expect(marginOfErrorForEquity(80, 10_000)).toBeLessThan(worstCaseMarginOfError(10_000))
+  })
+})
+
+describe('reading a result as a decision', () => {
+  it('calls when the equity clears the bar and folds when it does not', () => {
+    expect(callVerdict(52, 38, 0.3, 1200)).toBe('call')
+    expect(callVerdict(30, 38, 0.3, -900)).toBe('fold')
+  })
+
+  it('refuses to decide inside the margin of error', () => {
+    // 38.1% against a bar of 38.0% at ±0.9 is noise, not an edge.
+    expect(callVerdict(38.1, 38, 0.9, 5)).toBe('tooClose')
+    expect(callVerdict(37.5, 38, 0.9, -5)).toBe('tooClose')
+    // The same numbers at an accuracy that can tell them apart.
+    expect(callVerdict(38.1, 38, 0.05, 5)).toBe('call')
+  })
+
+  it('follows the money, not the percentages', () => {
+    // A bounty pays on the branch hero wins, so the EV can be positive while
+    // the equity sits under a bar drawn before the bounty was counted.
+    expect(callVerdict(41, 44, 0.3, 800)).toBe('call')
+    expect(callVerdict(46, 44, 0.3, -800)).toBe('fold')
+  })
+
+  it('falls back to the percentages when there is no EV to read', () => {
+    expect(callVerdict(41, 38, 0.3, null)).toBe('call')
+    expect(callVerdict(35, 38, 0.3, null)).toBe('fold')
+  })
+
+  it('treats breaking even exactly as a call', () => {
+    expect(callVerdict(44, 38, 0.3, 0)).toBe('call')
   })
 })
 
