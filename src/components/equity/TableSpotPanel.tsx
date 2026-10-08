@@ -736,7 +736,7 @@ export function TableSpotPanel({
               >
                 <option value="">{t('Load preset range…')}</option>
                 {EQUITY_PRESET_RANGES.map((preset) => (
-                  <option key={preset.id} value={preset.id}>
+                  <option key={preset.id} value={preset.id} title={preset.description}>
                     {preset.label}
                   </option>
                 ))}

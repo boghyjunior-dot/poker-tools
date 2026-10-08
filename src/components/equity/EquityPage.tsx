@@ -615,8 +615,6 @@ function ModeToggle({
 }
 
 function PresetSelect({ onLoad }: { onLoad: (id: string) => void }) {
-  const categories = [...new Set(EQUITY_PRESET_RANGES.map((range) => range.category))]
-
   return (
     <select
       defaultValue=""
@@ -629,14 +627,12 @@ function PresetSelect({ onLoad }: { onLoad: (id: string) => void }) {
       className="w-full rounded-md border border-slate-600 bg-slate-800 text-slate-200 text-xs px-2 py-1.5"
     >
       <option value="">Load preset range…</option>
-      {categories.map((category) => (
-        <optgroup key={category} label={category}>
-          {EQUITY_PRESET_RANGES.filter((range) => range.category === category).map((range) => (
-            <option key={range.id} value={range.id} title={range.description}>
-              {category === 'Top %' ? range.label : `${range.category} · ${range.label}`}
-            </option>
-          ))}
-        </optgroup>
+      {/* One ladder, so no grouping: an optgroup over a single category is a
+          heading for a list that has nothing to be distinguished from. */}
+      {EQUITY_PRESET_RANGES.map((range) => (
+        <option key={range.id} value={range.id} title={range.description}>
+          {range.label}
+        </option>
       ))}
     </select>
   )

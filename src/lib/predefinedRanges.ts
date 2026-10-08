@@ -324,10 +324,54 @@ export const PERCENT_RANGES: PredefinedRange[] = [
     ],
   },
   {
-    id: 'full-range',
-    label: 'Full range (100%)',
+    id: 'top-60',
+    label: 'Top 60%',
     category: 'Top %',
-    description: 'Every hand — all 169 cells, 1,326 combos (100%)',
+    description: 'Top 60% — every suited hand, offsuit kings and the better offsuit broadways (786 combos · 59.3%)',
+    tokens: [
+      '22+',
+      'A2s+', 'K2s+', 'Q2s+', 'J2s+', 'T2s+', '92s+', '82s+', '72s+', '62s+', '52s+', '42s+', '32s',
+      'A2o+', 'K2o+', 'Q8o+', 'J8o+', 'T8o+', '98o',
+    ],
+  },
+  {
+    id: 'top-70',
+    label: 'Top 70%',
+    category: 'Top %',
+    description: 'Top 70% — adds the offsuit queens and the offsuit connectors to 76o (930 combos · 70.1%)',
+    tokens: [
+      '22+',
+      'A2s+', 'K2s+', 'Q2s+', 'J2s+', 'T2s+', '92s+', '82s+', '72s+', '62s+', '52s+', '42s+', '32s',
+      'A2o+', 'K2o+', 'Q2o+', 'J6o+', 'T7o+', '97o+', '87o', '76o',
+    ],
+  },
+  {
+    id: 'top-80',
+    label: 'Top 80%',
+    category: 'Top %',
+    description: 'Top 80% — adds the offsuit jacks and most offsuit tens (1,062 combos · 80.1%)',
+    tokens: [
+      '22+',
+      'A2s+', 'K2s+', 'Q2s+', 'J2s+', 'T2s+', '92s+', '82s+', '72s+', '62s+', '52s+', '42s+', '32s',
+      'A2o+', 'K2o+', 'Q2o+', 'J2o+', 'T3o+', '95o+', '86o+', '76o',
+    ],
+  },
+  {
+    id: 'top-90',
+    label: 'Top 90%',
+    category: 'Top %',
+    description: 'Top 90% — everything but the weakest offsuit gappers (1,194 combos · 90.0%)',
+    tokens: [
+      '22+',
+      'A2s+', 'K2s+', 'Q2s+', 'J2s+', 'T2s+', '92s+', '82s+', '72s+', '62s+', '52s+', '42s+', '32s',
+      'A2o+', 'K2o+', 'Q2o+', 'J2o+', 'T2o+', '92o+', '82o+', '74o+', '65o',
+    ],
+  },
+  {
+    id: 'full-range',
+    label: 'Top 100%',
+    category: 'Top %',
+    description: 'Any two cards — all 169 cells, 1,326 combos (100%)',
     tokens: [
       '22+',
       'A2s+', 'K2s+', 'Q2s+', 'J2s+', 'T2s+', '92s+', '82s+', '72s+', '62s+', '52s+', '42s+', '32s',
@@ -336,8 +380,17 @@ export const PERCENT_RANGES: PredefinedRange[] = [
   },
 ]
 
-/** Presets offered by the equity calculator: top-X% ranges plus the positional ranges. */
-export const EQUITY_PRESET_RANGES: PredefinedRange[] = [...PERCENT_RANGES, ...PREDEFINED_RANGES]
+/**
+ * Presets offered by the equity calculator: the top-X% ladder, nothing else.
+ *
+ * The positional ranges are still here for the tools built around them, but
+ * they do not belong in this dropdown. A villain in this calculator is a seat
+ * at a table you have already described — its position is on the felt — so a
+ * preset carrying a second, unrelated position in its name ("vs HJ" on the CO
+ * seat) is a question about which one wins, and the answer never mattered. A
+ * percentage is the one thing you can read off a seat without contradicting it.
+ */
+export const EQUITY_PRESET_RANGES: PredefinedRange[] = PERCENT_RANGES
 
 export function getPredefinedRange(id: string): PredefinedRange | undefined {
   return PREDEFINED_RANGES.find((range) => range.id === id)

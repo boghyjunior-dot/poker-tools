@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { TOTAL_DECK_COMBOS } from './matrix'
 import {
+  EQUITY_PRESET_RANGES,
   PERCENT_RANGES,
   countRangeCombos,
   expandRangeTokens,
@@ -15,6 +16,10 @@ const NOMINAL: Record<string, number> = {
   'top-30': 30,
   'top-40': 40,
   'top-50': 50,
+  'top-60': 60,
+  'top-70': 70,
+  'top-80': 80,
+  'top-90': 90,
   'full-range': 100,
 }
 
@@ -35,6 +40,21 @@ describe('top-X% preset ranges', () => {
       const missing = [...inner].filter((hand) => !outer.has(hand))
       expect(missing, `${PERCENT_RANGES[i].label} drops ${missing.join(', ')}`).toEqual([])
       expect(outer.size).toBeGreaterThan(inner.size)
+    }
+  })
+
+  it('is the whole of what the equity calculator offers', () => {
+    // The positional presets live on for the tools built around them, but a
+    // range named for a position has no business on a seat that already has one.
+    expect(EQUITY_PRESET_RANGES).toEqual(PERCENT_RANGES)
+    expect(EQUITY_PRESET_RANGES.some((range) => range.id.startsWith('40bb-'))).toBe(false)
+  })
+
+  it('says its own combo count in the description the dropdown shows', () => {
+    // A stale number under a preset is worse than none, so it is checked.
+    for (const range of PERCENT_RANGES) {
+      const combos = countRangeCombos(parsePredefinedRange(range))
+      expect(range.description, range.label).toContain(combos.toLocaleString('en-US'))
     }
   })
 
