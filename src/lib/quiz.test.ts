@@ -215,6 +215,53 @@ describe('bundled deck file', () => {
   })
 })
 
+describe('ICM short-stack deck', () => {
+  const { decks } = parseQuizFile(JSON.stringify(bundled))
+  const deck = decks.find((d) => d.id === 'icm-short-stack')!
+
+  it('is in the bundle and reaches the reference list', () => {
+    expect(deck).toBeDefined()
+    // Reference mode is the browsable catalogue, and it shows heuristics only,
+    // so a deck whose lessons were all questions would never appear there.
+    expect(deck.cards.filter((card) => card.type === 'heuristic').length).toBeGreaterThanOrEqual(5)
+  })
+
+  it('asks as well as tells', () => {
+    expect(deck.cards.filter((card) => card.type === 'choice').length).toBeGreaterThanOrEqual(5)
+  })
+
+  it('covers every heuristic it was given', () => {
+    // One per line of the source note, so a card quietly dropped in an edit
+    // shows up here rather than as a gap nobody notices.
+    const text = deck.cards
+      .map((card) =>
+        card.type === 'heuristic'
+          ? `${card.title} ${card.body}`
+          : card.type === 'choice'
+            ? `${card.question} ${card.explanation ?? ''}`
+            : `${card.front} ${card.back}`,
+      )
+      .join(' ')
+      .toLowerCase()
+
+    for (const idea of [
+      'risk premium',
+      'fold equity',
+      'lojack',
+      'kqo',
+      'flat',
+    ]) {
+      expect(text, idea).toContain(idea)
+    }
+  })
+
+  it('tags every card for ICM so the filter finds them', () => {
+    for (const card of deck.cards) {
+      expect(card.tags, card.id).toContain('icm')
+    }
+  })
+})
+
 describe('combo maths deck', () => {
   const { decks } = parseQuizFile(JSON.stringify(bundled))
   const deck = decks.find((d) => d.id === 'combo-maths')!

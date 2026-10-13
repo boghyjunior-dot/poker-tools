@@ -931,6 +931,180 @@
           ]
         }
       ]
+    },
+    {
+      "id": "icm-short-stack",
+      "name": "ICM on a short stack",
+      "description": "How a 20–25BB button changes shape once the pay jumps bite: who you cover, what you still fold to, and where the pressure goes instead.",
+      "cards": [
+        {
+          "type": "heuristic",
+          "title": "Covering the blinds buys you a wider reshove",
+          "body": "Risk premium is the extra equity ICM asks for on top of chip EV, and it is owed to the players who can actually bust you. Cover the SB and the BB and that premium against them is close to nothing, so a 25BB button reshoving over an open can add the suited broadways back. The hands do not get better; the price of running them out does.",
+          "tags": [
+            "icm",
+            "mtt",
+            "preflop",
+            "3bet"
+          ]
+        },
+        {
+          "type": "heuristic",
+          "title": "No fold equity turns the jam into a showdown hand",
+          "body": "A suited broadway jam wants folds — that is most of where it makes its money. Against a range that has committed itself and is calling anyway, those folds are not coming, and the hand is left flipping at a price ICM has made worse. With no fold equity, jam the hands that are ahead when called instead: ATo and the rest of the strong offsuit aces, which dominate what calls rather than racing it.",
+          "tags": [
+            "icm",
+            "mtt",
+            "preflop",
+            "3bet"
+          ]
+        },
+        {
+          "type": "heuristic",
+          "title": "A big stack opens into the pressure, not away from it",
+          "body": "ICM taxes the stacks that can bust, which is everyone except you. Short stacks behind need far more than their share of equity to play back, so the open goes wider the less they can do about it — around 5% wider from the lojack with a big stack than the same seat plays off the bubble.",
+          "tags": [
+            "icm",
+            "mtt",
+            "preflop",
+            "opening"
+          ]
+        },
+        {
+          "type": "heuristic",
+          "title": "KQo is a non-all-in 3-bet on a short button",
+          "body": "On a short-stacked button under ICM, KQo is a 3-bet that stops short of all in. It blocks the KK, QQ, AQ and AK end of the continuing range, which is exactly the part that punishes a 3-bet, and it is a hand that flats badly: offsuit, dominated by what calls, and playing a pot in which it rarely has the initiative. Pressure is the better use of it.",
+          "tags": [
+            "icm",
+            "mtt",
+            "preflop",
+            "3bet"
+          ]
+        },
+        {
+          "type": "heuristic",
+          "title": "At 20BB on the button, flatting mostly stops",
+          "body": "In position on the button at 20BB or less under ICM, the calling range nearly empties. A flat invites the blinds in behind at a stack depth with no room to outplay anyone, and it keeps alive exactly the ICM disasters you are being paid to avoid. The hand either has enough to 3-bet or it folds.",
+          "tags": [
+            "icm",
+            "mtt",
+            "preflop",
+            "bubble"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "What does covering the blinds do to your risk premium against them?",
+          "back": "Takes it near zero — they cannot bust you, so the reshove widens (suited broadways come back in)",
+          "tags": [
+            "icm",
+            "mtt",
+            "preflop",
+            "3bet"
+          ]
+        },
+        {
+          "type": "flashcard",
+          "front": "Roughly how much wider does a big stack open the lojack under ICM?",
+          "back": "About 5% wider than the same seat off the bubble",
+          "tags": [
+            "icm",
+            "mtt",
+            "preflop",
+            "opening"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "You are 25BB on the button, covering both blinds, facing an open. How does that change your reshove?",
+          "options": [
+            "Widen it — your risk premium against the blinds is near zero, so suited broadways come back in",
+            "Tighten it — covering means you have more to lose",
+            "Leave it alone, since covering only matters at showdown",
+            "Replace the jam with a flat, to keep the pot small"
+          ],
+          "answer": "Widen it — your risk premium against the blinds is near zero, so suited broadways come back in",
+          "explanation": "Risk premium is owed to the players who can bust you. Covering the SB and BB means they cannot, so ICM stops charging you against them and the jam widens back toward chip EV.",
+          "tags": [
+            "icm",
+            "mtt",
+            "preflop",
+            "3bet"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "Jamming a short stack into a range that is never folding — which hand do you want?",
+          "options": [
+            "ATo, which is ahead of what calls",
+            "JTs, which flops well",
+            "KQs, for the blockers",
+            "It makes no difference once the money is in"
+          ],
+          "answer": "ATo, which is ahead of what calls",
+          "explanation": "Suited broadways earn most of their value from folds. With no fold equity left, the jam is a showdown, so the hand that dominates the calling range beats the hand that merely flops well.",
+          "tags": [
+            "icm",
+            "mtt",
+            "preflop",
+            "3bet"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "On the bubble with a big stack, what happens to your opening range in the lojack?",
+          "options": [
+            "It widens by roughly 5%",
+            "It tightens by roughly 5%",
+            "It stays where it is — position rules do not move with ICM",
+            "It narrows to premiums only"
+          ],
+          "answer": "It widens by roughly 5%",
+          "explanation": "ICM charges the stacks that can be eliminated, and a big stack is not one of them. The seats behind need far more equity than usual to fight back, so the open gets wider rather than more careful.",
+          "tags": [
+            "icm",
+            "mtt",
+            "preflop",
+            "opening"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "Short-stacked button under ICM, KQo facing an open. What is it?",
+          "options": [
+            "A 3-bet, but not all in",
+            "A flat — it plays fine in position",
+            "A jam, for maximum fold equity",
+            "A fold at any stack depth"
+          ],
+          "answer": "A 3-bet, but not all in",
+          "explanation": "KQo blocks the KK, QQ, AQ and AK end of the continuing range, and it flats badly — offsuit, dominated by what calls, rarely holding the initiative. The non-all-in 3-bet uses the blockers without committing the stack.",
+          "tags": [
+            "icm",
+            "mtt",
+            "preflop",
+            "3bet"
+          ]
+        },
+        {
+          "type": "choice",
+          "question": "At 20BB on the button under ICM, what happens to your flatting range?",
+          "options": [
+            "It nearly disappears — hands either 3-bet or fold",
+            "It widens, since position is worth more when shallow",
+            "It stays the same as at 40BB",
+            "It replaces the 3-betting range entirely"
+          ],
+          "answer": "It nearly disappears — hands either 3-bet or fold",
+          "explanation": "A flat at 20BB invites the blinds in behind with no room left to outplay anyone, and keeps alive the eliminations ICM pays you to dodge. The hand is either good enough to 3-bet or it goes.",
+          "tags": [
+            "icm",
+            "mtt",
+            "preflop",
+            "bubble"
+          ]
+        }
+      ]
     }
   ]
 }
