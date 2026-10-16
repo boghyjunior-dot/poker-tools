@@ -44,9 +44,12 @@ describe('top-X% preset ranges', () => {
     }
   })
 
-  it('leads the equity dropdown, with spots after it', () => {
+  it('leads the equity dropdown, with the named ranges after it', () => {
     expect(EQUITY_PRESET_RANGES.slice(0, PERCENT_RANGES.length)).toEqual(PERCENT_RANGES)
-    expect(EQUITY_PRESET_RANGES.slice(PERCENT_RANGES.length)).toEqual(SPOT_RANGES)
+    // Only that the spots follow the ladder — not that they end the list, or
+    // every new section would break a test that is not about it.
+    expect(EQUITY_PRESET_RANGES.slice(PERCENT_RANGES.length, PERCENT_RANGES.length + SPOT_RANGES.length))
+      .toEqual(SPOT_RANGES)
     // The positional presets live on for the tools built around them, but a
     // range named for a position has no business on a seat that already has one.
     expect(EQUITY_PRESET_RANGES.some((range) => range.id.startsWith('40bb-'))).toBe(false)

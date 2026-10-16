@@ -23,7 +23,11 @@ describe('spot ranges', () => {
   })
 
   it('offers them under their own heading, after the percentages', () => {
-    expect(EQUITY_PRESET_CATEGORIES).toEqual(['Top %', 'Spots'])
+    // Where 'Spots' sits relative to 'Top %', not what else is in the list.
+    expect(EQUITY_PRESET_CATEGORIES).toContain('Spots')
+    expect(EQUITY_PRESET_CATEGORIES.indexOf('Spots')).toBeGreaterThan(
+      EQUITY_PRESET_CATEGORIES.indexOf('Top %'),
+    )
   })
 
   it('quotes its real combo count in the description', () => {

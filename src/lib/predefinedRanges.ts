@@ -409,6 +409,88 @@ export const SPOT_RANGES: PredefinedRange[] = [
 ]
 
 /**
+ * Ranges built around a premium core: the pairs and big aces, widened by step.
+ *
+ * Seven of them are one ladder — QQ+/AKo loosened a pair and a broadway at a
+ * time down to 66+/ATs+ — so each is a strict superset of the one above it and
+ * picking the next one down is a deliberate loosening rather than a different
+ * idea. The three named by position are the same thought at a table: what the
+ * cutoff or the small blind keeps going with.
+ */
+export const PREMIUM_RANGES: PredefinedRange[] = [
+  {
+    id: 'prem-co-vs-hj-mp',
+    label: 'CO vs HJ, MP',
+    category: 'W/ Premium',
+    description: 'Cutoff continuing against a hijack or middle-position open (166 combos · 12.5%)',
+    tokens: ['44+', 'A7s+', 'KTs+', 'ATo+', 'KQo'],
+  },
+  {
+    id: 'prem-sb-vs-bu',
+    label: 'SB vs BU',
+    category: 'W/ Premium',
+    description: 'Small blind against a button open (270 combos · 20.4%)',
+    tokens: ['22+', 'A2s+', 'KTs+', 'QTs+', 'JTs', 'A7o+', 'A5o', 'KJo+'],
+  },
+  {
+    id: 'prem-qq-ako',
+    label: 'QQ+ / AKo',
+    category: 'W/ Premium',
+    description: 'QQ+ with ace-king both ways (34 combos · 2.6%)',
+    tokens: ['QQ+', 'AKs', 'AKo'],
+  },
+  {
+    id: 'prem-jj-ako',
+    label: 'JJ+ / AKo',
+    category: 'W/ Premium',
+    description: 'JJ+ with ace-king both ways (40 combos · 3.0%)',
+    tokens: ['JJ+', 'AKs', 'AKo'],
+  },
+  {
+    id: 'prem-tt-aqo',
+    label: 'TT+ / AQo+',
+    category: 'W/ Premium',
+    description: 'TT+ with AQs+ and AQo+ (62 combos · 4.7%)',
+    tokens: ['TT+', 'AQs+', 'AQo+'],
+  },
+  {
+    id: 'prem-99-aqo',
+    label: '99+ / AQo+',
+    category: 'W/ Premium',
+    description: '99+ with AQs+ and AQo+ (68 combos · 5.1%)',
+    tokens: ['99+', 'AQs+', 'AQo+'],
+  },
+  {
+    id: 'prem-88-ajs',
+    label: '88+ / AJs+',
+    category: 'W/ Premium',
+    description: '88+ with AJs+ and AQo+ (78 combos · 5.9%)',
+    tokens: ['88+', 'AJs+', 'AQo+'],
+  },
+  {
+    id: 'prem-77-ajo',
+    label: '77+ / AJo+',
+    category: 'W/ Premium',
+    description: '77+ with AJs+ and AJo+ (96 combos · 7.2%)',
+    tokens: ['77+', 'AJs+', 'AJo+'],
+  },
+  {
+    id: 'prem-66-ats',
+    label: '66+ / ATs+',
+    category: 'W/ Premium',
+    description: '66+ with ATs+, KQs and AJo+ (110 combos · 8.3%)',
+    tokens: ['66+', 'ATs+', 'KQs', 'AJo+'],
+  },
+  {
+    id: 'prem-sb-vs-open-covering',
+    label: 'SB vs open, covering',
+    category: 'W/ Premium',
+    description: 'Small blind against an open, with the opener covered (172 combos · 13.0%)',
+    tokens: ['55+', 'A8s+', 'A5s', 'KTs+', 'QTs+', 'JTs', 'ATo+', 'KQo'],
+  },
+]
+
+/**
  * Presets offered by the equity calculator: the top-X% ladder, plus spots.
  *
  * The positional ranges are still here for the tools built around them, but
@@ -418,7 +500,11 @@ export const SPOT_RANGES: PredefinedRange[] = [
  * seat) is a question about which one wins, and the answer never mattered. A
  * percentage is the one thing you can read off a seat without contradicting it.
  */
-export const EQUITY_PRESET_RANGES: PredefinedRange[] = [...PERCENT_RANGES, ...SPOT_RANGES]
+export const EQUITY_PRESET_RANGES: PredefinedRange[] = [
+  ...PERCENT_RANGES,
+  ...SPOT_RANGES,
+  ...PREMIUM_RANGES,
+]
 
 /** The categories in the equity dropdown, in the order they are offered. */
 export const EQUITY_PRESET_CATEGORIES: string[] = [
