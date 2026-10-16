@@ -197,6 +197,25 @@ export function newSeat(position: Position, stack: number, bountyAmount = 0): Se
 }
 
 /**
+ * Empty the table of action, and of nothing else.
+ *
+ * The table is two things wearing one shape: a lineup — who is sitting there,
+ * how deep, carrying what bounty — and a hand played out on it. Setting a new
+ * hand up with the same lineup should not mean typing the stacks back in, so
+ * this clears only the second: actions, the chips they put in, and the record
+ * of having spoken. Stacks, bounties, ranges, hero's cards and which seat is
+ * hero all survive, because none of them is something a seat did.
+ */
+export function clearActions(seats: Seat[]): Seat[] {
+  return seats.map((seat) => ({
+    ...seat,
+    action: 'fold' as const,
+    committed: null,
+    acted: false,
+  }))
+}
+
+/**
  * Settle every seat that acts before this one.
  *
  * Preflop runs round the table once, so naming a seat's action says something

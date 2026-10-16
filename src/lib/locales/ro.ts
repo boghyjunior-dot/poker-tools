@@ -1406,6 +1406,8 @@ export const ro: Dictionary = {
     "Ai nevoie de",
   "Too close":
     "Prea aproape",
+  "Reset actions":
+    "Resetează acțiunile",
   "Spots":
     "Situații",
   "The table has changed since this ran. Work it out again.":

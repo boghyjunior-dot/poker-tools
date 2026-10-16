@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   anteOf,
+  clearActions,
   defaultBounty,
   deriveSpot,
   formatAmount,
@@ -189,6 +190,58 @@ describe('bounties change the bar', () => {
       25_000,
     )
     expect(spot.capturableBountyChips).toBe(0)
+  })
+})
+
+describe('clearing the action off a table', () => {
+  const played = () =>
+    table({
+      UTG: { action: 'raise', committed: 2500, acted: true, range: { '0-0': 100 } },
+      CO: { action: 'call', acted: true },
+      BTN: { action: 'shove', acted: true, bountyAmount: 7.5 },
+      SB: { action: 'fold', committed: 500, acted: true },
+      BB: { isHero: true, committed: 4000, hand: [1, 2] as never },
+    })
+
+  it('leaves every seat unspoken for', () => {
+    for (const seat of clearActions(played())) {
+      expect(seat.action, seat.position).toBe('fold')
+      expect(seat.committed, seat.position).toBeNull()
+      expect(seat.acted, seat.position).toBe(false)
+    }
+  })
+
+  it('takes hero down with it, chips and all', () => {
+    // Hero has no action to clear, but the chips in front are hero's share of
+    // the hand that just happened, so they go too.
+    const hero = clearActions(played()).find((seat) => seat.isHero)!
+    expect(hero.committed).toBeNull()
+  })
+
+  it('keeps the lineup: stacks, bounties, ranges, cards and whose seat is whose', () => {
+    const before = played()
+    const after = clearActions(before)
+    for (let i = 0; i < before.length; i += 1) {
+      expect(after[i].stack, before[i].position).toBe(before[i].stack)
+      expect(after[i].bountyAmount, before[i].position).toBe(before[i].bountyAmount)
+      expect(after[i].range, before[i].position).toEqual(before[i].range)
+      expect(after[i].isHero, before[i].position).toBe(before[i].isHero)
+      expect(after[i].hand, before[i].position).toEqual(before[i].hand)
+    }
+  })
+
+  it('does not touch the seats it was given', () => {
+    const before = played()
+    const snapshot = JSON.stringify(before)
+    clearActions(before)
+    expect(JSON.stringify(before)).toBe(snapshot)
+  })
+
+  it('leaves a pot of nothing but blinds and antes behind', () => {
+    const spot = deriveSpot(clearActions(played()), BLINDS, 0, 25_000)
+    // Eight antes, the small blind and the big blind, and no bet anywhere.
+    expect(spot.potBeforeCall).toBe(8 * 100 + 500 + 1000)
+    expect(spot.currentBet).toBe(BLINDS.bigBlind)
   })
 })
 

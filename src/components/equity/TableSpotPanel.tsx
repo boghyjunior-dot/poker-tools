@@ -22,6 +22,7 @@ import { cellKey, type BoardCard, type RankIndex } from '../../types/poker'
 import {
   ANTE_OPTIONS,
   anteOf,
+  clearActions,
   defaultBounty,
   deriveSpot,
   formatAmount,
@@ -597,9 +598,23 @@ export function TableSpotPanel({
           bounties={bounties}
         />
 
-        <p className="mt-1 text-center text-[11px] text-slate-500">
-          {t('Click a seat to edit it. Double-click to make it yours.')}
-        </p>
+        <div className="mt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+          <p className="text-[11px] text-slate-500">
+            {t('Click a seat to edit it. Double-click to make it yours.')}
+          </p>
+          {/* Only once there is something to undo. A reset on an empty table
+              is a button that does nothing, sitting where you have to read it
+              every time you set a hand up. */}
+          {seats.some((seat) => seat.acted || seat.committed !== null) && (
+            <button
+              type="button"
+              onClick={() => setSeats(clearActions)}
+              className="rounded-md border border-slate-700 px-2.5 py-1 text-[11px] font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200"
+            >
+              {t('Reset actions')}
+            </button>
+          )}
+        </div>
 
         <div className="mt-3 flex flex-wrap items-end gap-x-6 gap-y-3">
           {heroIndex >= 0 && (
