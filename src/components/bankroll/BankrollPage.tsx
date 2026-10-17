@@ -25,10 +25,10 @@ interface FormState {
 
 const DEFAULTS: FormState = {
   bankroll: '5000',
-  roiPct: '10',
+  roiPct: '20',
   fieldSize: '1000',
   itmPct: '15',
-  feePct: '10',
+  feePct: '8',
   tournaments: '500',
   samples: '2000',
   currentBuyIn: '22',
