@@ -200,7 +200,12 @@ describe('simulateVariance', () => {
     expect(stats.worstMaxDrawdown).toBeGreaterThanOrEqual(stats.avgMaxDrawdown)
   })
 
-  it('clamps absurd inputs instead of hanging', () => {
+  // The clamps are 5,000 samples over 20,000 tournaments, so proving they
+  // hold means actually running a hundred million of them — a couple of
+  // seconds here and more than the default five on a slower CI runner. The
+  // test is heavy on purpose; the timeout should say so rather than make the
+  // build flaky.
+  it('clamps absurd inputs instead of hanging', { timeout: 30_000 }, () => {
     const result = simulateVariance({ ...baseConfig, tournaments: 1e9, samples: 1e9 })
     expect(Number.isFinite(result.stats.expectedProfit)).toBe(true)
     expect(result.finals.length).toBeLessThanOrEqual(5000)
