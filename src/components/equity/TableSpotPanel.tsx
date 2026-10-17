@@ -287,15 +287,18 @@ export function TableSpotPanel({
 
   /**
    * The all-in shortcut on a seat is only half an instruction — a shove
-   * without a range prices nothing. So pressing it sets the action, selects
-   * the seat, and carries the eye down to where the range gets chosen.
+   * without a range prices nothing — so pressing it also puts the cursor on
+   * the range chooser.
+   *
+   * It used to scroll to the editor at the bottom of the page to find one.
+   * Now the chooser sits under the table, so the cursor moves and the view
+   * does not: the seat you just named is still in front of you, and so is
+   * the button that works the spot out.
    */
-  const editorRef = useRef<HTMLElement | null>(null)
   const presetRef = useRef<HTMLSelectElement | null>(null)
   const [rangeJump, setRangeJump] = useState(0)
   useEffect(() => {
     if (rangeJump === 0) return
-    editorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     presetRef.current?.focus({ preventScroll: true })
   }, [rangeJump])
 
@@ -482,6 +485,41 @@ export function TableSpotPanel({
       {running ? t('Running…') : t('Work out the equity')}
     </button>
   )
+  /**
+   * The preset list, wherever it is needed.
+   *
+   * One definition rendered twice: beside the range it edits, and up by the
+   * table, where pressing All-in on a seat leaves your eyes. Picking the
+   * villain's range is the next thing you do after naming their action, and
+   * it should not cost a scroll to the bottom of the page to do it.
+   */
+  const presetPicker = (ref?: React.Ref<HTMLSelectElement>) => (
+    <select
+      ref={ref}
+      value=""
+      aria-label={t('Load preset range…')}
+      onChange={(event) => {
+        const preset = EQUITY_PRESET_RANGES.find((item) => item.id === event.target.value)
+        if (preset) patch(selected, { range: parsePredefinedRange(preset) as RangeCellStates })
+      }}
+      className="rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1 text-xs text-slate-300 focus:outline-none"
+    >
+      <option value="">{t('Load preset range…')}</option>
+      {EQUITY_PRESET_CATEGORIES.map((category) => (
+        <optgroup key={category} label={t(category)}>
+          {EQUITY_PRESET_RANGES.filter((preset) => preset.category === category).map((preset) => (
+            <option key={preset.id} value={preset.id} title={preset.description}>
+              {preset.label}
+            </option>
+          ))}
+        </optgroup>
+      ))}
+    </select>
+  )
+
+  /** A range is only meaningful on a villain who is still in the hand. */
+  const seatWantsRange = !seat.isHero && seat.action !== 'fold'
+
   const heroHandComplete = Boolean(spot.hero?.hand?.[0] && spot.hero?.hand?.[1])
 
   /**
@@ -626,6 +664,19 @@ export function TableSpotPanel({
                 cards={seats[heroIndex].hand ?? [null, null]}
                 onChange={(cards) => patch(heroIndex, { hand: cards })}
               />
+            </div>
+          )}
+          {/* Only for a seat that has an action and so needs a range. On a
+              table nobody has acted on there is nothing for it to set. */}
+          {seatWantsRange && (
+            <div className="flex flex-col gap-1 pb-1">
+              <span className="text-[10px] uppercase tracking-wider text-slate-500">
+                {t('{position} range', { position: seat.position })}
+              </span>
+              {presetPicker(presetRef)}
+              <span className="text-[10px] text-slate-500">
+                {t('{n} combos', { n: countRangeCombosFromStates(seat.range) })}
+              </span>
             </div>
           )}
           <label className="flex flex-col gap-1 pb-1">
@@ -789,7 +840,7 @@ export function TableSpotPanel({
         )}
       </section>
 
-      <section ref={editorRef} className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+      <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-semibold text-white">
             {seat.isHero ? t('You — {position}', { position: seat.position }) : seat.position}
@@ -854,28 +905,7 @@ export function TableSpotPanel({
         {!seat.isHero && seat.action !== 'fold' && (
           <div className="mt-3">
             <div className="mb-2 flex flex-wrap items-center gap-2">
-              <select
-                ref={presetRef}
-                value=""
-                onChange={(event) => {
-                  const preset = EQUITY_PRESET_RANGES.find((r) => r.id === event.target.value)
-                  if (preset) patch(selected, { range: parsePredefinedRange(preset) as RangeCellStates })
-                }}
-                className="rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1 text-xs text-slate-300 focus:outline-none"
-              >
-                <option value="">{t('Load preset range…')}</option>
-                {EQUITY_PRESET_CATEGORIES.map((category) => (
-                  <optgroup key={category} label={t(category)}>
-                    {EQUITY_PRESET_RANGES.filter((preset) => preset.category === category).map(
-                      (preset) => (
-                        <option key={preset.id} value={preset.id} title={preset.description}>
-                          {preset.label}
-                        </option>
-                      ),
-                    )}
-                  </optgroup>
-                ))}
-              </select>
+              {presetPicker()}
               <span className="text-xs text-slate-500">
                 {t('{n} combos', { n: countRangeCombosFromStates(seat.range) })}
               </span>
