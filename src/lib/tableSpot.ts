@@ -107,10 +107,11 @@ export interface Seat {
  * The ante a structure charges each seat, as a share of the big blind.
  *
  * Ten per cent is the common default. An eight-handed table at 12.5% puts
- * exactly one big blind of antes in the middle, which is the other structure
- * worth having to hand.
+ * exactly one big blind of antes in the middle. Twenty is the turbo and
+ * hyper structure, where the dead money alone is worth opening for: eight
+ * seats put in 1.6 big blinds before anybody has a hand.
  */
-export const ANTE_OPTIONS = [0.1, 0.125] as const
+export const ANTE_OPTIONS = [0.1, 0.125, 0.2] as const
 export type AntePct = (typeof ANTE_OPTIONS)[number]
 
 /**

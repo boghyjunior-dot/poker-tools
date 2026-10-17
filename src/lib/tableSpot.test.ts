@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  ANTE_OPTIONS,
   anteOf,
   clearActions,
   defaultBounty,
@@ -43,6 +44,29 @@ describe('one number describes the level', () => {
   it('puts one big blind of antes in the middle at 12.5% eight-handed', () => {
     // Which is the whole reason that option is worth having.
     expect(anteOf({ bigBlind: 1000, antePct: 0.125 }) * 8).toBe(1000)
+  })
+
+  it('offers the turbo structure as well as the two standard ones', () => {
+    expect([...ANTE_OPTIONS]).toEqual([0.1, 0.125, 0.2])
+    expect(anteOf({ bigBlind: 1000, antePct: 0.2 })).toBe(200)
+    // Eight seats at a fifth of a blind each: 1.6BB dead before the action.
+    expect(anteOf({ bigBlind: 1000, antePct: 0.2 }) * 8).toBe(1600)
+  })
+
+  it('shortens the price of a call as the ante grows', () => {
+    // More dead money in the middle, same bet to match, so the bar drops.
+    const bars = ANTE_OPTIONS.map(
+      (antePct) =>
+        deriveSpot(
+          table({ BTN: { action: 'shove', stack: 12_000 }, BB: { isHero: true, stack: 30_000 } }),
+          { bigBlind: 1000, antePct },
+          0,
+          25_000,
+        ).requiredEquityPct,
+    )
+    for (let i = 1; i < bars.length; i += 1) {
+      expect(bars[i], `${ANTE_OPTIONS[i]}`).toBeLessThan(bars[i - 1])
+    }
   })
 })
 
