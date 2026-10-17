@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
+import { startAlarm } from '../../lib/alarmSound'
 import { Footer } from '../Footer'
 import { formatMoney } from '../../lib/formatNumber'
 import { FEATURE_SESSION_PUBLISHED, SESSION_VARIABLE } from '../../lib/featureFlags'
@@ -44,30 +45,6 @@ const STATUS_STYLE = {
   lateReg: { chip: 'bg-amber-900/60 text-amber-300', row: 'border-amber-900/50' },
   closed: { chip: 'bg-slate-900 text-slate-600', row: 'border-slate-900' },
 } as const
-
-/** A short beep, for when notifications are blocked or the tab is in front. */
-function beep() {
-  try {
-    const Ctx =
-      window.AudioContext ??
-      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-    if (!Ctx) return
-    const ctx = new Ctx()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.type = 'sine'
-    osc.frequency.value = 880
-    gain.gain.setValueAtTime(0.0001, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.02)
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6)
-    osc.connect(gain).connect(ctx.destination)
-    osc.start()
-    osc.stop(ctx.currentTime + 0.62)
-    osc.onended = () => void ctx.close()
-  } catch {
-    // No audio available — the on-screen banner still fires.
-  }
-}
 
 /** A clearable number cell in the schedule table. */
 function NumberCell({
@@ -156,6 +133,8 @@ export function SchedulePage() {
   // rather than something the page draws.
   const scheduleRef = useRef(tournaments)
   const firedRef = useRef<Set<string>>(new Set())
+  /** Stops the ring that is going, if one is. */
+  const alarmRef = useRef<(() => void) | null>(null)
   const translateRef = useRef(t)
 
   useEffect(() => {
@@ -179,7 +158,11 @@ export function SchedulePage() {
         return next
       })
 
-      beep()
+      // A second alarm landing on top of the first restarts the ring rather
+      // than stacking two of them over each other.
+      alarmRef.current?.()
+      alarmRef.current = startAlarm()
+
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
         const translate = translateRef.current
         for (const view of due) {
@@ -193,7 +176,13 @@ export function SchedulePage() {
         }
       }
     }, 1000)
-    return () => window.clearInterval(id)
+    return () => {
+      window.clearInterval(id)
+      // Leaving the page takes the sound with it; a tone outliving the tab
+      // that started it has nothing left to tell anyone.
+      alarmRef.current?.()
+      alarmRef.current = null
+    }
   }, [])
 
   useEffect(() => {
@@ -252,6 +241,19 @@ export function SchedulePage() {
   // Looked up fresh each tick, so a banner that is still open keeps counting
   // down, and a tournament that closes drops out of it by itself.
   const ringingViews = views.filter((view) => ringing.has(view.id) && view.status !== 'closed')
+
+  const silence = useCallback(() => {
+    alarmRef.current?.()
+    alarmRef.current = null
+  }, [])
+
+  // The banner can empty without anyone pressing Dismiss — late reg closes and
+  // the row drops out of it. The sound follows the banner either way, because
+  // a ring with nothing on screen to explain it is just a noise.
+  const nothingRinging = ringingViews.length === 0
+  useEffect(() => {
+    if (nothingRinging) silence()
+  }, [nothingRinging, silence])
 
   const rooms = sitesInUse(tournaments)
   const days = weekdaysInUse(tournaments)
@@ -335,7 +337,10 @@ export function SchedulePage() {
               </div>
               <button
                 type="button"
-                onClick={() => setRinging(new Set())}
+                onClick={() => {
+                  setRinging(new Set())
+                  silence()
+                }}
                 className="rounded-md bg-amber-700 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-amber-600"
               >
                 {t('Dismiss')}
@@ -430,10 +435,10 @@ export function SchedulePage() {
 
             <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
               {permission === 'unsupported'
-                ? t('This browser has no notifications, so alarms appear on the page and beep.')
+                ? t('This browser has no notifications, so alarms appear on the page and ring until you dismiss them.')
                 : permission === 'granted'
-                  ? t('Alarms show a notification and beep. They only fire while this tab is open.')
-                  : t('Without notification permission, alarms still appear on this page and beep.')}
+                  ? t('Alarms show a notification and ring for half a minute, or until you dismiss them. They only fire while this tab is open.')
+                  : t('Without notification permission, alarms still appear on this page and ring until you dismiss them.')}
             </p>
 
             {pasteOpen && (
