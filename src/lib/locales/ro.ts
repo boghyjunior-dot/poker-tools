@@ -1406,6 +1406,36 @@ export const ro: Dictionary = {
     "Ai nevoie de",
   "Too close":
     "Prea aproape",
+  "Spot {n} of {total}":
+    "Situația {n} din {total}",
+  "Against":
+    "Împotriva",
+  "Price":
+    "Preț",
+  "Enough equity":
+    "Am destulă echitate",
+  "Not enough":
+    "Nu am destulă",
+  "Right":
+    "Corect",
+  "Wrong":
+    "Greșit",
+  "You have {equity}% against that range, and the price asks for {needed}%.":
+    "Ai {equity}% împotriva acelui range, iar prețul cere {needed}%.",
+  "Call.":
+    "Call.",
+  "Fold.":
+    "Fold.",
+  "±{margin} over {n} hands.":
+    "±{margin} din {n} mâini.",
+  "Next spot":
+    "Situația următoare",
+  "Start again":
+    "Ia-o de la capăt",
+  "Nothing to drill.":
+    "Nimic de antrenat.",
+  "Every answer is worked out by the same simulation the calculator runs, not read off a table, so a spot here can never disagree with the spot you build yourself.":
+    "Fiecare răspuns e calculat de aceeași simulare pe care o rulează calculatorul, nu citit dintr-un tabel, așa că o situație de aici nu poate contrazice niciodată spot-ul pe care îl construiești singur.",
   "{position} range":
     "Range {position}",
   "Load the built-in cards":

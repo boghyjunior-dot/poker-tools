@@ -19,6 +19,7 @@ import { cellKey, type BoardCard, type RankIndex } from '../../types/poker'
 import { handEquities, type HandEquityGrid } from '../../lib/callingRange'
 import { CallingRangeSection } from './CallingRangeSection'
 import { TableSpotPanel } from './TableSpotPanel'
+import { DrillPanel } from './DrillPanel'
 import { useT } from '../../lib/i18n'
 import type { CallEvResult } from '../../lib/equityBounty'
 import { EquityMatrix } from './EquityMatrix'
@@ -93,7 +94,7 @@ export function EquityPage() {
   // Two ways in. "Spot" starts from the table and derives the pot; "Ranges"
   // is the original form, where the pot is typed in and nothing is assumed
   // about how it got there.
-  const [inputMode, setInputMode] = useState<'spot' | 'ranges'>('spot')
+  const [inputMode, setInputMode] = useState<'spot' | 'ranges' | 'drill'>('spot')
   const [heroMode, setHeroMode] = useState<HeroMode>('hand')
   const [heroHand, setHeroHand] = useState<[BoardCard | null, BoardCard | null]>([null, null])
   const [heroRange, setHeroRange] = useState<RangeCellStates>(emptyRange())
@@ -254,7 +255,7 @@ export function EquityPage() {
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <span className="text-[10px] uppercase tracking-wider text-slate-500">{t('Start from')}</span>
-        {(['spot', 'ranges'] as const).map((mode) => (
+        {(['spot', 'ranges', 'drill'] as const).map((mode) => (
           <button
             key={mode}
             type="button"
@@ -266,12 +267,14 @@ export function EquityPage() {
                 : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
             }`}
           >
-            {mode === 'spot' ? t('A table') : t('Ranges only')}
+            {mode === 'spot' ? t('A table') : mode === 'ranges' ? t('Ranges only') : t('Drill')}
           </button>
         ))}
       </div>
 
-      {inputMode === 'spot' ? (
+      {inputMode === 'drill' ? (
+        <DrillPanel />
+      ) : inputMode === 'spot' ? (
         <TableSpotPanel
           buyIn={resolvedBuyIn}
           startingStack={resolvedStartingStack}
