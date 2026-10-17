@@ -7,6 +7,37 @@
  * across everything you registered for at once, and being told before it does.
  */
 
+/**
+ * What you have decided about a tournament, which is not the same as what the
+ * clock has decided.
+ *
+ * A schedule you cannot mark up is a list you re-read. Most rows are
+ * `watching` — on the card, not yet yours. `playing` is the only one that
+ * stakes money and sounds an alarm. `skipped` is a decision too, and worth
+ * recording rather than deleting: it keeps the row from coming back every time
+ * you scan the list, without pretending the tournament never existed.
+ * `busted` is where it ends up once you have put the result in.
+ */
+export const PLANS = ['watching', 'playing', 'skipped', 'busted'] as const
+export type TournamentPlan = (typeof PLANS)[number]
+
+/** How a tournament finished. Every part optional, because most of it is. */
+export interface TournamentResult {
+  /** What the finish paid, bounties kept out of it. */
+  cashed: number
+  bounties: number
+  /** Finishing place, when you bothered to note it. */
+  position: number | null
+}
+
+/**
+ * How long before late reg closes a "last chance" alarm fires.
+ *
+ * Not zero: an alarm at the exact moment registration shuts is a notification
+ * that you have missed it. Two minutes is enough to click.
+ */
+export const MAX_LATE_REG_ALARM_MINUTES = 2
+
 export interface Tournament {
   id: string
   name: string
@@ -18,8 +49,10 @@ export interface Tournament {
   /** Minutes of late registration from the start. */
   lateRegMinutes: number
   guarantee?: number
-  /** Whether you actually registered, as opposed to just watching it. */
-  registered: boolean
+  /** What you have decided about it. Only `playing` stakes money. */
+  plan: TournamentPlan
+  /** Filled in when you bust out, and the reason this row can leave. */
+  result?: TournamentResult
   /** Alarm before late reg closes, in minutes; null means no alarm. */
   alarmMinutes: number | null
   notes?: string
@@ -61,7 +94,7 @@ export function viewTournament(tournament: Tournament, now: number): TournamentV
 
   const alarmDue =
     tournament.alarmMinutes !== null &&
-    tournament.registered &&
+    tournament.plan === 'playing' &&
     msToLateRegClose > 0 &&
     msToLateRegClose <= tournament.alarmMinutes * MINUTE
 
@@ -97,10 +130,10 @@ export function dueAlarms(
   return views.filter((view) => view.alarmDue && !fired.has(view.id))
 }
 
-/** Total staked on everything you actually registered for. */
+/** Total staked on everything you are playing and have not finished. */
 export function committed(views: TournamentView[]): number {
   return views
-    .filter((view) => view.registered && view.status !== 'closed')
+    .filter((view) => view.plan === 'playing' && view.status !== 'closed')
     .reduce((sum, view) => sum + view.buyIn, 0)
 }
 
@@ -177,7 +210,7 @@ export function parseScheduleText(
       startsAt: startsAt.toISOString(),
       buyIn,
       lateRegMinutes,
-      registered: false,
+      plan: 'watching',
       alarmMinutes: 10,
     })
   }
@@ -213,7 +246,7 @@ export function sitesInUse(tournaments: readonly Tournament[]): string[] {
 export function committedBySite(views: readonly TournamentView[]): { site: string; amount: number }[] {
   const totals = new Map<string, number>()
   for (const view of views) {
-    if (!view.registered || view.status === 'closed') continue
+    if (view.plan !== 'playing' || view.status === 'closed') continue
     const site = view.site.trim() || 'Other'
     totals.set(site, (totals.get(site) ?? 0) + view.buyIn)
   }
@@ -368,7 +401,8 @@ export function parseStored(raw: unknown): Tournament[] {
         Number.isFinite(Number(entry.guarantee)) && Number(entry.guarantee) > 0
           ? Number(entry.guarantee)
           : undefined,
-      registered: entry.registered === true,
+      plan: readPlan(entry),
+      result: readResult(entry.result),
       alarmMinutes:
         alarm === null || alarm === undefined
           ? null
@@ -379,6 +413,55 @@ export function parseStored(raw: unknown): Tournament[] {
     })
   }
   return out
+}
+
+/**
+ * The plan a stored row carries, or the one its old shape implied.
+ *
+ * Schedules saved before plans existed have `registered: true | false`, which
+ * is exactly the playing/watching split. Reading it forward means nobody loses
+ * the tournaments they had already marked.
+ */
+function readPlan(entry: Record<string, unknown>): TournamentPlan {
+  const plan = entry.plan
+  if (typeof plan === 'string' && (PLANS as readonly string[]).includes(plan)) {
+    return plan as TournamentPlan
+  }
+  return entry.registered === true ? 'playing' : 'watching'
+}
+
+function readResult(raw: unknown): TournamentResult | undefined {
+  if (!isRecord(raw)) return undefined
+  const positive = (value: unknown) => {
+    const n = Number(value)
+    return Number.isFinite(n) && n > 0 ? n : 0
+  }
+  const place = Number(raw.position)
+  return {
+    cashed: positive(raw.cashed),
+    bounties: positive(raw.bounties),
+    position: Number.isFinite(place) && place > 0 ? Math.floor(place) : null,
+  }
+}
+
+/**
+ * Skipped rows, kept but out of the way.
+ *
+ * Deleting a tournament you decided against loses the decision, and the row
+ * comes back the next time the card is loaded. Setting it aside keeps the
+ * answer without keeping it in front of you.
+ */
+export function splitSkipped(views: readonly TournamentView[]): {
+  active: TournamentView[]
+  skipped: TournamentView[]
+} {
+  const active: TournamentView[] = []
+  const skipped: TournamentView[] = []
+  for (const view of views) {
+    if (view.plan === 'skipped') skipped.push(view)
+    else active.push(view)
+  }
+  return { active, skipped }
 }
 
 export function loadSchedule(): Tournament[] {

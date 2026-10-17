@@ -57,7 +57,7 @@ describe('buildFromTemplate', () => {
   })
 
   it('does not register you for anything', () => {
-    expect(built.some((item) => item.registered)).toBe(false)
+    expect(built.every((item) => item.plan === 'watching')).toBe(true)
   })
 
   it('keeps the card in running order', () => {

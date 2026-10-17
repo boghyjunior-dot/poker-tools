@@ -1406,6 +1406,38 @@ export const ro: Dictionary = {
     "Ai nevoie de",
   "Too close":
     "Prea aproape",
+  "Play":
+    "Joc",
+  "Playing":
+    "Îl joc",
+  "Skip":
+    "Sar",
+  "Skipped ({n})":
+    "Sărite ({n})",
+  "Put it back":
+    "Pune-l înapoi",
+  "Max reg":
+    "Ultima reg",
+  "Alarm at the last minute you can still register":
+    "Alarmă în ultimul minut în care te mai poți înscrie",
+  "Bust":
+    "Bust",
+  "Busted":
+    "Bustuit",
+  "How did it finish?":
+    "Cum s-a terminat?",
+  "What the finish paid":
+    "Cât a plătit locul",
+  "Heads collected":
+    "Capete strânse",
+  "Where you went out":
+    "Pe ce loc ai ieșit",
+  "Leave anything blank that you did not get. This goes to the bankroll tracker as a {amount} entry.":
+    "Lasă gol orice nu ai primit. Asta ajunge în tracker-ul de bankroll ca o intrare de {amount}.",
+  "Log it":
+    "Înregistrează",
+  "{name} logged to the bankroll tracker.":
+    "{name} a fost trecut în tracker-ul de bankroll.",
   "Reset actions":
     "Resetează acțiunile",
   "Spots":

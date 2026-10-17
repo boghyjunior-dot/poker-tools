@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
 import { startAlarm } from '../../lib/alarmSound'
+import { entryFromTournament } from '../../lib/scheduleToTracker'
+import { loadEntries, saveEntries } from '../../lib/tracker'
 import { Footer } from '../Footer'
 import { formatMoney } from '../../lib/formatNumber'
 import { FEATURE_SESSION_PUBLISHED, SESSION_VARIABLE } from '../../lib/featureFlags'
@@ -10,6 +12,7 @@ import { useNumberField } from '../../lib/numberField'
 import {
   committed,
   committedBySite,
+  MAX_LATE_REG_ALARM_MINUTES,
   dateSpan,
   dueAlarms,
   filterByDateRange,
@@ -24,8 +27,12 @@ import {
   sitesInUse,
   sortByUrgency,
   toJson,
+  splitSkipped,
   viewTournament,
   weekdaysInUse,
+  type TournamentPlan,
+  type TournamentResult,
+  type TournamentView,
   type Tournament,
 } from '../../lib/schedule'
 import { initialSchedule } from '../../lib/scheduleTemplate'
@@ -103,6 +110,191 @@ function Pill({
   )
 }
 
+const PLAN_BUTTON: Record<'on' | 'off', string> = {
+  on: 'bg-indigo-600 text-white',
+  off: 'bg-slate-800 text-slate-500 hover:bg-slate-700 hover:text-slate-300',
+}
+
+/**
+ * What you have decided about a row, and the one thing to do about it next.
+ *
+ * Play and Skip are the whole decision, so they sit in the table where the
+ * tick box used to. Everything that follows from playing — the last-chance
+ * alarm, and busting out — appears only once you have said you are playing,
+ * because offering them on three hundred rows you have not looked at is how a
+ * schedule becomes unreadable.
+ */
+function PlanCell({
+  view,
+  onPlan,
+  onMaxLateReg,
+  onBust,
+}: {
+  view: TournamentView
+  onPlan: (plan: TournamentPlan) => void
+  onMaxLateReg: () => void
+  onBust: () => void
+}) {
+  const t = useT()
+  const playing = view.plan === 'playing'
+
+  if (view.plan === 'busted') {
+    return (
+      <span className="whitespace-nowrap text-[11px] font-semibold text-slate-500">
+        {t('Busted')}
+      </span>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex gap-0.5">
+        <button
+          type="button"
+          aria-pressed={playing}
+          onClick={() => onPlan(playing ? 'watching' : 'playing')}
+          title={t('Playing')}
+          className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${PLAN_BUTTON[playing ? 'on' : 'off']}`}
+        >
+          {t('Play')}
+        </button>
+        <button
+          type="button"
+          onClick={() => onPlan('skipped')}
+          title={t('Skip')}
+          className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${PLAN_BUTTON.off}`}
+        >
+          {t('Skip')}
+        </button>
+      </div>
+      {playing && (
+        <div className="flex gap-0.5">
+          <button
+            type="button"
+            onClick={onMaxLateReg}
+            title={t('Alarm at the last minute you can still register')}
+            className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+              view.alarmMinutes === MAX_LATE_REG_ALARM_MINUTES
+                ? 'bg-amber-700 text-white'
+                : 'bg-slate-800 text-amber-300/70 hover:bg-slate-700'
+            }`}
+          >
+            {t('Max reg')}
+          </button>
+          <button
+            type="button"
+            onClick={onBust}
+            className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 hover:bg-slate-700 hover:text-slate-200"
+          >
+            {t('Bust')}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * What the tournament paid, asked once, on the way out.
+ *
+ * Every field is optional and blank means zero, because the common result is
+ * a bust with nothing to type — and a form that insists on three numbers for
+ * the outcome "I busted" is a form you stop filling in by the third
+ * tournament of the night.
+ */
+function BustDialog({
+  tournament,
+  onCancel,
+  onSave,
+}: {
+  tournament: Tournament | null
+  onCancel: () => void
+  onSave: (result: TournamentResult) => void
+}) {
+  const t = useT()
+  const [cashed, setCashed] = useState('')
+  const [bounties, setBounties] = useState('')
+  const [position, setPosition] = useState('')
+
+  if (!tournament) return null
+
+  const number = (raw: string) => {
+    const value = Number(raw)
+    return Number.isFinite(value) && value > 0 ? value : 0
+  }
+
+  const save = () => {
+    const place = Math.floor(number(position))
+    onSave({
+      cashed: number(cashed),
+      bounties: number(bounties),
+      position: place > 0 ? place : null,
+    })
+  }
+
+  const field = (
+    label: string,
+    value: string,
+    onChange: (next: string) => void,
+    hint: string,
+  ) => (
+    <label className="block">
+      <span className="mb-1 block text-[10px] uppercase tracking-wider text-slate-500">
+        {t(label)}
+      </span>
+      <input
+        type="number"
+        min="0"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="0"
+        className="w-full rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1.5 text-sm tabular-nums text-slate-200 focus:border-indigo-600 focus:outline-none"
+      />
+      <span className="mt-0.5 block text-[10px] text-slate-600">{t(hint)}</span>
+    </label>
+  )
+
+  return (
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-950/70 p-4 sm:items-center">
+      <div className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-xl">
+        <h2 className="text-sm font-semibold text-white">
+          {t('How did it finish?')}
+        </h2>
+        <p className="mt-0.5 text-xs text-slate-500">{tournament.name || t('Untitled')}</p>
+
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          {field('ITM', cashed, setCashed, 'What the finish paid')}
+          {field('Bounties', bounties, setBounties, 'Heads collected')}
+          {field('Position', position, setPosition, 'Where you went out')}
+        </div>
+
+        <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+          {t('Leave anything blank that you did not get. This goes to the bankroll tracker as a {amount} entry.', {
+            amount: `$${formatMoney(tournament.buyIn)}`,
+          })}
+        </p>
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-slate-700"
+          >
+            {t('Cancel')}
+          </button>
+          <button
+            type="button"
+            onClick={save}
+            className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-500"
+          >
+            {t('Log it')}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function localInputValue(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
@@ -121,6 +313,8 @@ export function SchedulePage() {
   const [pasteText, setPasteText] = useState('')
   const [note, setNote] = useState<string | null>(null)
   const [pasteSite, setPasteSite] = useState('')
+  /** The row whose bust form is open, if any. */
+  const [busting, setBusting] = useState<string | null>(null)
   const [siteFilter, setSiteFilter] = useState<Set<string>>(() => new Set())
   const [dayFilter, setDayFilter] = useState<Set<number>>(() => new Set())
   const [fromDay, setFromDay] = useState('')
@@ -198,6 +392,37 @@ export function SchedulePage() {
     setTournaments((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)))
   }, [])
 
+  const setPlan = (id: string, plan: TournamentPlan) => update(id, { plan })
+
+  /**
+   * Play it, and shout at the last moment you could still get in.
+   *
+   * One press rather than two, because marking a tournament and wanting to be
+   * told before registration shuts are the same intention nine times in ten.
+   */
+  const markMaxLateReg = (id: string) =>
+    update(id, { plan: 'playing', alarmMinutes: MAX_LATE_REG_ALARM_MINUTES })
+
+  /**
+   * Record the result and hand it to the Tracker.
+   *
+   * The entry is appended by reading storage rather than from anything held
+   * here, so a Tracker tab open alongside is only ever behind, never
+   * overwritten — it picks the row up next time it loads.
+   */
+  const bustOut = (id: string, result: TournamentResult) => {
+    const tournament = tournaments.find((item) => item.id === id)
+    if (!tournament) return
+    update(id, { plan: 'busted', result })
+    saveEntries([...loadEntries(), entryFromTournament(tournament, result)])
+    setBusting(null)
+    setNote(
+      t('{name} logged to the bankroll tracker.', {
+        name: tournament.name.trim() || t('Untitled'),
+      }),
+    )
+  }
+
   const addBlank = () => {
     const startsAt = new Date(Date.now() + 30 * MINUTE)
     startsAt.setSeconds(0, 0)
@@ -210,7 +435,7 @@ export function SchedulePage() {
         startsAt: startsAt.toISOString(),
         buyIn: 0,
         lateRegMinutes: 90,
-        registered: true,
+        plan: 'playing' as const,
         alarmMinutes: 10,
       },
     ])
@@ -260,8 +485,13 @@ export function SchedulePage() {
   const span = dateSpan(tournaments)
   const perSite = committedBySite(views)
 
+  // Skipped rows come out before the filters, so the count beside the
+  // disclosure is every tournament you have passed on, not just the ones
+  // today's filters would have shown you.
+  const { active, skipped } = splitSkipped(views)
+
   const shown = filterByDateRange(
-    filterByWeekday(filterBySite(views, siteFilter), dayFilter),
+    filterByWeekday(filterBySite(active, siteFilter), dayFilter),
     fromDay,
     toDay,
   )
@@ -303,7 +533,7 @@ export function SchedulePage() {
   }
 
   const staked = committed(views)
-  const live = views.filter((view) => view.status === 'lateReg' && view.registered)
+  const live = views.filter((view) => view.status === 'lateReg' && view.plan === 'playing')
 
   return (
     <div className="min-h-screen px-4 py-6">
@@ -617,14 +847,11 @@ export function SchedulePage() {
                     return (
                       <tr key={view.id} className={`border-b last:border-0 ${style.row}`}>
                         <td className="py-2">
-                          <input
-                            type="checkbox"
-                            aria-label={t('Registered')}
-                            checked={view.registered}
-                            onChange={(event) =>
-                              update(view.id, { registered: event.target.checked })
-                            }
-                            className="rounded border-slate-600"
+                          <PlanCell
+                            view={view}
+                            onPlan={(plan) => setPlan(view.id, plan)}
+                            onMaxLateReg={() => markMaxLateReg(view.id)}
+                            onBust={() => setBusting(view.id)}
                           />
                         </td>
                         <td className="py-2">
@@ -735,7 +962,51 @@ export function SchedulePage() {
               </table>
             </Panel>
           )}
+
+          {skipped.length > 0 && (
+            <Panel>
+              {/* Closed by default: the point of skipping is not to read it
+                  again, and the point of keeping it is that you can. */}
+              <details>
+                <summary className="cursor-pointer text-sm font-medium text-slate-400 hover:text-slate-200">
+                  {t('Skipped ({n})', { n: skipped.length })}
+                </summary>
+                <ul className="mt-3 space-y-1.5">
+                  {skipped.map((view) => (
+                    <li
+                      key={view.id}
+                      className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500"
+                    >
+                      <span className="tabular-nums text-slate-600">
+                        {new Date(view.startsAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                      <span className="line-through">{view.name || t('Untitled')}</span>
+                      {view.site && <span className="text-xs text-slate-600">{view.site}</span>}
+                      <button
+                        type="button"
+                        onClick={() => setPlan(view.id, 'watching')}
+                        className="ml-auto rounded-md border border-slate-700 px-2 py-0.5 text-[11px] font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200"
+                      >
+                        {t('Put it back')}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </Panel>
+          )}
         </div>
+
+        {busting !== null && (
+          <BustDialog
+            tournament={tournaments.find((item) => item.id === busting) ?? null}
+            onCancel={() => setBusting(null)}
+            onSave={(result) => bustOut(busting, result)}
+          />
+        )}
 
         <datalist id="schedule-sites">
           {[...new Set([...SITES, ...rooms])].map((room) => (

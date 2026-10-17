@@ -105,8 +105,8 @@ export function buildFromTemplate(template: ScheduleTemplate, day: Date): Tourna
       buyIn: event.buyIn,
       lateRegMinutes: lateRegGuess(event.name),
       guarantee: event.guarantee,
-      // Loading a card is reading the lobby, not registering for 97 events.
-      registered: false,
+      // Loading a card is reading the lobby, not entering 97 tournaments.
+      plan: 'watching' as const,
       alarmMinutes: 10,
       notes: event.notes,
     })

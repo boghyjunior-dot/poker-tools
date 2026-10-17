@@ -10,6 +10,8 @@ import {
   dateSpan,
   filterByDateRange,
   filterBySite,
+  MAX_LATE_REG_ALARM_MINUTES,
+  splitSkipped,
   filterByWeekday,
   isoDay,
   weekdaysInUse,
@@ -32,7 +34,7 @@ const make = (over: Partial<Tournament> = {}): Tournament => ({
   startsAt: new Date('2026-09-10T20:30:00Z').toISOString(),
   buyIn: 22,
   lateRegMinutes: 90,
-  registered: true,
+  plan: 'playing',
   alarmMinutes: 10,
   ...over,
 })
@@ -76,7 +78,7 @@ describe('the late-reg alarm', () => {
 
   it('says nothing about tournaments you did not register for', () => {
     const closeAt = lateRegCloseTime(make())
-    const watching = make({ registered: false })
+    const watching = make({ plan: 'watching' })
     expect(viewTournament(watching, closeAt - 5 * MINUTE).alarmDue).toBe(false)
   })
 
@@ -119,7 +121,7 @@ describe('ordering and totals', () => {
   it('adds up only what is registered and still open', () => {
     // Two of the three are still live at 22 each; the closed one does not count.
     expect(committed(views)).toBe(44)
-    const watching = views.map((v) => ({ ...v, registered: false }))
+    const watching = views.map((v) => ({ ...v, plan: 'watching' as const }))
     expect(committed(watching)).toBe(0)
   })
 })
@@ -175,7 +177,7 @@ describe('reading a pasted lobby', () => {
 describe('stored schedules', () => {
   it('round-trips a tournament', () => {
     const [restored] = parseStored([make()])
-    expect(restored).toMatchObject({ id: 't1', buyIn: 22, lateRegMinutes: 90, registered: true })
+    expect(restored).toMatchObject({ id: 't1', buyIn: 22, lateRegMinutes: 90, plan: 'playing' })
   })
 
   it('drops anything without a usable id or date', () => {
@@ -190,8 +192,11 @@ describe('stored schedules', () => {
     expect(t.alarmMinutes).toBeNull()
   })
 
-  it('treats anything but true as not registered', () => {
-    expect(parseStored([{ ...make(), registered: 'yes' }])[0].registered).toBe(false)
+  it('reads a schedule saved before plans existed', () => {
+    // registered: true | false was exactly the playing/watching split.
+    const legacy = { ...make(), plan: undefined, registered: true }
+    expect(parseStored([legacy])[0].plan).toBe('playing')
+    expect(parseStored([{ ...legacy, registered: 'yes' }])[0].plan).toBe('watching')
   })
 })
 
@@ -259,7 +264,7 @@ describe('rooms', () => {
       make({ id: 'c', site: 'iPoker', startsAt: new Date(NOW - 5 * 3600_000).toISOString() }),
       NOW,
     )
-    const watching = viewTournament(make({ id: 'w', site: 'iPoker', registered: false }), NOW)
+    const watching = viewTournament(make({ id: 'w', site: 'iPoker', plan: 'watching' }), NOW)
     expect(committedBySite([closed, watching])).toEqual([])
   })
 
@@ -271,6 +276,74 @@ describe('rooms', () => {
     expect(filterBySite(views, new Set()).map((v) => v.id)).toEqual(['g', 'c'])
     expect(filterBySite(views, new Set(['GGPoker'])).map((v) => v.id)).toEqual(['g'])
     expect(filterBySite(views, new Set(['GGPoker', 'CoinPoker']))).toHaveLength(2)
+  })
+})
+
+describe('what you have decided about a tournament', () => {
+  it('only sounds an alarm for the ones you are playing', () => {
+    // The fixture closes in two hours, so a wider alarm window is due now.
+    const wide = 150
+    for (const plan of ['watching', 'skipped', 'busted'] as const) {
+      const view = viewTournament(make({ plan, alarmMinutes: wide }), NOW)
+      expect(view.alarmDue, plan).toBe(false)
+    }
+    expect(viewTournament(make({ plan: 'playing', alarmMinutes: wide }), NOW).alarmDue).toBe(true)
+  })
+
+  it('only stakes money on the ones you are playing', () => {
+    const playing = viewTournament(make({ plan: 'playing', buyIn: 22 }), NOW)
+    const rest = (['watching', 'skipped', 'busted'] as const).map((plan) =>
+      viewTournament(make({ plan, buyIn: 22 }), NOW),
+    )
+    expect(committed([playing])).toBe(22)
+    expect(committed(rest)).toBe(0)
+  })
+
+  it('sets the last-chance alarm close enough to still act on', () => {
+    // Zero would fire as registration shuts, which is a notification that you
+    // have missed it.
+    expect(MAX_LATE_REG_ALARM_MINUTES).toBeGreaterThan(0)
+    expect(MAX_LATE_REG_ALARM_MINUTES).toBeLessThanOrEqual(5)
+    const view = viewTournament(
+      make({ plan: 'playing', alarmMinutes: MAX_LATE_REG_ALARM_MINUTES }),
+      NOW,
+    )
+    expect(view.alarmDue).toBe(false)
+    const nearlyShut = viewTournament(
+      make({
+        plan: 'playing',
+        alarmMinutes: MAX_LATE_REG_ALARM_MINUTES,
+        startsAt: new Date(NOW - 89 * MINUTE).toISOString(),
+      }),
+      NOW,
+    )
+    expect(nearlyShut.alarmDue).toBe(true)
+  })
+
+  it('sets the skipped ones aside without losing them', () => {
+    const views = [
+      viewTournament(make({ id: 'a', plan: 'playing' }), NOW),
+      viewTournament(make({ id: 'b', plan: 'skipped' }), NOW),
+      viewTournament(make({ id: 'c', plan: 'watching' }), NOW),
+      viewTournament(make({ id: 'd', plan: 'skipped' }), NOW),
+    ]
+    const { active, skipped } = splitSkipped(views)
+    expect(active.map((v) => v.id)).toEqual(['a', 'c'])
+    expect(skipped.map((v) => v.id)).toEqual(['b', 'd'])
+  })
+
+  it('keeps a result through a save and a load', () => {
+    const stored = parseStored([
+      { ...make({ plan: 'busted' }), result: { cashed: 140, bounties: 65, position: 12 } },
+    ])
+    expect(stored[0].result).toEqual({ cashed: 140, bounties: 65, position: 12 })
+  })
+
+  it('refuses nonsense in a stored result rather than trusting it', () => {
+    const stored = parseStored([
+      { ...make(), result: { cashed: -5, bounties: 'lots', position: 0 } },
+    ])
+    expect(stored[0].result).toEqual({ cashed: 0, bounties: 0, position: null })
   })
 })
 
