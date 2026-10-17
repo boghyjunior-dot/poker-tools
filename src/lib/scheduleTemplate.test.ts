@@ -109,14 +109,61 @@ describe('buildFromTemplate', () => {
   })
 })
 
-describe('defaultSchedule', () => {
-  it('puts every template on its next occurrence', () => {
-    // A Wednesday: the Friday card belongs two days out, not four days back.
-    const built = defaultSchedule(new Date(2026, 8, 30, 12, 0))
-    expect(built).toHaveLength(friday.events.length)
+describe('the Saturday card', () => {
+  const saturday = SCHEDULE_TEMPLATES.find((item) => item.id === 'gg-saturday')!
+  // The 17th of October 2026 is the Saturday it was read off.
+  const built = buildFromTemplate(saturday, new Date(2026, 9, 17))
+
+  it('runs on Saturday, from GGPoker', () => {
+    expect(saturday.weekday).toBe(6)
+    expect(new Date(built[0].startsAt).getDay()).toBe(6)
+    expect(built.every((item) => item.site === 'GGPoker')).toBe(true)
+  })
+
+  it('is the whole card, in running order', () => {
+    expect(built).toHaveLength(saturday.events.length)
+    const times = built.map((item) => new Date(item.startsAt).getTime())
+    expect(times).toEqual([...times].sort((a, b) => a - b))
+  })
+
+  it('starts at eleven and finishes on Sunday morning', () => {
     const first = new Date(built[0].startsAt)
-    expect(first.getDay()).toBe(5)
-    expect(first.getDate()).toBe(2)
+    expect([first.getHours(), first.getMinutes()]).toEqual([11, 0])
+    const last = new Date(built[built.length - 1].startsAt)
+    expect(last.getDate()).toBe(18)
+    expect([last.getHours(), last.getMinutes()]).toEqual([1, 30])
+  })
+
+  it('crosses midnight exactly once', () => {
+    const days = new Set(built.map((item) => new Date(item.startsAt).getDate()))
+    expect([...days].sort((a, b) => a - b)).toEqual([17, 18])
+  })
+
+  it('keeps the yuan events out of the dollar totals', () => {
+    const yuan = built.filter((item) => (item.notes ?? '').includes('¥'))
+    expect(yuan.length).toBeGreaterThan(0)
+    expect(yuan.every((item) => item.buyIn === 0)).toBe(true)
+  })
+})
+
+describe('defaultSchedule', () => {
+  const everyEvent = SCHEDULE_TEMPLATES.reduce((sum, item) => sum + item.events.length, 0)
+
+  it('puts every template on its next occurrence', () => {
+    // A Wednesday: the weekend cards belong ahead of it, not behind.
+    const built = defaultSchedule(new Date(2026, 8, 30, 12, 0))
+    expect(built).toHaveLength(everyEvent)
+    for (const template of SCHEDULE_TEMPLATES) {
+      const first = built.find((item) => item.name === template.events[0].name)!
+      expect(first, template.label).toBeDefined()
+    }
+  })
+
+  it('lands each card on its own day of the week', () => {
+    const built = defaultSchedule(new Date(2026, 8, 30, 12, 0))
+    // Friday the 2nd and Saturday the 3rd of October, each spilling one day.
+    const days = new Set(built.map((item) => new Date(item.startsAt).getDay()))
+    expect([...days].sort()).toEqual([0, 5, 6])
   })
 
   it('never lands in the past when today is the day itself', () => {

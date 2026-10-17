@@ -11,6 +11,7 @@
  */
 
 import ggFriday from '../content/ggFriday.json'
+import ggSaturday from '../content/ggSaturday.json'
 import { loadSchedule, newTournamentId, type Tournament } from './schedule'
 
 export interface TemplateEvent {
@@ -122,6 +123,14 @@ export const SCHEDULE_TEMPLATES: ScheduleTemplate[] = [
     weekday: 5,
     capturedOn: ggFriday.capturedOn,
     events: ggFriday.events,
+  },
+  {
+    id: 'gg-saturday',
+    label: ggSaturday.label,
+    site: ggSaturday.site,
+    weekday: 6,
+    capturedOn: ggSaturday.capturedOn,
+    events: ggSaturday.events,
   },
 ]
 
