@@ -1406,6 +1406,12 @@ export const ro: Dictionary = {
     "Ai nevoie de",
   "Too close":
     "Prea aproape",
+  "Load the built-in cards":
+    "Încarcă programele incluse",
+  "{cards} — {n} tournaments, on their next date.":
+    "{cards} — {n} turnee, la următoarea lor dată.",
+  "Loaded {n} tournaments.":
+    "Am încărcat {n} turnee.",
   "Play":
     "Joc",
   "Playing":

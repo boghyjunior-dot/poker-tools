@@ -35,7 +35,7 @@ import {
   type TournamentView,
   type Tournament,
 } from '../../lib/schedule'
-import { initialSchedule } from '../../lib/scheduleTemplate'
+import { defaultSchedule, initialSchedule, SCHEDULE_TEMPLATES } from '../../lib/scheduleTemplate'
 
 const MINUTE = 60_000
 
@@ -391,6 +391,13 @@ export function SchedulePage() {
   const update = useCallback((id: string, patch: Partial<Tournament>) => {
     setTournaments((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)))
   }, [])
+
+  /** Put the built-in cards back, for a schedule that has been emptied. */
+  const loadCards = () => {
+    const cards = defaultSchedule()
+    setTournaments(cards)
+    setNote(t('Loaded {n} tournaments.', { n: cards.length }))
+  }
 
   const setPlan = (id: string, plan: TournamentPlan) => update(id, { plan })
 
@@ -809,6 +816,23 @@ export function SchedulePage() {
             <Panel>
               <p className="text-sm text-slate-500">
                 {t('Nothing scheduled yet. Add a tournament or paste a few lines from a lobby.')}
+              </p>
+              {/* The built-in cards seed themselves once and never again, so
+                  an emptied schedule used to be a dead end. Offering them
+                  here costs nothing on a schedule that has rows, and is the
+                  one place someone looking for them would think to look. */}
+              <button
+                type="button"
+                onClick={loadCards}
+                className="mt-3 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-500"
+              >
+                {t('Load the built-in cards')}
+              </button>
+              <p className="mt-2 text-[11px] text-slate-600">
+                {t('{cards} — {n} tournaments, on their next date.', {
+                  cards: SCHEDULE_TEMPLATES.map((card) => t(card.label)).join(' · '),
+                  n: SCHEDULE_TEMPLATES.reduce((sum, card) => sum + card.events.length, 0),
+                })}
               </p>
             </Panel>
           ) : shown.length === 0 ? (
