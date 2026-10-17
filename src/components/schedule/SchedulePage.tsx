@@ -435,10 +435,10 @@ export function SchedulePage() {
 
             <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
               {permission === 'unsupported'
-                ? t('This browser has no notifications, so alarms appear on the page and ring until you dismiss them.')
+                ? t('This browser has no notifications, so alarms sound twice and the banner stays until you dismiss it.')
                 : permission === 'granted'
-                  ? t('Alarms show a notification and ring for half a minute, or until you dismiss them. They only fire while this tab is open.')
-                  : t('Without notification permission, alarms still appear on this page and ring until you dismiss them.')}
+                  ? t('Alarms show a notification and sound twice; the banner stays until you dismiss it. They only fire while this tab is open.')
+                  : t('Without notification permission, alarms still sound twice and show the banner on this page.')}
             </p>
 
             {pasteOpen && (

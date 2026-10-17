@@ -1566,12 +1566,12 @@ export const ro: Dictionary = {
     "Nimic nu se potrivește cu filtrele astea.",
   "Enable notifications":
     "Activează notificările",
-  "This browser has no notifications, so alarms appear on the page and ring until you dismiss them.":
-    "Browserul ăsta nu are notificări, așa că alarmele apar în pagină și sună până le închizi.",
-  "Alarms show a notification and ring for half a minute, or until you dismiss them. They only fire while this tab is open.":
-    "Alarmele afișează o notificare și sună timp de jumătate de minut, sau până le închizi. Funcționează doar cât timp acest tab e deschis.",
-  "Without notification permission, alarms still appear on this page and ring until you dismiss them.":
-    "Fără permisiunea de notificări, alarmele tot apar în pagină și sună până le închizi.",
+  "This browser has no notifications, so alarms sound twice and the banner stays until you dismiss it.":
+    "Browserul ăsta nu are notificări, așa că alarmele sună de două ori, iar bannerul rămâne până îl închizi.",
+  "Alarms show a notification and sound twice; the banner stays until you dismiss it. They only fire while this tab is open.":
+    "Alarmele afișează o notificare și sună de două ori; bannerul rămâne până îl închizi. Funcționează doar cât timp acest tab e deschis.",
+  "Without notification permission, alarms still sound twice and show the banner on this page.":
+    "Fără permisiunea de notificări, alarmele tot sună de două ori și afișează bannerul în pagină.",
   "Read the lines":
     "Citește liniile",
   "One tournament per line: a start time, a buy-in with a currency symbol, a name, and the late-reg window.":

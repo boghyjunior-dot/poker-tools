@@ -3,16 +3,16 @@
  *
  * A single beep is easy to miss, which is the one thing an alarm must not be:
  * you are looking at another table when it fires, and half a second of sine
- * wave is gone before you turn your head. So it rings in bursts and keeps
- * going, long enough to be noticed and short enough that forgetting to
- * dismiss it does not leave a tone running in a tab you walked away from.
+ * wave is gone before you turn your head. Two bursts is the answer — the
+ * second is what tells you the first was not the kettle — and then it stops.
+ * The banner is what persists; the sound only has to turn your head towards it.
  */
 
 /** One burst every this long, which reads as an alarm rather than a chime. */
 export const ALARM_BURST_MS = 1200
 
-/** How long it rings for if nobody stops it. */
-export const ALARM_RING_MS = 30_000
+/** Bursts per alarm. Two: one to hear, one to be sure of. */
+export const ALARM_BURSTS = 2
 
 /** The two notes of a burst, in hertz. Two tones carry further than one. */
 const NOTES = [880, 1175] as const
@@ -26,16 +26,20 @@ const NOTE_GAP_MS = 220
  * off a repeating timer: a timer in a background tab is throttled to once a
  * second or worse, which is exactly where an alarm needs to be reliable.
  */
-export function burstOffsets(durationMs: number, burstMs: number = ALARM_BURST_MS): number[] {
-  if (!Number.isFinite(durationMs) || durationMs <= 0) return []
-  if (!Number.isFinite(burstMs) || burstMs <= 0) return [0]
-  const offsets: number[] = []
-  // A burst must finish inside the ring, so the last one cannot start later
-  // than its own length before the end.
-  for (let at = 0; at + NOTE_GAP_MS + NOTE_MS <= durationMs; at += burstMs) {
-    offsets.push(at / 1000)
-  }
-  return offsets.length > 0 ? offsets : [0]
+export function burstOffsets(bursts: number = ALARM_BURSTS, burstMs: number = ALARM_BURST_MS): number[] {
+  if (!Number.isFinite(bursts) || bursts < 1) return []
+  const gap = Number.isFinite(burstMs) && burstMs > 0 ? burstMs : ALARM_BURST_MS
+  return Array.from({ length: Math.floor(bursts) }, (_, i) => (i * gap) / 1000)
+}
+
+/** How long a run of bursts takes, last note included. */
+export function alarmDurationMs(
+  bursts: number = ALARM_BURSTS,
+  burstMs: number = ALARM_BURST_MS,
+): number {
+  const offsets = burstOffsets(bursts, burstMs)
+  if (offsets.length === 0) return 0
+  return offsets[offsets.length - 1] * 1000 + NOTE_GAP_MS + NOTE_MS
 }
 
 type AudioCtor = typeof AudioContext
@@ -70,7 +74,7 @@ function scheduleNote(ctx: AudioContext, hz: number, at: number) {
  * not been given permission to make a noise yet, still shows the banner and
  * the notification. The alarm is quieter than intended, not broken.
  */
-export function startAlarm(durationMs: number = ALARM_RING_MS): () => void {
+export function startAlarm(bursts: number = ALARM_BURSTS): () => void {
   const Ctx = audioContextCtor()
   if (!Ctx) return () => {}
 
@@ -91,7 +95,7 @@ export function startAlarm(durationMs: number = ALARM_RING_MS): () => void {
   }
 
   try {
-    for (const offset of burstOffsets(durationMs)) {
+    for (const offset of burstOffsets(bursts)) {
       const at = ctx.currentTime + offset
       scheduleNote(ctx, NOTES[0], at)
       scheduleNote(ctx, NOTES[1], at + NOTE_GAP_MS / 1000)
@@ -101,8 +105,10 @@ export function startAlarm(durationMs: number = ALARM_RING_MS): () => void {
     return () => {}
   }
 
+  // Closed once the last note has sounded, so an alarm nobody dismissed does
+  // not leave an audio context open for the rest of the session.
   if (typeof window !== 'undefined') {
-    window.setTimeout(stop, durationMs + 500)
+    window.setTimeout(stop, alarmDurationMs(bursts) + 500)
   }
   return stop
 }

@@ -1,44 +1,56 @@
 import { describe, expect, it } from 'vitest'
-import { ALARM_BURST_MS, ALARM_RING_MS, burstOffsets, startAlarm } from './alarmSound'
+import {
+  ALARM_BURST_MS,
+  ALARM_BURSTS,
+  alarmDurationMs,
+  burstOffsets,
+  startAlarm,
+} from './alarmSound'
 
-describe('how long the alarm rings for', () => {
-  it('is long enough to be noticed across a table change', () => {
-    // The point of the change: the old alarm was one burst of 0.6s.
-    expect(ALARM_RING_MS).toBeGreaterThanOrEqual(20_000)
-    expect(burstOffsets(ALARM_RING_MS).length).toBeGreaterThan(20)
+describe('how the alarm rings', () => {
+  it('is two bursts, which is one more than you can mistake for something else', () => {
+    expect(ALARM_BURSTS).toBe(2)
+    expect(burstOffsets()).toHaveLength(2)
   })
 
-  it('spaces the bursts evenly, starting immediately', () => {
-    const offsets = burstOffsets(6000, 1000)
-    expect(offsets[0]).toBe(0)
-    for (let i = 1; i < offsets.length; i += 1) {
-      expect(offsets[i] - offsets[i - 1]).toBeCloseTo(1, 10)
-    }
+  it('starts the first burst at once and spaces the rest evenly', () => {
+    const offsets = burstOffsets(5, 1000)
+    expect(offsets).toEqual([0, 1, 2, 3, 4])
   })
 
   it('counts in seconds, because that is what the audio clock wants', () => {
-    expect(burstOffsets(5000, 1000)).toEqual([0, 1, 2, 3, 4])
+    expect(burstOffsets(2, 1200)).toEqual([0, 1.2])
   })
 
-  it('never starts a burst it cannot finish', () => {
-    // The last one has to fit inside the ring, or the alarm ends mid-note.
-    const duration = 5000
-    const last = burstOffsets(duration, 1200).at(-1)!
-    expect(last * 1000 + ALARM_BURST_MS).toBeLessThanOrEqual(duration + ALARM_BURST_MS)
-    expect(last * 1000).toBeLessThan(duration)
+  it('is over in a few seconds, not half a minute', () => {
+    // The banner is what persists. The sound only has to turn your head.
+    expect(alarmDurationMs()).toBeLessThan(3000)
+    expect(alarmDurationMs()).toBeGreaterThan(ALARM_BURST_MS)
   })
 
-  it('still makes one sound when asked for almost no time at all', () => {
-    // Better a single burst than an alarm that silently does nothing.
+  it('counts the last note in the length, so nothing is cut off', () => {
+    expect(alarmDurationMs(1, 1200)).toBeGreaterThan(0)
+    expect(alarmDurationMs(3, 1000)).toBeGreaterThan(2000)
+  })
+
+  it('rings once if asked for one', () => {
     expect(burstOffsets(1)).toEqual([0])
-    expect(burstOffsets(100, 1200)).toEqual([0])
   })
 
-  it('refuses a duration that is not one rather than looping forever', () => {
+  it('refuses a count that is not one rather than looping forever', () => {
     expect(burstOffsets(0)).toEqual([])
-    expect(burstOffsets(-5000)).toEqual([])
+    expect(burstOffsets(-3)).toEqual([])
     expect(burstOffsets(Number.NaN)).toEqual([])
-    expect(burstOffsets(5000, 0)).toEqual([0])
+    expect(alarmDurationMs(0)).toBe(0)
+  })
+
+  it('falls back to the usual spacing when given a nonsense gap', () => {
+    expect(burstOffsets(2, 0)).toEqual([0, ALARM_BURST_MS / 1000])
+    expect(burstOffsets(2, Number.NaN)).toEqual([0, ALARM_BURST_MS / 1000])
+  })
+
+  it('ignores a fractional count rather than scheduling half a burst', () => {
+    expect(burstOffsets(2.7, 1000)).toEqual([0, 1])
   })
 })
 
