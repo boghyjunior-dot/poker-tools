@@ -29,6 +29,14 @@ function ScheduleIcon() {
   )
 }
 
+function StatsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-6 w-6">
+      <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+    </svg>
+  )
+}
+
 function TrackerIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-6 w-6">
@@ -54,6 +62,13 @@ const TOOLS: Tool[] = [
       'Every result you have logged, and what it adds up to — profit, ROI, ITM, and the worst stretch you have sat through.',
     icon: <TrackerIcon />,
   },
+  {
+    href: './stats.html',
+    title: 'Stats',
+    description:
+      'The same results read sideways: which stakes you are beating, which rooms earn their hours, and how this month compares.',
+    icon: <StatsIcon />,
+  },
 ]
 
 export function SessionHome() {
@@ -66,12 +81,12 @@ export function SessionHome() {
           <h1 className="text-4xl font-bold text-white">{t('Snap Cash')}</h1>
           <p className="mt-2 max-w-xl text-sm text-slate-400">
             {t(
-              'Your schedule and your results, kept on this machine. This app is never deployed: it holds a database, and a database belongs somewhere you control.',
+              'Your schedule, your results, and what they add up to \u2014 kept on this machine. This app is never deployed: it holds a database, and a database belongs somewhere you control.',
             )}
           </p>
         </header>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {TOOLS.map((tool) => (
             <a
               key={tool.href}
