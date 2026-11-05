@@ -113,7 +113,6 @@ export function TrackerPage() {
     name: '',
     site: '',
     buyIn: '',
-    fee: '',
     cashed: '',
     bounties: '',
   })
@@ -147,12 +146,12 @@ export function TrackerPage() {
         name: draft.name.trim() || t('Untitled'),
         site: draft.site.trim(),
         buyIn: num(draft.buyIn),
-        fee: num(draft.fee),
+        fee: 0,
         cashed: num(draft.cashed),
         bounties: num(draft.bounties),
       },
     ])
-    setDraft((prev) => ({ ...prev, name: '', buyIn: '', fee: '', cashed: '', bounties: '' }))
+    setDraft((prev) => ({ ...prev, name: '', buyIn: '', cashed: '', bounties: '' }))
   }
 
   const exportCsv = () => {
@@ -293,7 +292,6 @@ export function TrackerPage() {
                 />
               </label>
               {field('buyIn', t('Buy-in'), '0')}
-              {field('fee', t('Fee'), '0')}
               {field('cashed', t('Cashed'), '0')}
               {field('bounties', t('Bounties'), '0')}
             </div>
