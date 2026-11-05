@@ -4,12 +4,17 @@ import {
   byBuyIn,
   byMonth,
   bySite,
+  concentration,
   finishStats,
   groupBy,
   isReadable,
   moneySplit,
+  rhythm,
+  stakeSpread,
   streaks,
   UNKNOWN_SITE,
+  utcDay,
+  weekdayIndex,
 } from './stats'
 import type { Entry } from './tracker'
 
@@ -225,5 +230,178 @@ describe('whether a row is worth reading', () => {
     const [row] = groupBy([entry()], () => 'all')
     expect(isReadable(row)).toBe(false)
     expect(isReadable({ ...row, count: 100 })).toBe(true)
+  })
+})
+
+describe('reading a date as a day', () => {
+  it('counts days from the epoch', () => {
+    expect(utcDay('2026-11-05')).toBe(20762)
+    expect((utcDay('2026-11-06') ?? 0) - (utcDay('2026-11-05') ?? 0)).toBe(1)
+  })
+
+  it('says nothing rather than guessing at a date it cannot read', () => {
+    expect(utcDay('whenever')).toBeNull()
+    expect(weekdayIndex('')).toBeNull()
+  })
+
+  it('puts Monday at nought', () => {
+    expect(weekdayIndex('2026-11-02')).toBe(0)
+    expect(weekdayIndex('2026-11-05')).toBe(3)
+    expect(weekdayIndex('2026-11-01')).toBe(6)
+  })
+})
+
+describe('where the profit came from', () => {
+  it('separates what was won from what was lost', () => {
+    const c = concentration([
+      entry({ buyIn: 10, cashed: 100 }),
+      entry({ buyIn: 10 }),
+      entry({ buyIn: 10 }),
+    ])
+    expect(c.won).toBe(90)
+    expect(c.lost).toBe(20)
+    expect(c.winners).toBe(1)
+    expect(c.best).toBe(90)
+  })
+
+  it('says what the log comes to without its best night', () => {
+    // The sentence that stops a good month being mistaken for a good game.
+    const c = concentration([entry({ buyIn: 10, cashed: 500 }), entry({ buyIn: 10 })])
+    expect(c.withoutBest).toBe(-10)
+  })
+
+  it('counts how many results it took to pay for all the losses', () => {
+    const c = concentration([
+      entry({ buyIn: 10, cashed: 60 }),
+      entry({ buyIn: 10, cashed: 40 }),
+      ...Array.from({ length: 6 }, () => entry({ buyIn: 10 })),
+    ])
+    // 50 and 30 against 60 of losses: the first two cover it.
+    expect(c.payingResults).toBe(2)
+  })
+
+  it('has no answer for a losing log, rather than a misleading one', () => {
+    expect(concentration([entry({ buyIn: 10 }), entry({ buyIn: 10, cashed: 15 })]).payingResults).toBeNull()
+  })
+
+  it('takes the best 5% of results, and never fewer than one', () => {
+    expect(concentration([entry()]).topCount).toBe(1)
+    expect(concentration(Array.from({ length: 100 }, () => entry())).topCount).toBe(5)
+  })
+
+  it('states how much of the winnings those few hold', () => {
+    const c = concentration([
+      entry({ buyIn: 10, cashed: 910 }),
+      ...Array.from({ length: 19 }, () => entry({ buyIn: 10, cashed: 20 })),
+    ])
+    // One result of twenty, holding 900 of the 1090 won.
+    expect(c.topCount).toBe(1)
+    expect(c.topSharePct).toBeCloseTo((900 / 1090) * 100, 6)
+  })
+
+  it('has nothing to say about an empty log', () => {
+    expect(concentration([])).toEqual({
+      won: 0,
+      lost: 0,
+      winners: 0,
+      best: 0,
+      withoutBest: 0,
+      topCount: 0,
+      topSharePct: 0,
+      payingResults: null,
+    })
+  })
+})
+
+describe('how the volume is spread', () => {
+  it('counts the days played, not the days in the log', () => {
+    const r = rhythm([
+      entry({ date: '2026-11-01' }),
+      entry({ date: '2026-11-01' }),
+      entry({ date: '2026-11-03' }),
+    ])
+    expect(r.activeDays).toBe(2)
+    expect(r.perActiveDay).toBeCloseTo(1.5, 6)
+    expect(r.span).toBe(3)
+  })
+
+  it('finds the busiest session', () => {
+    const r = rhythm([
+      entry({ date: '2026-11-01' }),
+      entry({ date: '2026-11-03' }),
+      entry({ date: '2026-11-03' }),
+    ])
+    expect(r.busiest).toEqual({ date: '2026-11-03', count: 2 })
+  })
+
+  it('measures the layoff, which is the usual reason a month looks wrong', () => {
+    const r = rhythm([entry({ date: '2026-09-01' }), entry({ date: '2026-09-15' })])
+    expect(r.longestGap).toBe(13)
+  })
+
+  it('has no gap to report when every day was played', () => {
+    expect(rhythm([entry({ date: '2026-11-01' }), entry({ date: '2026-11-02' })]).longestGap).toBe(0)
+  })
+
+  it('states a weekly rate over the span it covers', () => {
+    const r = rhythm([
+      entry({ date: '2026-11-01' }),
+      entry({ date: '2026-11-14' }),
+    ])
+    expect(r.span).toBe(14)
+    expect(r.perWeek).toBeCloseTo(1, 6)
+  })
+
+  it('has nothing to say about an empty log', () => {
+    expect(rhythm([])).toEqual({
+      activeDays: 0,
+      perActiveDay: 0,
+      busiest: null,
+      longestGap: 0,
+      span: 0,
+      perWeek: 0,
+    })
+  })
+})
+
+describe('what you actually play', () => {
+  it('gives the average and the median, which disagree when it matters', () => {
+    const spread = stakeSpread([
+      entry({ buyIn: 5 }),
+      entry({ buyIn: 5 }),
+      entry({ buyIn: 5 }),
+      entry({ buyIn: 215 }),
+    ])
+    expect(spread.median).toBe(5)
+    expect(spread.average).toBe(57.5)
+    expect(spread.biggest).toBe(215)
+  })
+
+  it('counts the fee as part of what a seat cost', () => {
+    expect(stakeSpread([entry({ buyIn: 10, fee: 1 })]).average).toBe(11)
+  })
+
+  it('counts the distinct stakes played', () => {
+    expect(stakeSpread([entry({ buyIn: 5 }), entry({ buyIn: 5 }), entry({ buyIn: 22 })]).distinct).toBe(2)
+  })
+
+  it('names the dearest band and how little of the volume it is', () => {
+    const spread = stakeSpread([
+      ...Array.from({ length: 9 }, () => entry({ buyIn: 5.5 })),
+      entry({ buyIn: 215 }),
+    ])
+    expect(spread.topBand).toBe('$200 and up')
+    expect(spread.topBandPct).toBeCloseTo(10, 6)
+  })
+
+  it('has nothing to say about an empty log', () => {
+    expect(stakeSpread([])).toEqual({
+      average: 0,
+      median: 0,
+      biggest: 0,
+      distinct: 0,
+      topBand: '',
+      topBandPct: 0,
+    })
   })
 })

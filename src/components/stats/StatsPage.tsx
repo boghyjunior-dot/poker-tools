@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
 import { Footer } from '../Footer'
 import { SiteTag } from '../SiteTag'
-import { formatMoney } from '../../lib/formatNumber'
+import { formatCompact, formatMoney } from '../../lib/formatNumber'
 import { useT } from '../../lib/i18n'
 import { loadEntriesFromDb } from '../../lib/trackerStore'
 import type { Entry } from '../../lib/tracker'
@@ -10,14 +10,32 @@ import {
   byBuyIn,
   byMonth,
   bySite,
+  concentration,
   finishStats,
   isReadable,
   moneySplit,
   READABLE_SAMPLE,
+  rhythm,
+  stakeSpread,
   streaks,
   UNKNOWN_SITE,
   type Breakdown,
 } from '../../lib/stats'
+import {
+  byWeekday,
+  profitCurve,
+  returnBuckets,
+  rollingRoi,
+  ROLLING_MIN,
+  rollingWindow,
+} from '../../lib/statsSeries'
+import {
+  ProfitCurve,
+  ReturnChart,
+  RollingRoiChart,
+  WeekdayChart,
+  type CurveUnit,
+} from './StatsCharts'
 
 function Panel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
@@ -145,6 +163,14 @@ export function StatsPage() {
   const [entries, setEntries] = useState<Entry[]>([])
   const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading')
   const [error, setError] = useState<string | null>(null)
+  /**
+   * Money or buy-ins on the curve.
+   *
+   * Money is what landed in the account and buy-ins is whether you played
+   * well. They disagree exactly when the stakes moved, which is the one time
+   * anybody needs to know.
+   */
+  const [unit, setUnit] = useState<CurveUnit>('money')
 
   useEffect(() => {
     let cancelled = false
@@ -170,6 +196,14 @@ export function StatsPage() {
   const finishes = useMemo(() => finishStats(entries), [entries])
   const split = useMemo(() => moneySplit(entries), [entries])
   const runs = useMemo(() => streaks(entries), [entries])
+  const curve = useMemo(() => profitCurve(entries), [entries])
+  const paid = useMemo(() => concentration(entries), [entries])
+  const returns = useMemo(() => returnBuckets(entries), [entries])
+  const week = useMemo(() => byWeekday(entries), [entries])
+  const pace = useMemo(() => rhythm(entries), [entries])
+  const stakeSizes = useMemo(() => stakeSpread(entries), [entries])
+  const rollWindow = rollingWindow(entries.length)
+  const rolling = useMemo(() => rollingRoi(entries, rollWindow), [entries, rollWindow])
 
   return (
     <div className="min-h-screen px-4 py-6">
@@ -204,6 +238,109 @@ export function StatsPage() {
 
         {state === 'ready' && entries.length > 0 && (
           <div className="flex flex-col gap-4">
+            <Panel>
+              <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-semibold text-white">{t('The curve')}</h2>
+                  <p className="mt-0.5 max-w-xl text-xs text-slate-500">
+                    {t('Every result in order. The red shading is how far under your previous best the roll was at the time, which is the part a single worst-drawdown figure flattens.')}
+                  </p>
+                </div>
+                <div className="flex shrink-0 gap-0.5 rounded-md border border-slate-800 bg-slate-950/60 p-0.5">
+                  {(['money', 'buyIns'] as CurveUnit[]).map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setUnit(option)}
+                      className={`rounded px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                        unit === option
+                          ? 'bg-indigo-600 text-white'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      {t(option === 'money' ? 'Money' : 'Buy-ins')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <ProfitCurve
+                curve={curve}
+                unit={unit}
+                format={
+                  unit === 'money'
+                    ? (value) => `${value < 0 ? '−' : ''}${formatCompact(Math.abs(value))}`
+                    : (value) => (Number.isInteger(value) ? String(value) : value.toFixed(1))
+                }
+              />
+              <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+                {unit === 'money'
+                  ? t('{count} tournaments, {from} to {to}.', {
+                      count: entries.length,
+                      from: curve[0]?.date ?? '',
+                      to: curve[curve.length - 1]?.date ?? '',
+                    })
+                  : t('Each result measured against its own buy-in, so the line is not pulled about by the stakes you happened to be playing. Up in buy-ins and down in money means the dearer ones were the losing ones.')}
+              </p>
+            </Panel>
+
+            <Panel>
+              <h2 className="mb-3 text-sm font-semibold text-white">
+                {t('Which results paid for it')}
+              </h2>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <Stat label="Results that won" value={`${paid.winners} / ${entries.length}`} />
+                <Stat label="Best single result" value={money(paid.best)} />
+                <Stat
+                  label="Without that one"
+                  value={money(paid.withoutBest)}
+                  hint={t('what the rest comes to')}
+                />
+                <Stat
+                  label="Best 5% hold"
+                  value={`${paid.topSharePct.toFixed(0)}%`}
+                  hint={t('of everything you have won')}
+                />
+              </div>
+              <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+                {paid.payingResults !== null
+                  ? t('Your best {n} results pay for every losing one. The other {rest} are what it cost to reach them, and a bankroll has to survive the stretch before any of the {n} have happened.', {
+                      n: paid.payingResults,
+                      rest: entries.length - paid.payingResults,
+                    })
+                  : t('The winning results come to {won} against {lost} lost, so nothing is paying for anything yet. On a short MTT sample that is the normal state of affairs rather than a verdict.', {
+                      won: money(paid.won),
+                      lost: money(paid.lost),
+                    })}
+              </p>
+            </Panel>
+
+            <Panel>
+              <h2 className="text-sm font-semibold text-white">{t('What a tournament returns')}</h2>
+              <p className="mt-0.5 max-w-2xl text-xs text-slate-500">
+                {t('Above: how many tournaments ended in each band. Below: what that band did to the roll. The two shapes never match, and the gap between them is the whole argument for volume.')}
+              </p>
+              <div className="mt-3">
+                <ReturnChart buckets={returns} />
+              </div>
+            </Panel>
+
+            {entries.length >= ROLLING_MIN && rolling.length > 1 && (
+              <Panel>
+                <h2 className="text-sm font-semibold text-white">{t('Form')}</h2>
+                <p className="mt-0.5 max-w-2xl text-xs text-slate-500">
+                  {t('ROI over a window of {n} tournaments, slid along the log.', {
+                    n: rollWindow,
+                  })}
+                </p>
+                <div className="mt-3">
+                  <RollingRoiChart points={rolling} window={rollWindow} />
+                </div>
+                <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+                  {t('It crosses zero when a cash lands in the window or falls out of the back of it, which is not the same as something changing about your game. The level it keeps returning to is the part worth reading.')}
+                </p>
+              </Panel>
+            )}
+
             <Panel>
               <h2 className="mb-3 text-sm font-semibold text-white">{t('Where the money came from')}</h2>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -244,6 +381,57 @@ export function StatsPage() {
               </div>
               <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
                 {t('The drawdown in the Tracker is money; these are patience. Knowing the dry spell you are in has happened before is the difference between a normal stretch and evidence that something is wrong.')}
+              </p>
+            </Panel>
+
+            <Panel>
+              <h2 className="text-sm font-semibold text-white">{t('The week')}</h2>
+              <p className="mt-0.5 max-w-2xl text-xs text-slate-500">
+                {t('Where the hours go, and what came of them. A Sunday that is a quarter of your volume and red costs far more than a red Tuesday you barely play.')}
+              </p>
+              <div className="mt-3">
+                <WeekdayChart days={week} />
+              </div>
+            </Panel>
+
+            <Panel>
+              <h2 className="mb-3 text-sm font-semibold text-white">{t('Volume and stakes')}</h2>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <Stat
+                  label="Days played"
+                  value={String(pace.activeDays)}
+                  hint={t('of {n} in the log', { n: pace.span })}
+                />
+                <Stat
+                  label="On a day you play"
+                  value={pace.perActiveDay.toFixed(1)}
+                  hint={t('tournaments')}
+                />
+                <Stat
+                  label="Busiest day"
+                  value={String(pace.busiest?.count ?? 0)}
+                  hint={pace.busiest?.date}
+                />
+                <Stat
+                  label="Longest break"
+                  value={String(pace.longestGap)}
+                  hint={t('days with nothing')}
+                />
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <Stat label="Average seat" value={money(stakeSizes.average)} />
+                <Stat label="Median seat" value={money(stakeSizes.median)} />
+                <Stat label="Biggest played" value={money(stakeSizes.biggest)} />
+                <Stat
+                  label="Dearest band"
+                  value={`${stakeSizes.topBandPct.toFixed(1)}%`}
+                  hint={stakeSizes.topBand}
+                />
+              </div>
+              <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+                {stakeSizes.average > stakeSizes.median * 1.5
+                  ? t('The average seat sits well above the median, which means a few shots are doing the talking. Those are the entries a bankroll rule has to cover even though they are a rounding error in the volume.')
+                  : t('Average and median close together is a schedule you actually play, rather than one with the odd shot sitting on top of it.')}
               </p>
             </Panel>
 

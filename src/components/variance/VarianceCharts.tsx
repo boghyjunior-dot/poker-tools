@@ -1,3 +1,4 @@
+import { niceStep } from '../../lib/chartScale'
 import { formatCompact } from '../../lib/formatNumber'
 import { useT } from '../../lib/i18n'
 import type { HistogramBin, VarianceBand, VarianceResult } from '../../lib/mttVariance'
@@ -8,16 +9,6 @@ const PAD = { top: 16, right: 16, bottom: 48, left: 62 }
 
 const PLOT_W = CHART_W - PAD.left - PAD.right
 const PLOT_H = CHART_H - PAD.top - PAD.bottom
-
-/** Round a span up to a readable 1 / 2 / 5 x 10^n step. */
-function niceStep(span: number, targetTicks: number): number {
-  if (span <= 0) return 1
-  const raw = span / targetTicks
-  const magnitude = Math.pow(10, Math.floor(Math.log10(raw)))
-  const scaled = raw / magnitude
-  const step = scaled >= 5 ? 10 : scaled >= 2 ? 5 : scaled >= 1 ? 2 : 1
-  return step * magnitude
-}
 
 /**
  * Fan chart: percentile bands across every sample, the median, the theoretical

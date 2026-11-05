@@ -64,7 +64,7 @@ export function entryProfit(entry: Entry): number {
 }
 
 /** Oldest first, so the running balance reads down the page in order. */
-export function sortByDate(entries: Entry[]): Entry[] {
+export function sortByDate(entries: readonly Entry[]): Entry[] {
   return [...entries].sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id))
 }
 

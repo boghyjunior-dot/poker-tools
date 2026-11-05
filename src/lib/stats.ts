@@ -241,3 +241,191 @@ export const READABLE_SAMPLE = 100
 export function isReadable(breakdown: Breakdown): boolean {
   return breakdown.count >= READABLE_SAMPLE
 }
+
+/**
+ * The day a date falls on, counted from the epoch.
+ *
+ * Parsed at noon UTC so no timezone can shift a result onto the day before:
+ * the dates in this log are days rather than moments, and reading them as
+ * local midnight moves a good share of the year by one.
+ */
+export function utcDay(date: string): number | null {
+  const ms = Date.parse(date + 'T12:00:00Z')
+  return Number.isFinite(ms) ? Math.floor(ms / 86_400_000) : null
+}
+
+/** Weekday with Monday at 0, or null for a date that does not parse. */
+export function weekdayIndex(date: string): number | null {
+  const ms = Date.parse(date + 'T12:00:00Z')
+  if (!Number.isFinite(ms)) return null
+  return (new Date(ms).getUTCDay() + 6) % 7
+}
+
+export interface Concentration {
+  /** Everything the winning results made, before the losses come off it. */
+  won: number
+  /** Everything the losing results cost, as a positive number. */
+  lost: number
+  winners: number
+  /** The best single result, by profit. */
+  best: number
+  /** What the whole log comes to with that one result taken out. */
+  withoutBest: number
+  /** How many results the best 5% is, at least one. */
+  topCount: number
+  /** The share of all winnings those few results account for. */
+  topSharePct: number
+  /**
+   * How many of your best results it takes to pay for every losing one.
+   *
+   * Null when they never do, which is simply a losing log — the question only
+   * has an answer if there is a profit to explain.
+   */
+  payingResults: number | null
+}
+
+/**
+ * How much of the profit came out of how few tournaments.
+ *
+ * The number that explains tournament bankroll requirements better than any
+ * variance calculator: a winning MTT player's year is a large pile of losses
+ * with a handful of results on top, and until you have seen your own split
+ * written down it is very hard to believe how lopsided it is. It is also the
+ * honest answer to "am I running good" — if one result is carrying the log,
+ * the ROI underneath it is a sentence about that one night.
+ */
+export function concentration(entries: readonly Entry[]): Concentration {
+  const profits = entries.map(entryProfit).sort((a, b) => b - a)
+
+  let won = 0
+  let lost = 0
+  for (const profit of profits) {
+    if (profit > 0) won += profit
+    else lost -= profit
+  }
+
+  const best = profits.length > 0 ? profits[0] : 0
+  const winners = profits.filter((profit) => profit > 0).length
+  const topCount = profits.length > 0 ? Math.max(1, Math.ceil(profits.length * 0.05)) : 0
+  const topWon = profits.slice(0, topCount).reduce((sum, profit) => sum + Math.max(0, profit), 0)
+
+  let running = 0
+  let payingResults: number | null = null
+  for (let i = 0; i < profits.length; i += 1) {
+    if (profits[i] <= 0) break
+    running += profits[i]
+    if (running >= lost) {
+      payingResults = i + 1
+      break
+    }
+  }
+
+  return {
+    won,
+    lost,
+    winners,
+    best,
+    withoutBest: won - lost - best,
+    topCount,
+    topSharePct: won > 0 ? (topWon / won) * 100 : 0,
+    payingResults,
+  }
+}
+
+export interface Rhythm {
+  /** Days with at least one result on them. */
+  activeDays: number
+  perActiveDay: number
+  busiest: { date: string; count: number } | null
+  /** The longest run of empty days between two days that had something. */
+  longestGap: number
+  /** First result to last, both days counted. */
+  span: number
+  perWeek: number
+}
+
+/**
+ * How the volume is spread across the calendar.
+ *
+ * Volume per day played is a different question from volume per week, and the
+ * gap between them is the whole of how somebody plays: twelve tables one
+ * evening a week is a schedule, two a night is a habit, and they do not
+ * produce the same results from the same ROI. The longest gap is here because
+ * a layoff you have forgotten about is the usual reason a month looks worse
+ * than it was.
+ */
+export function rhythm(entries: readonly Entry[]): Rhythm {
+  const perDay = new Map<string, number>()
+  for (const entry of entries) {
+    perDay.set(entry.date, (perDay.get(entry.date) ?? 0) + 1)
+  }
+  if (perDay.size === 0) {
+    return { activeDays: 0, perActiveDay: 0, busiest: null, longestGap: 0, span: 0, perWeek: 0 }
+  }
+
+  const days = [...perDay.keys()].sort()
+  let busiest = { date: days[0], count: perDay.get(days[0]) ?? 0 }
+  for (const date of days) {
+    const count = perDay.get(date) ?? 0
+    if (count > busiest.count) busiest = { date, count }
+  }
+
+  let longestGap = 0
+  const numbers = days.map(utcDay).filter((day): day is number => day !== null)
+  for (let i = 1; i < numbers.length; i += 1) {
+    longestGap = Math.max(longestGap, numbers[i] - numbers[i - 1] - 1)
+  }
+
+  const span =
+    numbers.length > 0 ? numbers[numbers.length - 1] - numbers[0] + 1 : perDay.size
+
+  return {
+    activeDays: perDay.size,
+    perActiveDay: entries.length / perDay.size,
+    busiest,
+    longestGap,
+    span,
+    perWeek: span > 0 ? (entries.length / span) * 7 : entries.length,
+  }
+}
+
+export interface StakeSpread {
+  average: number
+  /** Median cost, which a single shot cannot drag upwards. */
+  median: number
+  biggest: number
+  /** How many different buy-in costs appear in the log. */
+  distinct: number
+  /** The dearest band with anything in it, and its share of the volume. */
+  topBand: string
+  topBandPct: number
+}
+
+/**
+ * What you actually play, as opposed to what you would say you play.
+ *
+ * Average and median together, because the two disagree exactly when it
+ * matters: an average well above the median means a handful of shots are
+ * doing the talking, and those are the entries a bankroll rule has to cover
+ * even though they are a rounding error in the volume.
+ */
+export function stakeSpread(entries: readonly Entry[]): StakeSpread {
+  if (entries.length === 0) {
+    return { average: 0, median: 0, biggest: 0, distinct: 0, topBand: '', topBandPct: 0 }
+  }
+
+  const costs = entries.map(entryCost).sort((a, b) => a - b)
+  const middle = Math.floor(costs.length / 2)
+  const bands = byBuyIn(entries)
+  const top = bands[bands.length - 1]
+
+  return {
+    average: costs.reduce((sum, cost) => sum + cost, 0) / costs.length,
+    median:
+      costs.length % 2 === 1 ? costs[middle] : (costs[middle - 1] + costs[middle]) / 2,
+    biggest: costs[costs.length - 1],
+    distinct: new Set(costs).size,
+    topBand: top ? top.key : '',
+    topBandPct: top ? (top.count / entries.length) * 100 : 0,
+  }
+}
