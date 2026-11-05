@@ -22,7 +22,6 @@ import {
   formatCountdown,
   newTournamentId,
   parseScheduleText,
-  saveSchedule,
   sitesInUse,
   sortByUrgency,
   toJson,
@@ -34,7 +33,8 @@ import {
   type TournamentView,
   type Tournament,
 } from '../../lib/schedule'
-import { defaultSchedule, initialSchedule, SCHEDULE_TEMPLATES } from '../../lib/scheduleTemplate'
+import { defaultSchedule, SCHEDULE_TEMPLATES } from '../../lib/scheduleTemplate'
+import { loadScheduleFromDb, saveScheduleToDb } from '../../lib/scheduleStore'
 
 const MINUTE = 60_000
 
@@ -301,7 +301,10 @@ function localInputValue(date: Date): string {
 
 export function SchedulePage() {
   const t = useT()
-  const [tournaments, setTournaments] = useState<Tournament[]>(() => initialSchedule())
+  // Empty until the database answers. Nothing may be saved before then —
+  // see the guard on the effect below.
+  const [tournaments, setTournaments] = useState<Tournament[]>([])
+  const [ready, setReady] = useState(false)
   // A ticking clock is what makes every countdown on the page live.
   const [now, setNow] = useState(() => Date.now())
   const [ringing, setRinging] = useState<Set<string>>(() => new Set())
@@ -378,9 +381,34 @@ export function SchedulePage() {
     }
   }, [])
 
+  // One read, on mount: the database, or localStorage moved across from an
+  // older build, or the built-in cards on a first run.
   useEffect(() => {
-    saveSchedule(tournaments)
-  }, [tournaments])
+    let cancelled = false
+    loadScheduleFromDb()
+      .then((plan) => {
+        if (cancelled) return
+        setTournaments(plan.records)
+        setReady(true)
+        if (plan.writeBack) void saveScheduleToDb(plan.records)
+      })
+      .catch(() => {
+        // No database to be had. The page still works for this session; it
+        // just will not survive the tab.
+        if (!cancelled) setReady(true)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // Every change goes straight to the database, but not before the load has
+  // returned: the first save would otherwise be the empty array above,
+  // written over whatever was really there.
+  useEffect(() => {
+    if (!ready) return
+    void saveScheduleToDb(tournaments)
+  }, [tournaments, ready])
 
   const views = useMemo(
     () => sortByUrgency(tournaments.map((item) => viewTournament(item, now))),
