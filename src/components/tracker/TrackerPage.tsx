@@ -1,14 +1,27 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
-import { loadEntriesFromDb, saveEntriesToDb } from '../../lib/trackerStore'
+import {
+  loadBankrollsFromDb,
+  loadEntriesFromDb,
+  saveBankrollsToDb,
+  saveEntriesToDb,
+} from '../../lib/trackerStore'
 import type { LoadSource } from '../../lib/persisted'
 import { SiteSelect, SiteTag } from '../SiteTag'
-import { siteOptions } from '../../lib/sites'
+import { siteOptions, UNKNOWN_SITE } from '../../lib/sites'
+import {
+  amountFor,
+  bankrollFields,
+  setAmount,
+  siteRolls,
+  startingTotal,
+  underwater,
+  type SiteBankroll,
+} from '../../lib/siteBankrolls'
 import { Footer } from '../Footer'
 import { formatMoney } from '../../lib/formatNumber'
 import { useT } from '../../lib/i18n'
 import {
-  BANKROLL_KEY,
   buildViews,
   confidenceFromCount,
   CONFIDENCE_NOTE,
@@ -110,14 +123,17 @@ export function TrackerPage() {
   const [storage, setStorage] = useState<{ kind: LoadSource | 'saved'; count: number } | null>(
     null,
   )
-  const [start, setStart] = useState<string>(() => {
-    if (typeof localStorage === 'undefined') return '0'
-    try {
-      return localStorage.getItem(BANKROLL_KEY) ?? '0'
-    } catch {
-      return '0'
-    }
-  })
+  /**
+   * What is in each room's box, as typed.
+   *
+   * Text rather than numbers because a half-typed "21." is not a number yet,
+   * and parsing on every keystroke eats the decimal point as you reach for it.
+   */
+  const [startText, setStartText] = useState<Record<string, string>>({})
+  /** False until the stored bankrolls have been read — same guard as the log. */
+  const [rollsReady, setRollsReady] = useState(false)
+  /** Set when the migrated single bankroll is still sitting unsplit. */
+  const [movedStart, setMovedStart] = useState(false)
 
   const [draft, setDraft] = useState({
     date: today(),
@@ -168,16 +184,53 @@ export function TrackerPage() {
       )
   }, [entries, ready])
 
+  // The bankrolls, read once, same order as the log: read, then allow saving.
   useEffect(() => {
-    try {
-      localStorage.setItem(BANKROLL_KEY, start)
-    } catch {
-      // Private mode — the log still works for this session.
+    let cancelled = false
+    loadBankrollsFromDb()
+      .then((plan) => {
+        if (cancelled) return
+        setStartText(
+          Object.fromEntries(plan.records.map((roll) => [roll.id, String(roll.amount)])),
+        )
+        setMovedStart(plan.source === 'migrated')
+        setRollsReady(true)
+        if (plan.writeBack) void saveBankrollsToDb(plan.records)
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return
+        setRollsReady(true)
+        setDbError(error instanceof Error ? error.message : String(error))
+      })
+    return () => {
+      cancelled = true
     }
-  }, [start])
+  }, [])
 
-  const startingBankroll = Number(start) || 0
+  const rolls = useMemo<SiteBankroll[]>(() => {
+    let out: SiteBankroll[] = []
+    for (const [site, value] of Object.entries(startText)) {
+      out = setAmount(out, site, Math.max(0, Number(value) || 0))
+    }
+    return out
+  }, [startText])
+
+  useEffect(() => {
+    if (!rollsReady) return
+    saveBankrollsToDb(rolls).catch((error: unknown) =>
+      setDbError(error instanceof Error ? error.message : String(error)),
+    )
+  }, [rolls, rollsReady])
+
+  const startingBankroll = startingTotal(rolls)
   const views = useMemo(() => buildViews(entries, startingBankroll), [entries, startingBankroll])
+  const rooms = useMemo(() => bankrollFields(entries, rolls), [entries, rolls])
+  const accounts = useMemo(() => siteRolls(entries, rolls), [entries, rolls])
+  const overdrawn = useMemo(() => underwater(accounts), [accounts])
+  const byRoom = useMemo(
+    () => new Map(accounts.map((account) => [account.site, account])),
+    [accounts],
+  )
   const totals = useMemo(() => summarise(views), [views])
   const confidence = confidenceFromCount(totals.count)
 
@@ -252,7 +305,14 @@ export function TrackerPage() {
               <Stat
                 label={t('Bankroll')}
                 value={`$${formatMoney(startingBankroll + totals.profit)}`}
-                sub={t('from ${amount}', { amount: formatMoney(startingBankroll) })}
+                sub={
+                  rolls.length > 1
+                    ? t('from ${amount} across {n} rooms', {
+                        amount: formatMoney(startingBankroll),
+                        n: rolls.length,
+                      })
+                    : t('from ${amount}', { amount: formatMoney(startingBankroll) })
+                }
                 tone={totals.profit >= 0 ? 'good' : 'bad'}
               />
               <Stat
@@ -284,17 +344,6 @@ export function TrackerPage() {
             </div>
 
             <div className="mt-4 flex flex-wrap items-end gap-4">
-              <label className="flex flex-col gap-1">
-                <span className="text-[10px] uppercase tracking-wider text-slate-500">
-                  {t('Starting bankroll')}
-                </span>
-                <input
-                  type="number"
-                  value={start}
-                  onChange={(event) => setStart(event.target.value)}
-                  className="w-32 rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                />
-              </label>
               {totals.count > 0 && (
                 <button
                   type="button"
@@ -317,6 +366,108 @@ export function TrackerPage() {
                 }`}
               >
                 {t(CONFIDENCE_NOTE[confidence])}
+              </p>
+            )}
+          </Panel>
+
+          <Panel>
+            <h2 className="text-sm font-semibold text-white">{t('Money by room')}</h2>
+            <p className="mt-0.5 max-w-2xl text-xs text-slate-500">
+              {t(
+                'Each room is its own account, and $40 on one of them will not buy a seat on another. Put what you keep in each one here; everything above is the lot added together.',
+              )}
+            </p>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[560px] text-sm">
+                <thead>
+                  <tr className="border-b border-slate-800 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                    <th className="pb-2 font-medium">{t('Room')}</th>
+                    <th className="pb-2 font-medium">{t('Started with')}</th>
+                    <th className="pb-2 text-right font-medium">{t('Played')}</th>
+                    <th className="pb-2 text-right font-medium">{t('Profit')}</th>
+                    <th className="pb-2 text-right font-medium">{t('On the account')}</th>
+                  </tr>
+                </thead>
+                <tbody className="text-slate-300">
+                  {rooms.map((room) => {
+                    const account = byRoom.get(room)
+                    const played = account?.count ?? 0
+                    const funded = amountFor(rolls, room) > 0
+                    return (
+                      <tr key={room} className="border-b border-slate-800/60 last:border-0">
+                        <td className="py-2">
+                          {room === UNKNOWN_SITE ? (
+                            <span className="text-slate-400">{t(room)}</span>
+                          ) : (
+                            <SiteTag site={room} />
+                          )}
+                        </td>
+                        <td className="py-2">
+                          <label className="flex items-center gap-1">
+                            <span className="text-slate-600">$</span>
+                            <input
+                              type="number"
+                              inputMode="decimal"
+                              aria-label={t('Starting bankroll on {room}', { room })}
+                              value={startText[room] ?? ''}
+                              placeholder="0"
+                              onChange={(event) =>
+                                setStartText((prev) => ({ ...prev, [room]: event.target.value }))
+                              }
+                              className="w-24 rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1 text-sm tabular-nums text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                            />
+                          </label>
+                        </td>
+                        <td className="py-2 text-right tabular-nums text-slate-500">
+                          {played || '—'}
+                        </td>
+                        <td
+                          className={`py-2 text-right font-semibold tabular-nums ${
+                            played === 0
+                              ? 'text-slate-600'
+                              : (account?.profit ?? 0) >= 0
+                                ? 'text-emerald-400'
+                                : 'text-red-400'
+                          }`}
+                        >
+                          {played === 0
+                            ? '—'
+                            : `${(account?.profit ?? 0) >= 0 ? '+' : '-'}$${formatMoney(
+                                Math.abs(account?.profit ?? 0),
+                              )}`}
+                        </td>
+                        <td
+                          className={`py-2 text-right font-semibold tabular-nums ${
+                            (account?.balance ?? 0) < 0 ? 'text-rose-400' : 'text-white'
+                          }`}
+                        >
+                          {played === 0 && !funded
+                            ? '—'
+                            : `${(account?.balance ?? 0) < 0 ? '-' : ''}$${formatMoney(
+                                Math.abs(account?.balance ?? 0),
+                              )}`}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {movedStart && (
+              <p className="mt-3 rounded-md border border-amber-900/60 bg-amber-950/30 px-3 py-2 text-xs text-amber-300">
+                {t(
+                  'Your old starting bankroll had no room attached, so it is sitting under “No room” rather than being guessed at. Move it to the rooms you actually keep it on — the total does not change.',
+                )}
+              </p>
+            )}
+
+            {overdrawn.length > 0 && (
+              <p className="mt-3 rounded-md border border-rose-900/60 bg-rose-950/30 px-3 py-2 text-xs text-rose-300">
+                {t(
+                  'More has been staked on {rooms} than was ever on the account, so money arrived there that this log does not know about — a deposit, a transfer in from another room, or results tagged with the wrong one. The combined total hides this completely.',
+                  { rooms: overdrawn.map((account) => account.site).join(', ') },
+                )}
               </p>
             )}
           </Panel>

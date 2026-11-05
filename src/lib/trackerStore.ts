@@ -11,7 +11,8 @@
 
 import { readAll, writeAll, writeOne, indexedDbAvailable } from './localDb'
 import { planLoad, type LoadPlan } from './persisted'
-import { loadEntries, parseStored, type Entry } from './tracker'
+import { BANKROLL_KEY, loadEntries, parseStored, type Entry } from './tracker'
+import { legacyStart, parseBankrolls, type SiteBankroll } from './siteBankrolls'
 
 /** What the Tracker should open with, and whether it owes the database a write. */
 export async function loadEntriesFromDb(): Promise<LoadPlan<Entry>> {
@@ -54,4 +55,34 @@ export async function saveEntriesToDb(entries: readonly Entry[]): Promise<number
 export async function appendEntryToDb(entry: Entry): Promise<void> {
   if (!indexedDbAvailable()) throw new Error('This browser has no database to save to.')
   await writeOne('entries', entry)
+}
+
+/**
+ * The starting bankrolls, one per room.
+ *
+ * Small enough to have lived happily in localStorage, and it did — but it is
+ * the figure every balance on the page is measured from, so losing it silently
+ * would misreport every account at once. It goes where the results went.
+ */
+export async function loadBankrollsFromDb(): Promise<LoadPlan<SiteBankroll>> {
+  const fromDatabase = indexedDbAvailable()
+    ? parseBankrolls(await readAll<SiteBankroll>('bankrolls').catch(() => []))
+    : []
+
+  let stored: string | null = null
+  try {
+    stored = typeof localStorage === 'undefined' ? null : localStorage.getItem(BANKROLL_KEY)
+  } catch {
+    // Private mode. There is nothing to migrate across, which is fine.
+  }
+
+  return planLoad<SiteBankroll>({ fromDatabase, fromLegacy: legacyStart(stored) })
+}
+
+/** Replace the stored bankrolls, and report what the database kept. */
+export async function saveBankrollsToDb(rolls: readonly SiteBankroll[]): Promise<number> {
+  if (!indexedDbAvailable()) throw new Error('This browser has no database to save to.')
+  await writeAll('bankrolls', rolls)
+  const stored = await readAll<SiteBankroll>('bankrolls')
+  return stored.length
 }

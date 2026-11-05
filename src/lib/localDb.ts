@@ -26,10 +26,10 @@ const DB_NAME = 'poker-tools'
  * heard of throws. Which, until the catch below was removed, looked exactly
  * like a save that worked.
  */
-const DB_VERSION = 2
+const DB_VERSION = 3
 
 /** Object stores, each keyed by the `id` on the records it holds. */
-export const STORES = ['schedule', 'entries', 'library'] as const
+export const STORES = ['schedule', 'entries', 'library', 'bankrolls'] as const
 export type StoreName = (typeof STORES)[number]
 
 export function indexedDbAvailable(): boolean {

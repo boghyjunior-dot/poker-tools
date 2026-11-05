@@ -15,6 +15,38 @@
 export const SITES = ['GGPoker', 'iPoker', 'Coin Poker', 'PokerStars', '888 Poker'] as const
 export type KnownSite = (typeof SITES)[number]
 
+/**
+ * Where a result with no room written on it goes.
+ *
+ * One name for it across the whole app, because the same bucket has to collect
+ * the results and the money — a stats page calling it one thing and a bankroll
+ * page another would be two buckets as far as anyone reading them is
+ * concerned.
+ */
+export const UNKNOWN_SITE = 'No room'
+
+/** The room a row belongs to, with blank and whitespace landing in one place. */
+export function siteKey(site: string): string {
+  return site.trim() || UNKNOWN_SITE
+}
+
+/**
+ * Room order for anything that lists them as accounts rather than as results.
+ *
+ * The listed rooms in the order the dropdown offers them, then anything else
+ * alphabetically, then "No room" last. Fixed on purpose: a list of balances is
+ * something you check at a glance every session, and a row that moves because
+ * last night went well is a row you have to read again.
+ */
+export function compareSites(a: string, b: string): number {
+  const rank = (site: string) => {
+    if (site === UNKNOWN_SITE) return SITES.length + 1
+    const index = (SITES as readonly string[]).indexOf(site)
+    return index === -1 ? SITES.length : index
+  }
+  return rank(a) - rank(b) || a.localeCompare(b)
+}
+
 /** Tailwind classes for a room tag: background, text, and a border to lift it. */
 export interface SiteStyle {
   className: string

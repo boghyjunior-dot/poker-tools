@@ -12,6 +12,7 @@
  * nothing, and the page has to be able to say so.
  */
 
+import { siteKey } from './sites'
 import { entryCost, entryProfit, type Entry } from './tracker'
 
 export interface Breakdown {
@@ -74,10 +75,10 @@ export function groupBy(entries: readonly Entry[], keyOf: (entry: Entry) => stri
     .sort((a, b) => b.count - a.count || a.key.localeCompare(b.key))
 }
 
-export const UNKNOWN_SITE = 'No room'
+export { UNKNOWN_SITE } from './sites'
 
 export function bySite(entries: readonly Entry[]): Breakdown[] {
-  return groupBy(entries, (entry) => entry.site.trim() || UNKNOWN_SITE)
+  return groupBy(entries, (entry) => siteKey(entry.site))
 }
 
 /**
