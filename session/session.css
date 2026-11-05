@@ -1,0 +1,54 @@
+@import 'tailwindcss';
+
+/* Tailwind scans the root it is given, and this app's root is `session/`.
+   The screens it renders live in ../src, so they have to be pointed at or
+   half the classes in the build would never be generated. */
+@source '../src';
+
+/*
+ * The green app.
+ *
+ * Every screen here was written for the published site's slate-and-indigo,
+ * in Tailwind classes spread over thousands of lines. Rather than rewrite
+ * those — and leave two copies of each screen to keep in step — this
+ * redefines what the colours mean. `bg-slate-900` still says `bg-slate-900`
+ * in the component; here it resolves to a green.
+ *
+ * Slate carries the surfaces and the text, so it becomes a green-black
+ * neutral ramp. Indigo is the primary action, so it becomes the brightest
+ * green in the app. Amber, rose and sky keep their own hues, because warning,
+ * loss and information have to stay legible as themselves — an app where
+ * everything is green says nothing with colour at all.
+ */
+@theme {
+  --color-slate-50: #f2faf5;
+  --color-slate-100: #e3f4ea;
+  --color-slate-200: #c6e7d3;
+  --color-slate-300: #9fd3b4;
+  --color-slate-400: #67a985;
+  --color-slate-500: #3f7d5e;
+  --color-slate-600: #245741;
+  --color-slate-700: #15402f;
+  --color-slate-800: #0e2d21;
+  --color-slate-900: #081d15;
+  --color-slate-950: #03110b;
+
+  /* The primary. Pulled yellow-green on purpose, so it does not read as the
+     same colour as the emerald the tools use for "you are up". */
+  --color-indigo-300: #b9f27c;
+  --color-indigo-400: #a3e860;
+  --color-indigo-500: #86d943;
+  --color-indigo-600: #6cbb2f;
+  --color-indigo-700: #569a24;
+  --color-indigo-800: #3f741b;
+  --color-indigo-900: #2c5214;
+  --color-indigo-950: #152a09;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #03110b;
+  color: #e3f4ea;
+  font-family: system-ui, -apple-system, sans-serif;
+}

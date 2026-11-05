@@ -72,11 +72,3 @@ export const FEATURE_KNOWLEDGE_ENABLED = isEnabled(import.meta.env, KNOWLEDGE_VA
 
 /** True once the knowledge tools are set to ship. */
 export const FEATURE_KNOWLEDGE_PUBLISHED = isPublished(import.meta.env, KNOWLEDGE_VARIABLE)
-
-export const SESSION_VARIABLE = 'VITE_PUBLISH_SESSION'
-
-/** Schedule and Bankroll Tracker ship together, so they share one variable. */
-export const FEATURE_SESSION_ENABLED = isEnabled(import.meta.env, SESSION_VARIABLE)
-
-/** True once the session tools are set to ship. */
-export const FEATURE_SESSION_PUBLISHED = isPublished(import.meta.env, SESSION_VARIABLE)

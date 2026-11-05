@@ -32,8 +32,6 @@ const LOCAL_ONLY: { name: string; variable: string }[] = [
   { name: 'bounty', variable: 'VITE_PUBLISH_IN_REVIEW' },
   { name: 'charts', variable: 'VITE_PUBLISH_KNOWLEDGE' },
   { name: 'quiz', variable: 'VITE_PUBLISH_KNOWLEDGE' },
-  { name: 'schedule', variable: 'VITE_PUBLISH_SESSION' },
-  { name: 'tracker', variable: 'VITE_PUBLISH_SESSION' },
 ]
 
 function isOn(value: string | undefined): boolean {

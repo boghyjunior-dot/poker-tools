@@ -5,8 +5,6 @@ import { entryFromTournament } from '../../lib/scheduleToTracker'
 import { loadEntries, saveEntries } from '../../lib/tracker'
 import { Footer } from '../Footer'
 import { formatMoney } from '../../lib/formatNumber'
-import { FEATURE_SESSION_PUBLISHED, SESSION_VARIABLE } from '../../lib/featureFlags'
-import { LocalOnlyBanner } from '../LocalOnlyBanner'
 import { useT } from '../../lib/i18n'
 import { useNumberField } from '../../lib/numberField'
 import {
@@ -553,7 +551,6 @@ export function SchedulePage() {
           )}
         </p>
 
-        <LocalOnlyBanner published={FEATURE_SESSION_PUBLISHED} variable={SESSION_VARIABLE} />
 
         {ringingViews.length > 0 && (
           <div className="mb-4 rounded-lg border border-amber-700 bg-amber-950/50 p-4">

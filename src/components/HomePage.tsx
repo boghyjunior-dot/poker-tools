@@ -6,8 +6,6 @@ import {
   FEATURE_REVIEW_PUBLISHED,
   FEATURE_ROADMAP_ENABLED,
   FEATURE_ROADMAP_PUBLISHED,
-  FEATURE_SESSION_ENABLED,
-  FEATURE_SESSION_PUBLISHED,
 } from '../lib/featureFlags'
 import { useT } from '../lib/i18n'
 import { LanguageSwitcher } from './LanguageSwitcher'
@@ -105,27 +103,6 @@ function RoadmapIcon() {
       <circle cx="9" cy="3.5" r="1.6" fill="currentColor" stroke="none" />
       <circle cx="15" cy="12" r="1.6" />
       <circle cx="7" cy="20.5" r="1.8" fill="currentColor" stroke="none" />
-    </svg>
-  )
-}
-
-function ScheduleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
-      <rect x="3" y="5" width="18" height="16" rx="2" />
-      <path d="M3 10h18M8 3v4M16 3v4" />
-      <path d="M12 13v3l2 1.5" />
-    </svg>
-  )
-}
-
-function TrackerIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
-      <path d="M4 19V5" />
-      <path d="M4 19h16" />
-      <path d="M7 15l4-5 3 3 5-7" />
-      <path d="M19 6h-3.5M19 6v3.5" />
     </svg>
   )
 }
@@ -396,33 +373,6 @@ const SECTIONS: Section[] = [
         description:
           'Heuristics, flashcards and questions to drill the numbers. Study the bundled decks or import your own file.',
         accent: 'border-amber-800/60 hover:border-amber-600/80',
-        status: 'in-progress',
-      },
-    ],
-  },
-  {
-    name: 'Your session',
-    blurb: 'What you are playing tonight, and what it did to the roll.',
-    enabled: FEATURE_SESSION_ENABLED,
-    tools: [
-      {
-        href: 'schedule.html',
-        icon: <ScheduleIcon />,
-        title: 'Schedule',
-        ...local(FEATURE_SESSION_ENABLED, FEATURE_SESSION_PUBLISHED),
-        description:
-          'The tournaments you registered for, how long late registration has left on each, and an alarm before it closes.',
-        accent: 'border-orange-800/60 hover:border-orange-600/80',
-        status: 'in-progress',
-      },
-      {
-        href: 'tracker.html',
-        icon: <TrackerIcon />,
-        title: 'Bankroll Tracker',
-        ...local(FEATURE_SESSION_ENABLED, FEATURE_SESSION_PUBLISHED),
-        description:
-          'Log every result and watch the roll move: profit, ROI, ITM and the worst downswing you have been through.',
-        accent: 'border-teal-800/60 hover:border-teal-600/80',
         status: 'in-progress',
       },
     ],

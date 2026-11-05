@@ -2,8 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
 import { Footer } from '../Footer'
 import { formatMoney } from '../../lib/formatNumber'
-import { FEATURE_SESSION_PUBLISHED, SESSION_VARIABLE } from '../../lib/featureFlags'
-import { LocalOnlyBanner } from '../LocalOnlyBanner'
 import { useT } from '../../lib/i18n'
 import {
   BANKROLL_KEY,
@@ -192,7 +190,6 @@ export function TrackerPage() {
           )}
         </p>
 
-        <LocalOnlyBanner published={FEATURE_SESSION_PUBLISHED} variable={SESSION_VARIABLE} />
 
         <div className="flex flex-col gap-4">
           <Panel>
