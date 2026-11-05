@@ -24,10 +24,22 @@ export async function loadEntriesFromDb(): Promise<LoadPlan<Entry>> {
   return planLoad<Entry>({ fromDatabase, fromLegacy: loadEntries() })
 }
 
-/** Throws if it cannot save, so the page can say so rather than pretend. */
-export async function saveEntriesToDb(entries: readonly Entry[]): Promise<void> {
+/**
+ * Save, then read back what is actually there.
+ *
+ * Not paranoia. A browser can accept a write and keep nothing — private
+ * windows, storage set to clear on exit, extensions that stub IndexedDB out —
+ * and every one of those looks identical to a working save until the next
+ * reload, which is far too late to find out. Reading the count back costs one
+ * more transaction and turns "it did not save" into a number on the screen.
+ *
+ * Throws if it cannot save at all.
+ */
+export async function saveEntriesToDb(entries: readonly Entry[]): Promise<number> {
   if (!indexedDbAvailable()) throw new Error('This browser has no database to save to.')
   await writeAll('entries', entries)
+  const stored = await readAll<Entry>('entries')
+  return stored.length
 }
 
 /**

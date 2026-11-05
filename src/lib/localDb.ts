@@ -90,8 +90,16 @@ export function readAll<T>(store: StoreName): Promise<T[]> {
 /**
  * Replace a store's contents.
  *
- * One transaction, so a failure part way through leaves what was there
- * before rather than half of what was meant to replace it.
+ * The clear and the writes are one transaction, and the order they are issued
+ * in is the whole of the danger here. A clear followed by writes that throw
+ * leaves a transaction holding nothing but the deletion — and IndexedDB will
+ * commit that quite happily, because nothing told it anything went wrong. The
+ * result is a store emptied by the act of trying to save to it, which looks
+ * from the outside exactly like a save that silently did nothing.
+ *
+ * So the handlers go on before any request is issued, and a throw while
+ * issuing them aborts the transaction, which rolls the clear back with it.
+ * Whatever was there survives a failed save.
  */
 export function writeAll<T extends { id: string }>(
   store: StoreName,
@@ -101,12 +109,23 @@ export function writeAll<T extends { id: string }>(
     (db) =>
       new Promise<void>((resolve, reject) => {
         const tx = db.transaction(store, 'readwrite')
-        const objectStore = tx.objectStore(store)
-        objectStore.clear()
-        for (const record of records) objectStore.put(record)
         tx.oncomplete = () => resolve()
         tx.onerror = () => reject(tx.error ?? new Error('Database write failed'))
         tx.onabort = () => reject(tx.error ?? new Error('Database write aborted'))
+
+        try {
+          const objectStore = tx.objectStore(store)
+          objectStore.clear()
+          for (const record of records) objectStore.put(record)
+        } catch (error) {
+          // Rolls back the clear. Without this the store stays empty.
+          try {
+            tx.abort()
+          } catch {
+            // Already aborting; onabort will do the rejecting.
+          }
+          reject(error instanceof Error ? error : new Error(String(error)))
+        }
       }),
   )
 }

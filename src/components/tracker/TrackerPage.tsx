@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
 import { loadEntriesFromDb, saveEntriesToDb } from '../../lib/trackerStore'
+import type { LoadSource } from '../../lib/persisted'
 import { SiteSelect, SiteTag } from '../SiteTag'
 import { siteOptions } from '../../lib/sites'
 import { Footer } from '../Footer'
@@ -103,6 +104,12 @@ export function TrackerPage() {
   const [ready, setReady] = useState(false)
   /** Set when the database refuses, so the page can stop pretending. */
   const [dbError, setDbError] = useState<string | null>(null)
+  /** Set when the database keeps fewer rows than it was handed. */
+  const [mismatch, setMismatch] = useState<{ sent: number; stored: number } | null>(null)
+  /** What the database actually holds, read back after each save. */
+  const [storage, setStorage] = useState<{ kind: LoadSource | 'saved'; count: number } | null>(
+    null,
+  )
   const [start, setStart] = useState<string>(() => {
     if (typeof localStorage === 'undefined') return '0'
     try {
@@ -131,6 +138,7 @@ export function TrackerPage() {
         if (cancelled) return
         setEntries(plan.records)
         setReady(true)
+        setStorage({ kind: plan.source, count: plan.records.length })
         if (plan.writeBack) void saveEntriesToDb(plan.records)
       })
       .catch((error: unknown) => {
@@ -148,7 +156,13 @@ export function TrackerPage() {
   useEffect(() => {
     if (!ready) return
     saveEntriesToDb(entries)
-      .then(() => setDbError(null))
+      .then((stored) => {
+        setDbError(null)
+        // The count the database gives back, not the one we hoped for: a
+        // browser that accepts writes and keeps nothing says so right here.
+        setStorage({ kind: 'saved', count: stored })
+        setMismatch(stored === entries.length ? null : { sent: entries.length, stored })
+      })
       .catch((error: unknown) =>
         setDbError(error instanceof Error ? error.message : String(error)),
       )
@@ -339,6 +353,27 @@ export function TrackerPage() {
             {dbError && (
               <p className="mt-3 rounded-md border border-rose-900 bg-rose-950/40 px-3 py-2 text-xs text-rose-300">
                 {dbError}
+              </p>
+            )}
+            {mismatch && (
+              <p className="mt-3 rounded-md border border-rose-900 bg-rose-950/40 px-3 py-2 text-xs text-rose-300">
+                {t(
+                  'Saved {sent} results but the database reports {stored}. This browser is not keeping them — check whether it is set to clear site data on exit, or whether this is a private window.',
+                  mismatch,
+                )}
+              </p>
+            )}
+            {storage && !dbError && !mismatch && (
+              <p className="mt-3 text-[11px] text-slate-600">
+                {storage.kind === 'saved'
+                  ? t('{n} saved in the database', { n: storage.count })
+                  : storage.kind === 'database'
+                    ? t('{n} loaded from the database', { n: storage.count })
+                    : storage.kind === 'migrated'
+                      ? t('{n} moved across from this browser\u2019s older storage', {
+                          n: storage.count,
+                        })
+                      : t('Nothing stored yet.')}
               </p>
             )}
             <button
