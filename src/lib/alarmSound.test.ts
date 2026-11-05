@@ -3,7 +3,9 @@ import {
   ALARM_BURST_MS,
   ALARM_BURSTS,
   alarmDurationMs,
+  alarmTestReport,
   burstOffsets,
+  canPlayAlarm,
   startAlarm,
 } from './alarmSound'
 
@@ -64,5 +66,57 @@ describe('starting the alarm where there is no audio', () => {
       stop()
       stop()
     }).not.toThrow()
+  })
+})
+
+describe('what a test alarm reports back', () => {
+  const report = (over: Partial<Parameters<typeof alarmTestReport>[0]> = {}) =>
+    alarmTestReport({ audible: true, notified: false, permission: 'granted', ...over })
+
+  it('says both halves worked when both did', () => {
+    expect(report({ notified: true })).toMatch(/sounded twice and sent a notification/)
+  })
+
+  it('names the mute when the sound is the half that failed', () => {
+    expect(report({ audible: false, notified: true })).toMatch(/would not make a sound/)
+  })
+
+  it('tells you an alarm cannot reach you while permission is unasked', () => {
+    // The whole point of the button: finding this out tonight rather than
+    // the night it mattered.
+    expect(report({ permission: 'default' })).toMatch(/have not been allowed yet/)
+  })
+
+  it('distinguishes blocked from merely unasked', () => {
+    expect(report({ permission: 'denied' })).toMatch(/blocked for this site/)
+    expect(report({ permission: 'denied' })).not.toMatch(/have not been allowed yet/)
+  })
+
+  it('does not blame permission on a browser that has no notifications', () => {
+    expect(report({ permission: 'unsupported' })).toMatch(/no notifications/)
+  })
+
+  it('admits it when permission was granted and the notification still failed', () => {
+    expect(report({ permission: 'granted' })).toMatch(/did not go out/)
+  })
+
+  it('says the banner is all there is when nothing else worked', () => {
+    expect(report({ audible: false, permission: 'denied' })).toMatch(/banner above is all/)
+  })
+
+  it('always gives the page a sentence to show', () => {
+    for (const audible of [true, false]) {
+      for (const notified of [true, false]) {
+        for (const permission of ['granted', 'denied', 'default', 'unsupported'] as const) {
+          expect(alarmTestReport({ audible, notified, permission }).length).toBeGreaterThan(20)
+        }
+      }
+    }
+  })
+})
+
+describe('whether this browser can make a noise', () => {
+  it('says no where there is no audio, rather than guessing', () => {
+    expect(canPlayAlarm()).toBe(false)
   })
 })

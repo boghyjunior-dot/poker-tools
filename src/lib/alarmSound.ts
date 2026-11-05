@@ -44,6 +44,49 @@ export function alarmDurationMs(
 
 type AudioCtor = typeof AudioContext
 
+/** Whether this browser can make a noise at all. */
+export function canPlayAlarm(): boolean {
+  return audioContextCtor() !== null
+}
+
+/**
+ * What a test alarm managed to do, in one sentence.
+ *
+ * The point of a test button is not the beep — it is finding out which half
+ * of the alarm is missing before the night you needed it. A sound with no
+ * notification still works while you are looking at the tab and fails the
+ * moment you are not, and that is worth saying out loud rather than leaving
+ * you to infer it from a noise you did hear.
+ */
+export function alarmTestReport(options: {
+  audible: boolean
+  notified: boolean
+  permission: NotificationPermission | 'unsupported'
+}): string {
+  const { audible, notified, permission } = options
+
+  if (notified) {
+    return audible
+      ? 'It sounded twice and sent a notification. A real one also leaves the banner up until you dismiss it.'
+      : 'It sent a notification, but this browser would not make a sound. Check the tab is not muted.'
+  }
+  if (!audible) {
+    return 'No sound and no notification: the banner above is all a real alarm could show you here.'
+  }
+  if (permission === 'unsupported') {
+    return 'It sounded twice and put the banner up. This browser has no notifications, so those two are all you get.'
+  }
+  if (permission === 'denied') {
+    return 'It sounded twice and put the banner up. Notifications are blocked for this site, so nothing will reach you with the tab in the background.'
+  }
+  if (permission === 'default') {
+    return 'It sounded twice and put the banner up. Notifications have not been allowed yet — enable them, or an alarm only reaches you while you are looking at this tab.'
+  }
+  // Permission granted and the notification still did not go out: some
+  // browsers only allow them through a service worker.
+  return 'It sounded twice and put the banner up, but the notification did not go out, even though this site is allowed to send them.'
+}
+
 function audioContextCtor(): AudioCtor | null {
   if (typeof window === 'undefined') return null
   return (

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
 import { SiteSelect, SiteTag } from '../SiteTag'
 import { siteOptions } from '../../lib/sites'
-import { startAlarm } from '../../lib/alarmSound'
+import { alarmTestReport, canPlayAlarm, startAlarm } from '../../lib/alarmSound'
 import { entryFromTournament } from '../../lib/scheduleToTracker'
 import { appendEntryToDb } from '../../lib/trackerStore'
 import { Footer } from '../Footer'
@@ -309,6 +309,8 @@ export function SchedulePage() {
   // A ticking clock is what makes every countdown on the page live.
   const [now, setNow] = useState(() => Date.now())
   const [ringing, setRinging] = useState<Set<string>>(() => new Set())
+  /** True while a test alarm is on screen, so the banner has something to show. */
+  const [testing, setTesting] = useState(false)
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>(() =>
     typeof Notification === 'undefined' ? 'unsupported' : Notification.permission,
   )
@@ -363,13 +365,19 @@ export function SchedulePage() {
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
         const translate = translateRef.current
         for (const view of due) {
-          new Notification(translate('Late reg closing'), {
-            body: translate('{name} — {time} left', {
-              name: view.name,
-              time: formatCountdown(view.msToLateRegClose),
-            }),
-            tag: view.id,
-          })
+          try {
+            new Notification(translate('Late reg closing'), {
+              body: translate('{name} — {time} left', {
+                name: view.name,
+                time: formatCountdown(view.msToLateRegClose),
+              }),
+              tag: view.id,
+            })
+          } catch {
+            // Some browsers only allow notifications through a service
+            // worker. The sound and the banner are already going, and one
+            // throw must not take the rest of the due alarms with it.
+          }
         }
       }
     }, 1000)
@@ -504,6 +512,37 @@ export function SchedulePage() {
     setPermission(await Notification.requestPermission())
   }
 
+  /**
+   * Fire the whole alarm on demand: sound, banner and notification.
+   *
+   * Not a beep button. What goes wrong with an alarm is never the code —
+   * it is a muted tab, a notification permission nobody granted, or a volume
+   * slider somebody moved, and all three are invisible until the one night
+   * they matter. So this runs the real path and then says which parts of it
+   * actually reached you.
+   */
+  const testAlarm = () => {
+    setTesting(true)
+    alarmRef.current?.()
+    alarmRef.current = startAlarm()
+
+    let notified = false
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      try {
+        new Notification(t('Late reg closing'), {
+          body: t('Test alarm — a real one names the tournament and the time left.'),
+          tag: 'alarm-test',
+        })
+        notified = true
+      } catch {
+        // Some browsers only allow notifications through a service worker.
+        // The report below says so rather than claiming one went out.
+      }
+    }
+
+    setNote(t(alarmTestReport({ audible: canPlayAlarm(), notified, permission })))
+  }
+
   // Looked up fresh each tick, so a banner that is still open keeps counting
   // down, and a tournament that closes drops out of it by itself.
   const ringingViews = views.filter((view) => ringing.has(view.id) && view.status !== 'closed')
@@ -516,7 +555,7 @@ export function SchedulePage() {
   // The banner can empty without anyone pressing Dismiss — late reg closes and
   // the row drops out of it. The sound follows the banner either way, because
   // a ring with nothing on screen to explain it is just a noise.
-  const nothingRinging = ringingViews.length === 0
+  const nothingRinging = ringingViews.length === 0 && !testing
   useEffect(() => {
     if (nothingRinging) silence()
   }, [nothingRinging, silence])
@@ -588,12 +627,17 @@ export function SchedulePage() {
         </p>
 
 
-        {ringingViews.length > 0 && (
+        {(ringingViews.length > 0 || testing) && (
           <div className="mb-4 rounded-lg border border-amber-700 bg-amber-950/50 p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-amber-200">{t('Late reg closing')}</p>
                 <ul className="mt-1 space-y-0.5">
+                  {testing && (
+                    <li className="text-sm text-amber-100">
+                      {t('Test alarm — a real one names the tournament and the time left.')}
+                    </li>
+                  )}
                   {ringingViews.map((view) => (
                     <li key={view.id} className="text-sm text-amber-100">
                       {view.name || t('Untitled')} —{' '}
@@ -609,6 +653,7 @@ export function SchedulePage() {
                 type="button"
                 onClick={() => {
                   setRinging(new Set())
+                  setTesting(false)
                   silence()
                 }}
                 className="rounded-md bg-amber-700 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-amber-600"
@@ -689,6 +734,13 @@ export function SchedulePage() {
                     {t('Export JSON')}
                   </button>
                 )}
+                <button
+                  type="button"
+                  onClick={testAlarm}
+                  className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-slate-700"
+                >
+                  {t('Test alarm')}
+                </button>
                 {permission !== 'granted' && permission !== 'unsupported' && (
                   <button
                     type="button"
