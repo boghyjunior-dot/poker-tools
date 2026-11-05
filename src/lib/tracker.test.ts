@@ -55,9 +55,12 @@ describe('the running balance', () => {
     expect(views.map((v) => v.balance)).toEqual([978, 1056, 1078])
   })
 
-  it('marks a cash as in the money, including a bounty-only result', () => {
+  it('counts a cash as in the money and a bounty-only bust as not', () => {
+    // Entry 'c' collected $44 of heads and still busted out of the places.
+    // Calling that in the money would put a PKO grinder near 50% ITM, which
+    // reads like a world-beater and says nothing at all.
     const views = buildViews(entries)
-    expect(views.map((v) => v.itm)).toEqual([false, true, true])
+    expect(views.map((v) => v.itm)).toEqual([false, true, false])
   })
 
   it('keeps entries on the same day in a stable order', () => {

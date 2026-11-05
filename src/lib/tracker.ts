@@ -85,7 +85,11 @@ export function buildViews(entries: Entry[], startingBankroll = 0): EntryView[] 
       cost,
       profit,
       balance,
-      itm: Math.max(0, entry.cashed) + Math.max(0, entry.bounties) > 0,
+      // Reaching the paid places, which a knockout on the way out is not.
+      // Bounty money is money and counts everywhere money counts; it just is
+      // not a cash, and a schedule of PKOs would otherwise report an ITM near
+      // half — a number that would look like a world-beater and mean nothing.
+      itm: Math.max(0, entry.cashed) > 0,
     }
   })
 }
