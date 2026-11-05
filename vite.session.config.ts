@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 /**
- * The local app: Schedule and Bankroll Tracker.
+ * Snap Cash: the local app, holding Schedule and the Bankroll Tracker.
  *
  * Its own config rather than more entries in the published one, because the
  * difference between the two is not which pages they contain — it is that

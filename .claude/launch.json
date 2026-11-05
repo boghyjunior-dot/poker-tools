@@ -12,7 +12,7 @@
       "autoPort": true
     },
     {
-      "name": "snapper-local",
+      "name": "snap-cash",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
         "run",

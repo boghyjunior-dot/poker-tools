@@ -63,7 +63,7 @@ export function SessionHome() {
     <div className="min-h-screen px-4 py-10">
       <div className="mx-auto w-full max-w-3xl">
         <header className="mb-8">
-          <h1 className="text-4xl font-bold text-white">{t('Snapper Livewell')}</h1>
+          <h1 className="text-4xl font-bold text-white">{t('Snap Cash')}</h1>
           <p className="mt-2 max-w-xl text-sm text-slate-400">
             {t(
               'Your schedule and your results, kept on this machine. This app is never deployed: it holds a database, and a database belongs somewhere you control.',
