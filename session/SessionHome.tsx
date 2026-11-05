@@ -4,8 +4,8 @@ import { LanguageSwitcher } from '../src/components/LanguageSwitcher'
 /**
  * The front door of the local app.
  *
- * Two tools, and the reason they live apart from the published site: they are
- * the only ones that keep anything. Everything on snapper.poker answers a
+ * The tools that live apart from the published site, and the reason they do:
+ * they are the only ones that keep anything. Everything on snapper.poker answers a
  * question and forgets it, which is what lets it be a folder of static files
  * with nothing behind it. A schedule you mark up and a results log you build
  * over a year are not that — they are a database, and a database is a thing
@@ -101,6 +101,19 @@ export function SessionHome() {
             </a>
           ))}
         </div>
+
+        {/* A link rather than a card: it is not a tool, and nothing about an
+            empty database should look like a thing you are meant to use. */}
+        <p className="mt-4 text-[13px] text-slate-500">
+          {t('Nothing logged yet?')}{' '}
+          <a
+            href="./demo.html"
+            className="font-medium text-indigo-400 underline-offset-2 hover:underline"
+          >
+            {t('Fill it with demo data')}
+          </a>{' '}
+          {t('to see what the pages look like with six months behind them.')}
+        </p>
 
         <section className="mt-8 rounded-lg border border-slate-800 bg-slate-950/50 p-4">
           <h2 className="text-sm font-semibold text-slate-200">{t('Why this is separate')}</h2>
