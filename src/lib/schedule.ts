@@ -230,7 +230,7 @@ export function parseScheduleText(
  * tournament is inferred from its room — late registration varies far too much
  * between events for a per-site default to be anything but a wrong guess.
  */
-export const SITES = ['GGPoker', 'CoinPoker', 'iPoker', 'PokerStars', 'partypoker'] as const
+export { SITES } from './sites'
 
 /** Every room actually present in a schedule, for the filter row. */
 export function sitesInUse(tournaments: readonly Tournament[]): string[] {

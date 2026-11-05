@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
+import { SiteSelect, SiteTag } from '../SiteTag'
+import { siteOptions } from '../../lib/sites'
 import { startAlarm } from '../../lib/alarmSound'
 import { entryFromTournament } from '../../lib/scheduleToTracker'
 import { loadEntries, saveEntries } from '../../lib/tracker'
@@ -21,7 +23,6 @@ import {
   newTournamentId,
   parseScheduleText,
   saveSchedule,
-  SITES,
   sitesInUse,
   sortByUrgency,
   toJson,
@@ -686,12 +687,13 @@ export function SchedulePage() {
                 />
                 <div className="flex flex-wrap items-center gap-2">
                   <label className="text-[11px] text-slate-500">{t('These lines are from')}</label>
-                  <input
-                    list="schedule-sites"
+                  <SiteSelect
+                    ariaLabel={t('Room')}
                     value={pasteSite}
-                    onChange={(event) => setPasteSite(event.target.value)}
+                    options={siteOptions(pasteSite)}
+                    onChange={setPasteSite}
                     placeholder={t('Room')}
-                    className="w-36 rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                    className="w-36"
                   />
                   <button
                     type="button"
@@ -723,7 +725,7 @@ export function SchedulePage() {
                         active={siteFilter.has(room)}
                         onClick={() => toggleIn(setSiteFilter, room)}
                       >
-                        {room}
+                        <SiteTag site={room} />
                       </Pill>
                     ))}
                   </div>
@@ -796,7 +798,7 @@ export function SchedulePage() {
                       <FilterLabel>{t('Committed by room')}</FilterLabel>
                       {perSite.map((row) => (
                         <span key={row.site} className="text-sm text-slate-300">
-                          {row.site}{' '}
+                          <SiteTag site={row.site} />{' '}
                           <span className="font-semibold tabular-nums text-white">
                             ${formatMoney(row.amount)}
                           </span>
@@ -894,13 +896,12 @@ export function SchedulePage() {
                           </span>
                         </td>
                         <td className="py-2">
-                          <input
-                            list="schedule-sites"
-                            aria-label={t('Room')}
+                          <SiteSelect
+                            ariaLabel={t('Room')}
                             value={view.site}
-                            onChange={(event) => update(view.id, { site: event.target.value })}
-                            placeholder="—"
-                            className="w-24 rounded border border-transparent bg-transparent px-1 py-0.5 text-xs text-slate-400 placeholder:text-slate-700 hover:border-slate-700 focus:border-indigo-600 focus:outline-none"
+                            options={siteOptions(view.site)}
+                            onChange={(site) => update(view.id, { site })}
+                            className="w-28"
                           />
                         </td>
                         <td className="py-2">
@@ -1005,7 +1006,7 @@ export function SchedulePage() {
                         })}
                       </span>
                       <span className="line-through">{view.name || t('Untitled')}</span>
-                      {view.site && <span className="text-xs text-slate-600">{view.site}</span>}
+                      <SiteTag site={view.site} />
                       <button
                         type="button"
                         onClick={() => setPlan(view.id, 'watching')}
@@ -1028,12 +1029,6 @@ export function SchedulePage() {
             onSave={(result) => bustOut(busting, result)}
           />
         )}
-
-        <datalist id="schedule-sites">
-          {[...new Set([...SITES, ...rooms])].map((room) => (
-            <option key={room} value={room} />
-          ))}
-        </datalist>
 
         <Footer />
       </div>

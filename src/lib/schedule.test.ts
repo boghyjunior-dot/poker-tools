@@ -216,8 +216,10 @@ describe('formatCountdown', () => {
 
 describe('rooms', () => {
   it('suggests the networks people actually name', () => {
+    // The list itself is owned by sites.ts and checked there; this only
+    // holds that the schedule still reaches it.
     expect(SITES).toContain('GGPoker')
-    expect(SITES).toContain('CoinPoker')
+    expect(SITES).toContain('Coin Poker')
     expect(SITES).toContain('iPoker')
   })
 

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
+import { SiteSelect, SiteTag } from '../SiteTag'
+import { siteOptions } from '../../lib/sites'
 import { Footer } from '../Footer'
 import { formatMoney } from '../../lib/formatNumber'
 import { useT } from '../../lib/i18n'
@@ -278,7 +280,18 @@ export function TrackerPage() {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
               {field('date', t('Date'))}
               {field('name', t('Name'), t('Nightly'))}
-              {field('site', t('Site'))}
+              <label className="flex flex-col gap-1">
+                <span className="text-[10px] uppercase tracking-wider text-slate-500">
+                  {t('Site')}
+                </span>
+                <SiteSelect
+                  ariaLabel={t('Site')}
+                  value={draft.site}
+                  options={siteOptions(draft.site)}
+                  onChange={(site) => setDraft((prev) => ({ ...prev, site }))}
+                  className="w-full py-1.5"
+                />
+              </label>
               {field('buyIn', t('Buy-in'), '0')}
               {field('fee', t('Fee'), '0')}
               {field('cashed', t('Cashed'), '0')}
@@ -313,7 +326,7 @@ export function TrackerPage() {
                       <td className="py-2 tabular-nums text-slate-500">{view.date}</td>
                       <td className="py-2 text-white">
                         {view.name}
-                        {view.site && <span className="ml-2 text-xs text-slate-500">{view.site}</span>}
+                        <SiteTag site={view.site} className="ml-2" />
                       </td>
                       <td className="py-2 tabular-nums">${formatMoney(view.cost)}</td>
                       <td className="py-2 tabular-nums">
