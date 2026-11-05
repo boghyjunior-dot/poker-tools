@@ -133,6 +133,21 @@ describe('stored results', () => {
     expect(parseStored([make({ cashed: 50 })])[0]).toMatchObject({ id: 'e1', cashed: 50 })
   })
 
+  it('keeps a finishing place, and only a real one', () => {
+    expect(parseStored([{ ...make(), position: 47 }])[0].position).toBe(47)
+    expect(parseStored([{ ...make(), position: 12.7 }])[0].position).toBe(12)
+    // Unrecorded, nonsense, and the places that do not exist.
+    for (const bad of [undefined, null, 0, -3, 'first', Number.NaN]) {
+      expect(parseStored([{ ...make(), position: bad }])[0].position, String(bad)).toBeUndefined()
+    }
+  })
+
+  it('reads an entry saved before places existed', () => {
+    const legacy = { ...make() }
+    delete (legacy as Record<string, unknown>).position
+    expect(parseStored([legacy])[0].position).toBeUndefined()
+  })
+
   it('drops rows without a usable id or date', () => {
     expect(parseStored([{ id: 'x' }, { date: '2026-09-01' }, null, 7])).toEqual([])
     expect(parseStored([{ id: 'x', date: 'nonsense' }])).toEqual([])
@@ -154,9 +169,16 @@ describe('csv export', () => {
   it('writes a header and a row per entry', () => {
     const csv = toCsv(buildViews([make({ cashed: 60 })], 100))
     const lines = csv.split('\n')
-    expect(lines[0]).toBe('date,name,site,buyIn,fee,cashed,bounties,profit,balance')
+    expect(lines[0]).toBe('date,name,site,buyIn,fee,cashed,bounties,place,profit,balance')
     expect(lines[1]).toContain('2026-09-01')
     expect(lines[1]).toContain('38') // profit
+  })
+
+  it('leaves the place column empty rather than writing a zero', () => {
+    // A blank cell reads as "not recorded". A 0 reads as a finishing place,
+    // and there is no such thing.
+    const csv = toCsv(buildViews([make({ cashed: 60 })], 100))
+    expect(csv.split('\n')[1]).toContain(',,')
   })
 
   it('quotes names so a comma cannot break the file', () => {

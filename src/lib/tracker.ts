@@ -20,6 +20,14 @@ export interface Entry {
   cashed: number
   /** Bounties collected, kept apart so they do not hide inside the cash. */
   bounties: number
+  /**
+   * Where you finished, when you noted it.
+   *
+   * Optional because most of the time you did not: a bust three levels in has
+   * a place nobody looks up. Undefined means unrecorded, which is a different
+   * thing from first, and the one number that must never be guessed at.
+   */
+  position?: number
   notes?: string
 }
 
@@ -169,6 +177,12 @@ const money = (value: unknown): number => {
   return Number.isFinite(n) && n >= 0 ? n : 0
 }
 
+/** A finishing place, or nothing. Zero and below are not places. */
+const place = (value: unknown): number | undefined => {
+  const n = Number(value)
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : undefined
+}
+
 export function parseStored(raw: unknown): Entry[] {
   if (!Array.isArray(raw)) return []
   const out: Entry[] = []
@@ -186,6 +200,7 @@ export function parseStored(raw: unknown): Entry[] {
       fee: money(entry.fee),
       cashed: money(entry.cashed),
       bounties: money(entry.bounties),
+      position: place(entry.position),
       notes: typeof entry.notes === 'string' ? entry.notes : undefined,
     })
   }
@@ -217,7 +232,7 @@ export function newEntryId(): string {
 
 /** Results as CSV, so the log can leave this browser. */
 export function toCsv(views: EntryView[]): string {
-  const header = 'date,name,site,buyIn,fee,cashed,bounties,profit,balance'
+  const header = 'date,name,site,buyIn,fee,cashed,bounties,place,profit,balance'
   const rows = views.map((view) =>
     [
       view.date,
@@ -227,6 +242,7 @@ export function toCsv(views: EntryView[]): string {
       view.fee,
       view.cashed,
       view.bounties,
+      view.position ?? '',
       view.profit,
       view.balance,
     ].join(','),

@@ -31,16 +31,13 @@ export function entryDate(startsAt: string): string {
  * Everything the result does not say is left at zero rather than guessed. A
  * blank cash field means a bust, which is most of them, and the Tracker reads
  * "in the money" off the cash rather than off a flag that could disagree with
- * it. The finishing place has nowhere structured to live in an entry, so it
- * goes in the notes, where it is at least still legible.
+ * it.
  */
 export function entryFromTournament(
   tournament: Tournament,
   result: TournamentResult,
   id: string = newEntryId(),
 ): Entry {
-  const place =
-    result.position !== null && result.position > 0 ? `Finished ${result.position}` : undefined
   return {
     id,
     date: entryDate(tournament.startsAt),
@@ -51,6 +48,8 @@ export function entryFromTournament(
     fee: 0,
     cashed: Math.max(0, result.cashed),
     bounties: Math.max(0, result.bounties),
-    notes: [tournament.notes?.trim(), place].filter(Boolean).join(' · ') || undefined,
+    position:
+      result.position !== null && result.position > 0 ? Math.floor(result.position) : undefined,
+    notes: tournament.notes?.trim() || undefined,
   }
 }

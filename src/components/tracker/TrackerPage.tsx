@@ -115,6 +115,7 @@ export function TrackerPage() {
     buyIn: '',
     cashed: '',
     bounties: '',
+    position: '',
   })
 
   useEffect(() => {
@@ -149,9 +150,10 @@ export function TrackerPage() {
         fee: 0,
         cashed: num(draft.cashed),
         bounties: num(draft.bounties),
+        position: num(draft.position) > 0 ? Math.floor(num(draft.position)) : undefined,
       },
     ])
-    setDraft((prev) => ({ ...prev, name: '', buyIn: '', cashed: '', bounties: '' }))
+    setDraft((prev) => ({ ...prev, name: '', buyIn: '', cashed: '', bounties: '', position: '' }))
   }
 
   const exportCsv = () => {
@@ -294,6 +296,7 @@ export function TrackerPage() {
               {field('buyIn', t('Buy-in'), '0')}
               {field('cashed', t('Cashed'), '0')}
               {field('bounties', t('Bounties'), '0')}
+              {field('position', t('Place'), '—')}
             </div>
             <button
               type="button"
@@ -313,6 +316,7 @@ export function TrackerPage() {
                     <th className="pb-2 font-medium">{t('Tournament')}</th>
                     <th className="pb-2 font-medium">{t('Cost')}</th>
                     <th className="pb-2 font-medium">{t('Back')}</th>
+                    <th className="pb-2 font-medium">{t('Place')}</th>
                     <th className="pb-2 font-medium">{t('Profit')}</th>
                     <th className="pb-2 font-medium">{t('Bankroll')}</th>
                     <th className="pb-2 font-medium" />
@@ -329,6 +333,9 @@ export function TrackerPage() {
                       <td className="py-2 tabular-nums">${formatMoney(view.cost)}</td>
                       <td className="py-2 tabular-nums">
                         ${formatMoney(view.cashed + view.bounties)}
+                      </td>
+                      <td className="py-2 tabular-nums text-slate-500">
+                        {view.position ?? '—'}
                       </td>
                       <td
                         className={`py-2 tabular-nums font-semibold ${

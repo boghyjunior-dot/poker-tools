@@ -66,23 +66,25 @@ describe('turning a busted tournament into a tracker entry', () => {
     expect(entryProfit(entry)).toBeCloseTo(140 + 65 - 21.6, 10)
   })
 
-  it('notes the finishing place, which an entry has nowhere else to keep', () => {
-    const entry = entryFromTournament(tournament(), result({ position: 47 }), 'e1')
-    expect(entry.notes).toContain('47')
+  it('carries the finishing place into its own field', () => {
+    expect(entryFromTournament(tournament(), result({ position: 47 }), 'e1').position).toBe(47)
   })
 
-  it('says nothing about a place you did not record', () => {
-    expect(entryFromTournament(tournament(), result(), 'e1').notes).toBeUndefined()
+  it('leaves the place undefined when you did not record one', () => {
+    // Undefined is not the same as first, and is the one number that must
+    // never be guessed at.
+    expect(entryFromTournament(tournament(), result(), 'e1').position).toBeUndefined()
+    expect(entryFromTournament(tournament(), result({ position: 0 }), 'e1').position).toBeUndefined()
   })
 
-  it('keeps a note the tournament already had, and adds to it', () => {
+  it('keeps the note the tournament had, and does not write the place into it', () => {
     const entry = entryFromTournament(
       tournament({ notes: 'satellite seat' }),
       result({ position: 3 }),
       'e1',
     )
-    expect(entry.notes).toContain('satellite seat')
-    expect(entry.notes).toContain('3')
+    expect(entry.notes).toBe('satellite seat')
+    expect(entry.position).toBe(3)
   })
 
   it('refuses negative money rather than logging a profit nobody made', () => {
