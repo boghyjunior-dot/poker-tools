@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
+import { loadEntriesFromDb, saveEntriesToDb } from '../../lib/trackerStore'
 import { SiteSelect, SiteTag } from '../SiteTag'
 import { siteOptions } from '../../lib/sites'
 import { Footer } from '../Footer'
@@ -10,9 +11,7 @@ import {
   buildViews,
   confidenceFromCount,
   CONFIDENCE_NOTE,
-  loadEntries,
   newEntryId,
-  saveEntries,
   summarise,
   toCsv,
   type Entry,
@@ -98,7 +97,10 @@ const today = () => new Date().toISOString().slice(0, 10)
 
 export function TrackerPage() {
   const t = useT()
-  const [entries, setEntries] = useState<Entry[]>(() => loadEntries())
+  // Empty until the database answers. Nothing saves before then — see the
+  // guard on the effect below.
+  const [entries, setEntries] = useState<Entry[]>([])
+  const [ready, setReady] = useState(false)
   const [start, setStart] = useState<string>(() => {
     if (typeof localStorage === 'undefined') return '0'
     try {
@@ -118,9 +120,31 @@ export function TrackerPage() {
     position: '',
   })
 
+  // One read on mount: the database, or the localStorage log moved across
+  // from before this app had one.
   useEffect(() => {
-    saveEntries(entries)
-  }, [entries])
+    let cancelled = false
+    loadEntriesFromDb()
+      .then((plan) => {
+        if (cancelled) return
+        setEntries(plan.records)
+        setReady(true)
+        if (plan.writeBack) void saveEntriesToDb(plan.records)
+      })
+      .catch(() => {
+        if (!cancelled) setReady(true)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // Not before the load has returned: the first save would otherwise be the
+  // empty array above, written over a year of results.
+  useEffect(() => {
+    if (!ready) return
+    void saveEntriesToDb(entries)
+  }, [entries, ready])
 
   useEffect(() => {
     try {

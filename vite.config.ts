@@ -155,10 +155,11 @@ export default defineConfig(({ mode }) => {
 
   return {
     base: './',
-    // Vite does not read PORT on its own, and this is rarely the only dev
-    // server running. Honour an assigned port so two sessions, or two
-    // checkouts, do not fight over 5173.
-    server: { port: Number(process.env.PORT) || 5173 },
+    // 5174, because Snap Cash needs 5173: browser storage is keyed by origin,
+    // port included, so the app holding a database cannot move without
+    // leaving the database behind. This one stores nothing, so it is the one
+    // that moves. PORT still wins, for two checkouts running at once.
+    server: { port: Number(process.env.PORT) || 5174 },
     plugins: [react(), tailwindcss(), publishedPages(published, heldBack)],
     build: {
       rollupOptions: { input },

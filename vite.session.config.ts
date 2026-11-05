@@ -23,9 +23,10 @@ export default defineConfig({
   root: 'session',
   plugins: [react(), tailwindcss()],
   server: {
-    port: 5174,
-    // Fail rather than wander to another port: the whole point is knowing
-    // which app is on which number.
+    port: 5173,
+    // Fail rather than wander to another port. It also has to be this
+    // number: browser storage is keyed by origin, port included, so the app
+    // that owns a database cannot move without leaving the database behind.
     strictPort: true,
     fs: {
       // The pages and the model live above this root.

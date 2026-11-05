@@ -97,10 +97,10 @@ export function SessionHome() {
           <p className="mt-3 text-[13px] text-slate-500">
             {t('The calculators are at')}{' '}
             <a
-              href="http://localhost:5173/"
+              href="http://localhost:5174/"
               className="font-medium text-indigo-400 underline-offset-2 hover:underline"
             >
-              localhost:5173
+              localhost:5174
             </a>
             .
           </p>

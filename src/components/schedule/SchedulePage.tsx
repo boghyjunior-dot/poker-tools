@@ -4,7 +4,7 @@ import { SiteSelect, SiteTag } from '../SiteTag'
 import { siteOptions } from '../../lib/sites'
 import { startAlarm } from '../../lib/alarmSound'
 import { entryFromTournament } from '../../lib/scheduleToTracker'
-import { loadEntries, saveEntries } from '../../lib/tracker'
+import { appendEntryToDb } from '../../lib/trackerStore'
 import { Footer } from '../Footer'
 import { formatMoney } from '../../lib/formatNumber'
 import { useT } from '../../lib/i18n'
@@ -448,7 +448,7 @@ export function SchedulePage() {
     const tournament = tournaments.find((item) => item.id === id)
     if (!tournament) return
     update(id, { plan: 'busted', result })
-    saveEntries([...loadEntries(), entryFromTournament(tournament, result)])
+    void appendEntryToDb(entryFromTournament(tournament, result))
     setBusting(null)
     setNote(
       t('{name} logged to the bankroll tracker.', {
