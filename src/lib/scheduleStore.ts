@@ -52,8 +52,14 @@ export async function loadScheduleFromDb(): Promise<LoadPlan<Tournament>> {
   return plan
 }
 
-/** Replace the stored schedule. Quiet on failure: the session still works. */
+/**
+ * Replace the stored schedule.
+ *
+ * Throws if it cannot. Swallowing this was a mistake: a write that fails
+ * silently leaves the row on screen and gone after a reload, which is
+ * indistinguishable from the app working until the moment it matters.
+ */
 export async function saveScheduleToDb(tournaments: readonly Tournament[]): Promise<void> {
-  if (!indexedDbAvailable()) return
-  await writeAll('schedule', tournaments).catch(() => {})
+  if (!indexedDbAvailable()) throw new Error('This browser has no database to save to.')
+  await writeAll('schedule', tournaments)
 }

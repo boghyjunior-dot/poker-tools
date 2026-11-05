@@ -24,9 +24,10 @@ export async function loadEntriesFromDb(): Promise<LoadPlan<Entry>> {
   return planLoad<Entry>({ fromDatabase, fromLegacy: loadEntries() })
 }
 
+/** Throws if it cannot save, so the page can say so rather than pretend. */
 export async function saveEntriesToDb(entries: readonly Entry[]): Promise<void> {
-  if (!indexedDbAvailable()) return
-  await writeAll('entries', entries).catch(() => {})
+  if (!indexedDbAvailable()) throw new Error('This browser has no database to save to.')
+  await writeAll('entries', entries)
 }
 
 /**
@@ -39,6 +40,6 @@ export async function saveEntriesToDb(entries: readonly Entry[]): Promise<void> 
  * can no longer overwrite it by saving a list this row was never in.
  */
 export async function appendEntryToDb(entry: Entry): Promise<void> {
-  if (!indexedDbAvailable()) return
-  await writeOne('entries', entry).catch(() => {})
+  if (!indexedDbAvailable()) throw new Error('This browser has no database to save to.')
+  await writeOne('entries', entry)
 }

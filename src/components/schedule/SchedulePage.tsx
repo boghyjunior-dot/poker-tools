@@ -305,6 +305,7 @@ export function SchedulePage() {
   // see the guard on the effect below.
   const [tournaments, setTournaments] = useState<Tournament[]>([])
   const [ready, setReady] = useState(false)
+  const [dbError, setDbError] = useState<string | null>(null)
   // A ticking clock is what makes every countdown on the page live.
   const [now, setNow] = useState(() => Date.now())
   const [ringing, setRinging] = useState<Set<string>>(() => new Set())
@@ -392,10 +393,12 @@ export function SchedulePage() {
         setReady(true)
         if (plan.writeBack) void saveScheduleToDb(plan.records)
       })
-      .catch(() => {
-        // No database to be had. The page still works for this session; it
-        // just will not survive the tab.
-        if (!cancelled) setReady(true)
+      .catch((error: unknown) => {
+        // The page still works for this session; it just will not survive the
+        // tab, and saying so beats letting you find out tomorrow.
+        if (cancelled) return
+        setReady(true)
+        setDbError(error instanceof Error ? error.message : String(error))
       })
     return () => {
       cancelled = true
@@ -407,7 +410,11 @@ export function SchedulePage() {
   // written over whatever was really there.
   useEffect(() => {
     if (!ready) return
-    void saveScheduleToDb(tournaments)
+    saveScheduleToDb(tournaments)
+      .then(() => setDbError(null))
+      .catch((error: unknown) =>
+        setDbError(error instanceof Error ? error.message : String(error)),
+      )
   }, [tournaments, ready])
 
   const views = useMemo(
@@ -694,7 +701,12 @@ export function SchedulePage() {
               </div>
             </div>
 
-            {note && <p className="mt-3 text-xs text-slate-400">{note}</p>}
+            {dbError && (
+          <p className="mt-3 rounded-md border border-rose-900 bg-rose-950/40 px-3 py-2 text-xs text-rose-300">
+            {t('Not saved: {reason}', { reason: dbError })}
+          </p>
+        )}
+        {note && <p className="mt-3 text-xs text-slate-400">{note}</p>}
 
             <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
               {permission === 'unsupported'

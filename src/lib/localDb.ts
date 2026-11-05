@@ -17,7 +17,16 @@
  */
 
 const DB_NAME = 'poker-tools'
-const DB_VERSION = 1
+/**
+ * Raise this whenever STORES gains a name.
+ *
+ * A database created at an older version keeps the stores it has and gets
+ * the missing ones in onupgradeneeded; leaving the number alone means that
+ * upgrade never runs, and the first write to a store the browser has never
+ * heard of throws. Which, until the catch below was removed, looked exactly
+ * like a save that worked.
+ */
+const DB_VERSION = 2
 
 /** Object stores, each keyed by the `id` on the records it holds. */
 export const STORES = ['schedule', 'entries', 'library'] as const

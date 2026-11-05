@@ -101,6 +101,8 @@ export function TrackerPage() {
   // guard on the effect below.
   const [entries, setEntries] = useState<Entry[]>([])
   const [ready, setReady] = useState(false)
+  /** Set when the database refuses, so the page can stop pretending. */
+  const [dbError, setDbError] = useState<string | null>(null)
   const [start, setStart] = useState<string>(() => {
     if (typeof localStorage === 'undefined') return '0'
     try {
@@ -131,8 +133,10 @@ export function TrackerPage() {
         setReady(true)
         if (plan.writeBack) void saveEntriesToDb(plan.records)
       })
-      .catch(() => {
-        if (!cancelled) setReady(true)
+      .catch((error: unknown) => {
+        if (cancelled) return
+        setReady(true)
+        setDbError(error instanceof Error ? error.message : String(error))
       })
     return () => {
       cancelled = true
@@ -143,7 +147,11 @@ export function TrackerPage() {
   // empty array above, written over a year of results.
   useEffect(() => {
     if (!ready) return
-    void saveEntriesToDb(entries)
+    saveEntriesToDb(entries)
+      .then(() => setDbError(null))
+      .catch((error: unknown) =>
+        setDbError(error instanceof Error ? error.message : String(error)),
+      )
   }, [entries, ready])
 
   useEffect(() => {
@@ -162,7 +170,13 @@ export function TrackerPage() {
   const num = (value: string) => Math.max(0, Number(value) || 0)
 
   const add = () => {
-    if (draft.buyIn.trim() === '' && draft.cashed.trim() === '') return
+    if (draft.buyIn.trim() === '' && draft.cashed.trim() === '') {
+      // It used to return without a word, which reads exactly like a result
+      // that was logged and then lost.
+      setDbError(t('Give it a buy-in or a cash amount, so there is a result to log.'))
+      return
+    }
+    setDbError(null)
     setEntries((prev) => [
       ...prev,
       {
@@ -322,6 +336,11 @@ export function TrackerPage() {
               {field('bounties', t('Bounties'), '0')}
               {field('position', t('Place'), '—')}
             </div>
+            {dbError && (
+              <p className="mt-3 rounded-md border border-rose-900 bg-rose-950/40 px-3 py-2 text-xs text-rose-300">
+                {dbError}
+              </p>
+            )}
             <button
               type="button"
               onClick={add}
