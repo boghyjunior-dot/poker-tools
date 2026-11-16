@@ -39,6 +39,15 @@ export interface ChallengeResult {
   buyIn: number
   /** Bty: bounty money collected. */
   bounties: number
+  /**
+   * Prize money, with bounties kept out of it.
+   *
+   * A cash is what the prize pool paid you. Heads are money too and they are
+   * counted a line above, but they are not a cash — the same separation the
+   * Tracker makes, for the same reason: a schedule of knockouts would
+   * otherwise report everybody as cashing half the time.
+   */
+  cashed: number
 }
 
 /** The part of a score that comes from how deep you ran in how big a field. */
@@ -321,8 +330,15 @@ export interface LastLongerRound {
   winners: string[]
   /** The winning finish. */
   place: number
-  /** What that result scored, by the usual formula. */
-  score: number
+  /**
+   * What the winner cashed for that night.
+   *
+   * Money rather than points, because the last longer is not a points race:
+   * it is a tournament everybody entered, and the answer to "what did
+   * lasting longest get you" is in dollars. Prize money only — the buy-in is
+   * not taken off it and the bounties are not added to it.
+   */
+  cash: number
 }
 
 /**
@@ -354,7 +370,7 @@ export function lastLongerRounds(
       contested: field.length,
       winners: winners.map((result) => result.player).sort((a, b) => a.localeCompare(b)),
       place: best,
-      score: Math.max(...winners.map(score)),
+      cash: Math.max(...winners.map((result) => Math.max(0, result.cashed))),
     })
   }
 
@@ -371,8 +387,8 @@ export interface LastLongerStanding {
   winPct: number
   /** Their deepest finish in the event, won or not. */
   bestPlace: number | null
-  /** What the nights they won were worth on the points formula. */
-  pointsFromWins: number
+  /** What the nights they took paid them, in prize money. */
+  cashFromWins: number
 }
 
 /**
@@ -394,7 +410,7 @@ export function lastLongerStandings(
   for (const round of rounds) {
     for (const player of round.winners) {
       wins.set(player, (wins.get(player) ?? 0) + 1)
-      worth.set(player, (worth.get(player) ?? 0) + round.score)
+      worth.set(player, (worth.get(player) ?? 0) + round.cash)
     }
   }
 
@@ -413,7 +429,7 @@ export function lastLongerStandings(
       played: nights,
       winPct: nights > 0 ? ((wins.get(player) ?? 0) / nights) * 100 : 0,
       bestPlace: best.get(player) ?? null,
-      pointsFromWins: worth.get(player) ?? 0,
+      cashFromWins: worth.get(player) ?? 0,
     }))
     .sort((a, b) => b.won - a.won || a.player.localeCompare(b.player))
 

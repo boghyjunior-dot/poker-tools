@@ -258,7 +258,7 @@ export function LeaderboardPage() {
                           <th className="pb-2 pr-4 text-right font-medium">{t('Played')}</th>
                           <th className="pb-2 pr-4 text-right font-medium">{t('Win rate')}</th>
                           <th className="pb-2 text-right font-medium">{t('Deepest')}</th>
-                          <th className="pb-2 text-right font-medium">{t('Points won')}</th>
+                          <th className="pb-2 text-right font-medium">{t('Cashed')}</th>
                         </tr>
                       </thead>
                       <tbody className="text-slate-300">
@@ -293,8 +293,12 @@ export function LeaderboardPage() {
                             <td className="py-2 text-right tabular-nums text-slate-400">
                               {row.bestPlace ?? '—'}
                             </td>
-                            <td className="py-2 text-right tabular-nums text-slate-400">
-                              {points(row.pointsFromWins)}
+                            <td
+                              className={`py-2 text-right font-semibold tabular-nums ${
+                                row.cashFromWins > 0 ? 'text-emerald-400' : 'text-slate-600'
+                              }`}
+                            >
+                              ${formatMoney(row.cashFromWins)}
                             </td>
                           </tr>
                         ))}
@@ -314,7 +318,7 @@ export function LeaderboardPage() {
                           <th className="pb-2 pr-5 text-right font-medium">{t('In it')}</th>
                           <th className="pb-2 font-medium">{t('Lasted longest')}</th>
                           <th className="pb-2 text-right font-medium">{t('Position')}</th>
-                          <th className="pb-2 text-right font-medium">{t('Score')}</th>
+                          <th className="pb-2 text-right font-medium">{t('Cashed')}</th>
                         </tr>
                       </thead>
                       <tbody className="text-slate-300">
@@ -345,8 +349,12 @@ export function LeaderboardPage() {
                             <td className="py-1.5 text-right tabular-nums text-amber-300">
                               {night.place}
                             </td>
-                            <td className="py-1.5 text-right font-semibold tabular-nums text-white">
-                              {points(night.score)}
+                            <td
+                              className={`py-1.5 text-right font-semibold tabular-nums ${
+                                night.cash > 0 ? 'text-emerald-400' : 'text-slate-600'
+                              }`}
+                            >
+                              ${formatMoney(night.cash)}
                             </td>
                           </tr>
                         ))}
@@ -366,7 +374,7 @@ export function LeaderboardPage() {
                   )}
                   <p className="mt-3 text-[11px] leading-relaxed text-slate-600">
                     {t(
-                      'Position is where the winner finished in the Main itself, and the score is what that result was worth on the points formula — the last longer is its own competition, but the night still counts towards the tables above.',
+                      'Position is where the winner finished in the Main itself, and the money is what the prize pool paid them for it: cashes only, with the buy-in not taken off and the bounties counted separately. The last longer is its own competition, but the night still counts towards the points tables.',
                     )}
                   </p>
                 </>
@@ -525,7 +533,7 @@ export function LeaderboardPage() {
                         ×{stakeFactor(example.buyIn).toFixed(2)}
                       </td>
                       <td className="py-1.5 text-right font-semibold tabular-nums text-white">
-                        {points(score({ ...example, id: example.label, player: '', date: '', event: '', site: '' }))}
+                        {points(score({ ...example, id: example.label, player: '', date: '', event: '', site: '', cashed: 0 }))}
                       </td>
                     </tr>
                   ))}

@@ -105,7 +105,7 @@ describe('a field that never played', () => {
     for (const round of rounds) {
       expect(round.contested).toBeGreaterThanOrEqual(2)
       expect(round.winners).toHaveLength(1)
-      expect(round.score).toBeGreaterThan(0)
+      expect(round.cash).toBeGreaterThanOrEqual(0)
     }
   })
 

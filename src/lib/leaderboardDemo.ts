@@ -215,6 +215,39 @@ function dayAt(from: string, offset: number): string {
 
 const round = (value: number) => Math.round(value * 100) / 100
 
+/** Roughly the share of a field that gets paid. */
+const PAID_SHARE = 0.15
+
+/**
+ * What the prize pool paid for a finish.
+ *
+ * A power law over the paid places, which is the shape every tournament
+ * payout has: the top of it holds most of the money and the bottom of it
+ * hands back rather less than the seat cost. Not any real structure — the
+ * point is that a min-cash is a consolation and a win is a month's volume,
+ * and anything with that shape will do.
+ */
+function cashFor(
+  entrants: number,
+  place: number,
+  buyIn: number,
+  bounty: boolean,
+  random: () => number,
+): number {
+  const paid = Math.max(1, Math.round(entrants * PAID_SHARE))
+  if (place > paid) return 0
+
+  // A knockout tournament puts half the buy-in on heads, so only the other
+  // half is in the pool these places are paid out of.
+  const pool = entrants * buyIn * (bounty ? 0.5 : 0.93)
+
+  let total = 0
+  for (let r = 1; r <= paid; r += 1) total += Math.pow(r, -0.9)
+  // A little noise, because no two structures are the same.
+  const share = (Math.pow(place, -0.9) / total) * (0.92 + random() * 0.16)
+  return round(pool * share)
+}
+
 /**
  * A field size, log-uniform between the two ends.
  *
@@ -296,6 +329,7 @@ export function buildChallengeLog(options: {
         place,
         buyIn,
         bounties: bounty ? bountiesWon(buyIn, profile.bountyRate, entrants, place, random) : 0,
+        cashed: cashFor(entrants, place, buyIn, bounty, random),
       })
     }
   })
@@ -359,6 +393,7 @@ export function buildDailyMains(options: {
         place,
         buyIn: DAILY_MAIN.buyIn,
         bounties: bountiesWon(DAILY_MAIN.buyIn, 0.35, entrants, place, random),
+        cashed: cashFor(entrants, place, DAILY_MAIN.buyIn, true, random),
       })
     })
   }

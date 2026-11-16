@@ -43,6 +43,7 @@ const result = (over: Partial<ChallengeResult> = {}): ChallengeResult => ({
   place: 500,
   buyIn: STAKE_FLOOR,
   bounties: 0,
+  cashed: 0,
   ...over,
 })
 
@@ -330,12 +331,22 @@ describe('the last longer', () => {
     expect(round.contested).toBe(3)
   })
 
-  it('scores the winning result the way everything else is scored', () => {
+  it('reports what the winner cashed, not what they scored', () => {
+    // The last longer is a tournament everybody entered, so the answer to
+    // "what did lasting longest get you" is in money.
     const [round] = lastLongerRounds([
-      main({ player: 'Ana', entrants: 1000, place: 10, bounties: 0 }),
-      main({ player: 'Bogdan', entrants: 1000, place: 500 }),
+      main({ player: 'Ana', entrants: 1000, place: 10, cashed: 420, bounties: 99 }),
+      main({ player: 'Bogdan', entrants: 1000, place: 500, cashed: 0 }),
     ])
-    expect(round.score).toBeCloseTo(1000 * stakeFactor(54), 6)
+    expect(round.cash).toBe(420)
+  })
+
+  it('counts the prize only, with the buy-in left on and the heads left out', () => {
+    const [round] = lastLongerRounds([
+      main({ player: 'Ana', place: 10, buyIn: 54, cashed: 200, bounties: 150 }),
+      main({ player: 'Bogdan', place: 900 }),
+    ])
+    expect(round.cash).toBe(200)
   })
 
   it('does not record a walkover as a win', () => {
@@ -413,11 +424,11 @@ describe('the last longer table', () => {
     expect(table.get('Cristi')?.bestPlace).toBe(60)
   })
 
-  it('adds up what the winning nights were worth', () => {
+  it('adds up what the winning nights paid', () => {
     const table = new Map(lastLongerStandings(log).map((row) => [row.player, row]))
     const rounds = lastLongerRounds(log).filter((round) => round.winners.includes('Ana'))
-    expect(table.get('Ana')?.pointsFromWins).toBeCloseTo(
-      rounds.reduce((sum, round) => sum + round.score, 0),
+    expect(table.get('Ana')?.cashFromWins).toBeCloseTo(
+      rounds.reduce((sum, round) => sum + round.cash, 0),
       6,
     )
   })

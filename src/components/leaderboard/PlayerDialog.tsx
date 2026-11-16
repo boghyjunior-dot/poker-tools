@@ -169,6 +169,11 @@ export function PlayerDialog({
                 label="Deepest"
                 value={lastLonger.bestPlace === null ? '—' : String(lastLonger.bestPlace)}
               />
+              <Figure
+                label="Cashed"
+                value={`$${formatMoney(lastLonger.cashFromWins)}`}
+                muted={lastLonger.cashFromWins === 0}
+              />
             </div>
           ) : (
             <p className="mt-2 text-xs text-slate-500">
