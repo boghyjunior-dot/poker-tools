@@ -3,17 +3,24 @@ import {
   DAILY_MAIN,
   FORMATS,
   MIN_CONTESTED,
+  STAKE_CEILING,
+  STAKE_EXPONENT,
+  STAKE_FLOOR,
   bountyPoints,
   countedFor,
   finishPoints,
   inMonth,
   inYear,
+  eligible,
+  isEligible,
   isLastLonger,
+  ineligible,
   lastLongerRounds,
   lastLongerStandings,
   monthsIn,
   pot,
   score,
+  stakeFactor,
   standings,
   yearsIn,
   type ChallengeResult,
@@ -28,7 +35,7 @@ const result = (over: Partial<ChallengeResult> = {}): ChallengeResult => ({
   site: 'GGPoker',
   entrants: 1000,
   place: 500,
-  buyIn: 22,
+  buyIn: STAKE_FLOOR,
   bounties: 0,
   ...over,
 })
@@ -79,8 +86,14 @@ describe('the bounty half of a score', () => {
 
 describe('a score', () => {
   it('adds the two halves', () => {
-    const s = score(result({ entrants: 1000, place: 10, buyIn: 22, bounties: 44 }))
+    const s = score(result({ entrants: 1000, place: 10, buyIn: 5, bounties: 10 }))
     expect(s).toBeCloseTo(1000 + 50, 6)
+  })
+
+  it('multiplies the lot by the stake', () => {
+    const cheap = score(result({ entrants: 1000, place: 10, buyIn: STAKE_FLOOR }))
+    const dear = score(result({ entrants: 1000, place: 10, buyIn: STAKE_CEILING }))
+    expect(dear).toBeCloseTo(cheap * stakeFactor(STAKE_CEILING), 6)
   })
 
   it('is worth more for the same finish in a bigger field', () => {
@@ -156,7 +169,7 @@ describe('the table', () => {
 
   it('says how much of a total came out of bounties', () => {
     const [row] = standings(
-      [result({ player: 'Ana', entrants: 1000, place: 10, buyIn: 22, bounties: 44 })],
+      [result({ player: 'Ana', entrants: 1000, place: 10, buyIn: 5, bounties: 10 })],
       FORMATS.monthly,
     )
     expect(row.fromBounties).toBeCloseTo(50, 6)
@@ -165,6 +178,69 @@ describe('the table', () => {
 
   it('has no table without results', () => {
     expect(standings([], FORMATS.yearly)).toEqual([])
+  })
+})
+
+describe('the stake', () => {
+  it('counts for nothing at the bottom of the band', () => {
+    expect(stakeFactor(STAKE_FLOOR)).toBeCloseTo(1, 10)
+  })
+
+  it('is a shallow root, so the whole band is under two to one', () => {
+    // Finishing points go as the square root of the field, so a factor of f
+    // is worth finishing f² deeper. Anything steeper than this and the stake
+    // stops being a nudge and starts being the competition.
+    const spread = stakeFactor(STAKE_CEILING)
+    expect(STAKE_EXPONENT).toBe(0.25)
+    expect(spread).toBeGreaterThan(1.5)
+    expect(spread).toBeLessThan(2)
+    expect(spread ** 2).toBeLessThan(4)
+  })
+
+  it('rises with the buy-in, all the way up the band', () => {
+    const steps = [5, 11, 22, 33, 54, 60].map(stakeFactor)
+    for (let i = 1; i < steps.length; i += 1) expect(steps[i]).toBeGreaterThan(steps[i - 1])
+  })
+
+  it('goes no further than the band, in either direction', () => {
+    // A stray row from outside should be dull rather than spectacular.
+    expect(stakeFactor(500)).toBeCloseTo(stakeFactor(STAKE_CEILING), 10)
+    expect(stakeFactor(1)).toBeCloseTo(stakeFactor(STAKE_FLOOR), 10)
+  })
+
+  it('does not fall over on a buy-in that is not one', () => {
+    expect(stakeFactor(0)).toBe(1)
+    expect(stakeFactor(-20)).toBe(1)
+    expect(stakeFactor(Number.NaN)).toBe(1)
+  })
+})
+
+describe('what is in the challenge', () => {
+  it('takes the band, ends included', () => {
+    expect(isEligible(result({ buyIn: STAKE_FLOOR }))).toBe(true)
+    expect(isEligible(result({ buyIn: STAKE_CEILING }))).toBe(true)
+    expect(isEligible(result({ buyIn: 22 }))).toBe(true)
+  })
+
+  it('leaves out anything cheaper or dearer', () => {
+    expect(isEligible(result({ buyIn: 4.99 }))).toBe(false)
+    expect(isEligible(result({ buyIn: 109 }))).toBe(false)
+    expect(isEligible(result({ buyIn: 0 }))).toBe(false)
+  })
+
+  it('splits a log into what counts and what does not', () => {
+    const log = [
+      result({ player: 'Ana', buyIn: 22 }),
+      result({ player: 'Bogdan', buyIn: 215 }),
+      result({ player: 'Cristi', buyIn: 2.2 }),
+    ]
+    expect(eligible(log).map((row) => row.player)).toEqual(['Ana'])
+    expect(ineligible(log).map((row) => row.player)).toEqual(['Bogdan', 'Cristi'])
+  })
+
+  it('keeps the two halves adding up to the whole', () => {
+    const log = [result({ buyIn: 22 }), result({ buyIn: 215 }), result({ buyIn: 5 })]
+    expect(eligible(log).length + ineligible(log).length).toBe(log.length)
   })
 })
 
@@ -253,7 +329,7 @@ describe('the last longer', () => {
       main({ player: 'Ana', entrants: 1000, place: 10, bounties: 0 }),
       main({ player: 'Bogdan', entrants: 1000, place: 500 }),
     ])
-    expect(round.score).toBeCloseTo(1000, 6)
+    expect(round.score).toBeCloseTo(1000 * stakeFactor(54), 6)
   })
 
   it('does not record a walkover as a win', () => {

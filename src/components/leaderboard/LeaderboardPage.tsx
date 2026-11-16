@@ -20,13 +20,18 @@ import {
   bountyPoints,
   countedFor,
   finishPoints,
+  STAKE_CEILING,
+  STAKE_FLOOR,
+  eligible,
   inMonth,
   inYear,
+  ineligible,
   lastLongerRounds,
   lastLongerStandings,
   monthsIn,
   pot,
   score,
+  stakeFactor,
   standings,
   yearsIn,
   type ChallengeResult,
@@ -87,10 +92,19 @@ export function LeaderboardPage() {
 
   const format = FORMATS[formatId]
   const period = formatId === 'monthly' ? month : year
-  const inPeriod = useMemo(
+  const everything = useMemo(
     () => (formatId === 'monthly' ? inMonth(results, month) : inYear(results, year)),
     [results, formatId, month, year],
   )
+  /**
+   * Only what the band allows, filtered once and in one place.
+   *
+   * Everything downstream — the tables, the last longer, the profiles —
+   * reads this rather than the raw log, so there is no path by which an
+   * out-of-band result can quietly score.
+   */
+  const inPeriod = useMemo(() => eligible(everything), [everything])
+  const skipped = useMemo(() => ineligible(everything).length, [everything])
   const table = useMemo(() => standings(inPeriod, format), [inPeriod, format])
   const working = useMemo(
     () => (open ? countedFor(inPeriod, open, format) : []),
@@ -171,6 +185,16 @@ export function LeaderboardPage() {
               fee: format.fee,
               pot: pot(table.length, format),
             })}
+          </span>
+
+          <span className="rounded border border-slate-800 bg-slate-950/60 px-2 py-1 text-[11px] text-slate-400">
+            {t('${low}–${high} buy-ins only', { low: STAKE_FLOOR, high: STAKE_CEILING })}
+            {skipped > 0 && (
+              <span className="text-slate-600">
+                {' '}
+                {t('· {n} results outside it are not counted', { n: skipped })}
+              </span>
+            )}
           </span>
         </div>
 
@@ -435,42 +459,61 @@ export function LeaderboardPage() {
           <Panel>
             <h2 className="text-sm font-semibold text-white">{t('How a score is worked out')}</h2>
             <p className="mt-2 font-mono text-sm text-indigo-300">
-              S = 100 × √(N / R) + 25 × (Bty / Bi)
+              S = [ 100 × √(N / R) + 25 × (Bty / Bi) ] × ⁴√(Bi / {STAKE_FLOOR})
             </p>
             <p className="mt-2 max-w-2xl text-xs leading-relaxed text-slate-500">
               {t(
                 'N is the number of entries, R is where you finished, Bty is the bounty money you collected and Bi is the buy-in. Finishing last in the field is worth 100, because N over R is one; everything above that is how far up you got, and the square root is what stops a win in a huge field being worth a hundred times a win in a small one.',
               )}
             </p>
+            <p className="mt-2 max-w-2xl text-xs leading-relaxed text-slate-500">
+              {t(
+                'The last part is the stake. Only ${low} to ${high} buy-ins are in the challenge, and inside that band a dearer game is worth a little more — a fourth root, so the whole band is {spread}x end to end. Because finishing points go as the square root of the field, that is the same as finishing {deeper}x deeper: a ${high} result matches a ${low} one that got three and a half times further up. A good night at the bottom of the band still beats an ordinary one at the top, which is the point.',
+                {
+                  low: STAKE_FLOOR,
+                  high: STAKE_CEILING,
+                  spread: stakeFactor(STAKE_CEILING).toFixed(2),
+                  deeper: (stakeFactor(STAKE_CEILING) ** 2).toFixed(1),
+                },
+              )}
+            </p>
             <div className="mt-4 overflow-x-auto">
-              <table className="w-full min-w-[520px] text-sm">
+              <table className="w-full min-w-[760px] text-sm">
                 <thead>
                   <tr className="border-b border-slate-800 text-left text-[11px] uppercase tracking-wide text-slate-500">
                     <th className="pb-2 font-medium">{t('A night like this')}</th>
-                    <th className="pb-2 text-right font-medium">N</th>
-                    <th className="pb-2 text-right font-medium">R</th>
-                    <th className="pb-2 text-right font-medium">Bty / Bi</th>
-                    <th className="pb-2 text-right font-medium">{t('Finish')}</th>
-                    <th className="pb-2 text-right font-medium">{t('Bounty')}</th>
-                    <th className="pb-2 text-right font-medium">{t('Score')}</th>
+                    <th className="pb-2 pl-4 text-right font-medium">N</th>
+                    <th className="pb-2 pl-4 text-right font-medium">R</th>
+                    <th className="pb-2 pl-4 text-right font-medium">Bi</th>
+                    <th className="pb-2 pl-4 text-right font-medium">Bty / Bi</th>
+                    <th className="pb-2 pl-4 text-right font-medium">{t('Finish')}</th>
+                    <th className="pb-2 pl-4 text-right font-medium">{t('Bounty')}</th>
+                    <th className="pb-2 pl-4 text-right font-medium">{t('Stake')}</th>
+                    <th className="pb-2 pl-4 text-right font-medium">{t('Score')}</th>
                   </tr>
                 </thead>
                 <tbody className="text-slate-300">
                   {EXAMPLES.map((example) => (
                     <tr key={example.label} className="border-b border-slate-800/60 last:border-0">
                       <td className="py-1.5 text-slate-400">{t(example.label)}</td>
-                      <td className="py-1.5 text-right tabular-nums">
+                      <td className="py-1.5 pl-4 text-right tabular-nums">
                         {example.entrants.toLocaleString('en-US')}
                       </td>
-                      <td className="py-1.5 text-right tabular-nums">{example.place}</td>
-                      <td className="py-1.5 text-right tabular-nums text-slate-500">
+                      <td className="py-1.5 pl-4 text-right tabular-nums">{example.place}</td>
+                      <td className="py-1.5 pl-4 text-right tabular-nums text-slate-400">
+                        ${example.buyIn}
+                      </td>
+                      <td className="py-1.5 pl-4 text-right tabular-nums text-slate-500">
                         {(example.bounties / example.buyIn).toFixed(1)}
                       </td>
-                      <td className="py-1.5 text-right tabular-nums text-slate-400">
+                      <td className="py-1.5 pl-4 text-right tabular-nums text-slate-400">
                         {points(finishPoints(example.entrants, example.place))}
                       </td>
-                      <td className="py-1.5 text-right tabular-nums text-slate-400">
+                      <td className="py-1.5 pl-4 text-right tabular-nums text-slate-400">
                         {points(bountyPoints(example.bounties, example.buyIn))}
+                      </td>
+                      <td className="py-1.5 pl-4 text-right tabular-nums text-slate-500">
+                        ×{stakeFactor(example.buyIn).toFixed(2)}
                       </td>
                       <td className="py-1.5 text-right font-semibold tabular-nums text-white">
                         {points(score({ ...example, id: example.label, player: '', date: '', event: '', site: '' }))}
@@ -494,11 +537,12 @@ const RECENT_NIGHTS = 12
 
 /** A few results worth knowing the price of. */
 const EXAMPLES = [
-  { label: 'Busting last in a 1,000-runner', entrants: 1000, place: 1000, buyIn: 22, bounties: 0 },
-  { label: 'A min-cash, 150th of 1,000', entrants: 1000, place: 150, buyIn: 22, bounties: 0 },
-  { label: 'The same min-cash with ten buy-ins in heads', entrants: 1000, place: 150, buyIn: 22, bounties: 220 },
-  { label: 'Final table, 7th of 1,000', entrants: 1000, place: 7, buyIn: 22, bounties: 0 },
-  { label: 'Winning a 200-runner', entrants: 200, place: 1, buyIn: 22, bounties: 0 },
-  { label: 'Winning a 1,000-runner', entrants: 1000, place: 1, buyIn: 22, bounties: 0 },
-  { label: 'Winning a 10,000-runner', entrants: 10_000, place: 1, buyIn: 22, bounties: 0 },
+  { label: 'Busting last in a 1,000-runner', entrants: 1000, place: 1000, buyIn: 5, bounties: 0 },
+  { label: 'A min-cash, 150th of 1,000, at the bottom of the band', entrants: 1000, place: 150, buyIn: 5, bounties: 0 },
+  { label: 'The same min-cash at the top of it', entrants: 1000, place: 150, buyIn: 60, bounties: 0 },
+  { label: 'The same again, with ten buy-ins in heads', entrants: 1000, place: 150, buyIn: 60, bounties: 600 },
+  { label: 'What a $5 player needs to match that bare min-cash', entrants: 1000, place: 43, buyIn: 5, bounties: 0 },
+  { label: 'Final table, 7th of 1,000, in the Daily Main', entrants: 1000, place: 7, buyIn: 54, bounties: 0 },
+  { label: 'Winning a 1,000-runner at $22', entrants: 1000, place: 1, buyIn: 22, bounties: 0 },
+  { label: 'Winning a 10,000-runner at $60', entrants: 10_000, place: 1, buyIn: 60, bounties: 0 },
 ]

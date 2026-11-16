@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { DAILY_MAIN, FORMATS, inYear, isLastLonger, lastLongerRounds, standings } from './leaderboard'
+import {
+  DAILY_MAIN,
+  FORMATS,
+  ineligible,
+  inYear,
+  isLastLonger,
+  lastLongerRounds,
+  standings,
+} from './leaderboard'
 import { DEMO_PROFILES, PLAYERS, buildChallengeLog } from './leaderboardDemo'
 
 const log = (over: Partial<Parameters<typeof buildChallengeLog>[0]> = {}) =>
@@ -148,5 +156,29 @@ describe('Snapper', () => {
   it('actually plays, so the table has something to show', () => {
     const results = log().filter((row) => row.player === 'Snapper')
     expect(results.length).toBeGreaterThan(200)
+  })
+})
+
+describe('the mock field plays inside the band', () => {
+  it('fires nothing the challenge would throw out', () => {
+    // A demo full of ineligible results would be showing a competition
+    // nobody is actually in.
+    expect(ineligible(log())).toEqual([])
+  })
+
+  it('uses the width of the band, not one corner of it', () => {
+    const stakes = [...new Set(log().map((row) => row.buyIn))].sort((a, b) => a - b)
+    expect(stakes[0]).toBeLessThanOrEqual(11)
+    expect(stakes[stakes.length - 1]).toBeGreaterThanOrEqual(54)
+    expect(stakes.length).toBeGreaterThan(4)
+  })
+
+  it('still has somebody at each end of it', () => {
+    const byName = new Map(PLAYERS.map((p) => [p.name, p]))
+    const cheapest = Math.min(...PLAYERS.map((p) => Math.min(...p.buyIns)))
+    const dearest = Math.max(...PLAYERS.map((p) => Math.max(...p.buyIns)))
+    expect(cheapest).toBeLessThanOrEqual(5.5)
+    expect(dearest).toBeGreaterThanOrEqual(55)
+    expect(byName.get('Dana M.')?.buyIns.some((b) => b >= 55)).toBe(true)
   })
 })

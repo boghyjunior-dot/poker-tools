@@ -63,11 +63,65 @@ export function bountyPoints(bounties: number, buyIn: number): number {
   return 25 * (bounties / buyIn)
 }
 
-/** S = 100·√(N/R) + 25·(Bty/Bi) */
+/**
+ * The buy-ins the challenge runs on.
+ *
+ * A band rather than a guideline: a result outside it does not score, it is
+ * simply not part of the competition. That is what keeps a stake multiplier
+ * safe to have at all — without a ceiling, "bigger games are worth more" is
+ * an instruction to keep moving up until something breaks, and the player it
+ * breaks is the one who could least afford to follow it.
+ */
+export const STAKE_FLOOR = 5
+export const STAKE_CEILING = 60
+
+/**
+ * How much a stake is worth, as a multiple of the cheapest one that counts.
+ *
+ * A fourth root, which is deliberately shallow. Because finishing points go
+ * as the square root of the field, a factor of f is worth finishing f² higher
+ * up: at the fourth root the whole band is 1.86x, so a $60 result matches a
+ * $5 one that finished three and a half times deeper. A $5 player having a
+ * better night still beats a $60 player having an ordinary one, which is the
+ * test the exponent has to pass. At the square root the same gap would be
+ * twelve times, and the stake would stop being a nudge and start being the
+ * competition.
+ */
+export const STAKE_EXPONENT = 0.25
+
+export function stakeFactor(buyIn: number): number {
+  if (!Number.isFinite(buyIn) || buyIn <= 0) return 1
+  // Held inside the band as well as filtered by it: scoring a stray row from
+  // outside should be dull rather than spectacular.
+  const held = Math.min(STAKE_CEILING, Math.max(STAKE_FLOOR, buyIn))
+  return Math.pow(held / STAKE_FLOOR, STAKE_EXPONENT)
+}
+
+/** Whether a result is in the challenge at all. */
+export function isEligible(result: ChallengeResult): boolean {
+  return (
+    Number.isFinite(result.buyIn) &&
+    result.buyIn >= STAKE_FLOOR &&
+    result.buyIn <= STAKE_CEILING
+  )
+}
+
+/** The results that count. */
+export function eligible(results: readonly ChallengeResult[]): ChallengeResult[] {
+  return results.filter(isEligible)
+}
+
+/** The ones that do not, so a page can say so rather than quietly dropping them. */
+export function ineligible(results: readonly ChallengeResult[]): ChallengeResult[] {
+  return results.filter((result) => !isEligible(result))
+}
+
+/** S = [100·√(N/R) + 25·(Bty/Bi)] × ⁴√(Bi/5) */
 export function score(result: ChallengeResult): number {
   return (
-    finishPoints(result.entrants, result.place) +
-    bountyPoints(result.bounties, result.buyIn)
+    (finishPoints(result.entrants, result.place) +
+      bountyPoints(result.bounties, result.buyIn)) *
+    stakeFactor(result.buyIn)
   )
 }
 
@@ -135,7 +189,9 @@ export function standings(
       const scored = played
         .map((result) => ({
           total: score(result),
-          bounty: bountyPoints(result.bounties, result.buyIn),
+          // Scaled by the stake like the rest of the result, or the share
+          // this reports would not be a share of the total it sits beside.
+          bounty: bountyPoints(result.bounties, result.buyIn) * stakeFactor(result.buyIn),
         }))
         .sort((a, b) => b.total - a.total)
       const counting = scored.slice(0, format.best)
