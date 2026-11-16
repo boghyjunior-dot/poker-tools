@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import {
+  DAILY_MAIN,
   FORMATS,
+  MIN_CONTESTED,
   bountyPoints,
   countedFor,
   finishPoints,
   inMonth,
   inYear,
+  isLastLonger,
+  lastLongerRounds,
+  lastLongerStandings,
   monthsIn,
   pot,
   score,
@@ -20,6 +25,7 @@ const result = (over: Partial<ChallengeResult> = {}): ChallengeResult => ({
   player: 'Ana',
   date: '2026-07-04',
   event: 'Bounty Hunters',
+  site: 'GGPoker',
   entrants: 1000,
   place: 500,
   buyIn: 22,
@@ -212,5 +218,145 @@ describe('showing the working', () => {
     )
     expect(counted).toHaveLength(2)
     expect(counted.map((entry) => Math.round(entry.score))).toEqual([1000, 500])
+  })
+})
+
+describe('the last longer', () => {
+  const main = (over: Partial<ChallengeResult> = {}) =>
+    result({ event: 'Daily Main', site: 'GGPoker', buyIn: 54, ...over })
+
+  it('knows the one event it is run in', () => {
+    expect(DAILY_MAIN).toEqual({ event: 'Daily Main', site: 'GGPoker', buyIn: 54 })
+    expect(isLastLonger(main(), DAILY_MAIN)).toBe(true)
+  })
+
+  it('is not the same name in another lobby, or at another buy-in', () => {
+    // A Mini Main and a satellite into the Main are not the Main.
+    expect(isLastLonger(main({ site: 'PokerStars' }), DAILY_MAIN)).toBe(false)
+    expect(isLastLonger(main({ buyIn: 5.5 }), DAILY_MAIN)).toBe(false)
+    expect(isLastLonger(main({ event: 'Mini Main' }), DAILY_MAIN)).toBe(false)
+  })
+
+  it('gives the night to whoever busted last', () => {
+    const [round] = lastLongerRounds([
+      main({ player: 'Ana', place: 80 }),
+      main({ player: 'Bogdan', place: 12 }),
+      main({ player: 'Cristi', place: 340 }),
+    ])
+    expect(round.winners).toEqual(['Bogdan'])
+    expect(round.place).toBe(12)
+    expect(round.contested).toBe(3)
+  })
+
+  it('scores the winning result the way everything else is scored', () => {
+    const [round] = lastLongerRounds([
+      main({ player: 'Ana', entrants: 1000, place: 10, bounties: 0 }),
+      main({ player: 'Bogdan', entrants: 1000, place: 500 }),
+    ])
+    expect(round.score).toBeCloseTo(1000, 6)
+  })
+
+  it('does not record a walkover as a win', () => {
+    // One entrant is not a contest, and counting it would reward being the
+    // only one awake.
+    expect(lastLongerRounds([main({ player: 'Ana', date: '2026-07-04' })])).toEqual([])
+    expect(MIN_CONTESTED).toBe(2)
+  })
+
+  it('keeps the nights apart', () => {
+    const rounds = lastLongerRounds([
+      main({ date: '2026-07-04', player: 'Ana', place: 5 }),
+      main({ date: '2026-07-04', player: 'Bogdan', place: 50 }),
+      main({ date: '2026-07-05', player: 'Ana', place: 90 }),
+      main({ date: '2026-07-05', player: 'Bogdan', place: 9 }),
+    ])
+    expect(rounds).toHaveLength(2)
+    expect(rounds.map((round) => round.date)).toEqual(['2026-07-05', '2026-07-04'])
+    expect(rounds.map((round) => round.winners[0])).toEqual(['Bogdan', 'Ana'])
+  })
+
+  it('shows both names rather than picking one, when the data says they tied', () => {
+    // Two people cannot finish 40th in the same tournament, so this is a typo
+    // somewhere — and quietly choosing a winner would hide it.
+    const [round] = lastLongerRounds([
+      main({ player: 'Ana', place: 40 }),
+      main({ player: 'Bogdan', place: 40 }),
+    ])
+    expect(round.winners).toEqual(['Ana', 'Bogdan'])
+  })
+
+  it('ignores everything that is not the Main', () => {
+    expect(
+      lastLongerRounds([
+        result({ player: 'Ana', event: 'Sunday Major', place: 1 }),
+        main({ player: 'Bogdan', place: 70 }),
+        main({ player: 'Cristi', place: 90 }),
+      ])[0].winners,
+    ).toEqual(['Bogdan'])
+  })
+})
+
+describe('the last longer table', () => {
+  const night = (date: string, places: Record<string, number>) =>
+    Object.entries(places).map(([player, place]) =>
+      result({ event: 'Daily Main', site: 'GGPoker', buyIn: 54, date, player, place }),
+    )
+
+  const log = [
+    ...night('2026-07-01', { Ana: 10, Bogdan: 200, Cristi: 400 }),
+    ...night('2026-07-02', { Ana: 300, Bogdan: 20 }),
+    ...night('2026-07-03', { Ana: 5, Bogdan: 600, Cristi: 60 }),
+  ]
+
+  it('counts the nights each player took', () => {
+    const table = lastLongerStandings(log)
+    expect(table.map((row) => [row.player, row.won])).toEqual([
+      ['Ana', 2],
+      ['Bogdan', 1],
+      ['Cristi', 0],
+    ])
+  })
+
+  it('counts the nights they turned up for', () => {
+    const table = new Map(lastLongerStandings(log).map((row) => [row.player, row]))
+    expect(table.get('Ana')?.played).toBe(3)
+    expect(table.get('Cristi')?.played).toBe(2)
+    expect(table.get('Cristi')?.winPct).toBe(0)
+    expect(table.get('Ana')?.winPct).toBeCloseTo(66.67, 1)
+  })
+
+  it('remembers the deepest anybody got, win or not', () => {
+    const table = new Map(lastLongerStandings(log).map((row) => [row.player, row]))
+    expect(table.get('Bogdan')?.bestPlace).toBe(20)
+    expect(table.get('Cristi')?.bestPlace).toBe(60)
+  })
+
+  it('adds up what the winning nights were worth', () => {
+    const table = new Map(lastLongerStandings(log).map((row) => [row.player, row]))
+    const rounds = lastLongerRounds(log).filter((round) => round.winners.includes('Ana'))
+    expect(table.get('Ana')?.pointsFromWins).toBeCloseTo(
+      rounds.reduce((sum, round) => sum + round.score, 0),
+      6,
+    )
+  })
+
+  it('lets a tie on wins share a rank', () => {
+    const table = lastLongerStandings([
+      ...night('2026-07-01', { Ana: 10, Bogdan: 200 }),
+      ...night('2026-07-02', { Ana: 300, Bogdan: 20 }),
+    ])
+    expect(table.map((row) => row.rank)).toEqual([1, 1])
+  })
+
+  it('leaves out a player whose only nights were walkovers', () => {
+    const table = lastLongerStandings([
+      ...night('2026-07-01', { Ana: 10, Bogdan: 200 }),
+      ...night('2026-07-09', { Cristi: 3 }),
+    ])
+    expect(table.map((row) => row.player)).toEqual(['Ana', 'Bogdan'])
+  })
+
+  it('has no table without a contest', () => {
+    expect(lastLongerStandings([])).toEqual([])
   })
 })

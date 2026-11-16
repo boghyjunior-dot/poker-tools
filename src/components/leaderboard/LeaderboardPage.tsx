@@ -15,12 +15,15 @@ import { LocalOnlyBanner } from '../LocalOnlyBanner'
 import { CHALLENGE_VARIABLE, FEATURE_CHALLENGE_PUBLISHED } from '../../lib/featureFlags'
 import { useT } from '../../lib/i18n'
 import {
+  DAILY_MAIN,
   FORMATS,
   bountyPoints,
   countedFor,
   finishPoints,
   inMonth,
   inYear,
+  lastLongerRounds,
+  lastLongerStandings,
   monthsIn,
   pot,
   score,
@@ -92,6 +95,10 @@ export function LeaderboardPage() {
     () => (open ? countedFor(inPeriod, open, format) : []),
     [inPeriod, open, format],
   )
+  const nights = useMemo(() => lastLongerRounds(inPeriod, DAILY_MAIN), [inPeriod])
+  const lastLonger = useMemo(() => lastLongerStandings(inPeriod, DAILY_MAIN), [inPeriod])
+  const [allNights, setAllNights] = useState(false)
+  const shown = allNights ? nights : nights.slice(0, RECENT_NIGHTS)
 
   return (
     <div className="min-h-screen px-4 py-6">
@@ -290,6 +297,124 @@ export function LeaderboardPage() {
           )}
 
           <Panel>
+            <h2 className="text-sm font-semibold text-white">{t('Last Longer')}</h2>
+            <p className="mt-0.5 max-w-2xl text-xs text-slate-500">
+              {t(
+                'A side contest in the $54 Daily Main on GGPoker: everybody in it plays the same tournament, and whoever busts last takes the night. No formula and no argument — you know who won before you go to bed.',
+              )}
+            </p>
+
+            {nights.length === 0 ? (
+              <p className="mt-4 text-sm text-slate-500">
+                {t('Nobody has contested the Main in this period. A night with one entrant is not a last longer, so it is not counted.')}
+              </p>
+            ) : (
+              <>
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full min-w-[560px] text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-800 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                        <th className="pb-2 font-medium">{t('#')}</th>
+                        <th className="pb-2 font-medium">{t('Player')}</th>
+                        <th className="pb-2 text-right font-medium">{t('Won')}</th>
+                        <th className="pb-2 pr-4 text-right font-medium">{t('Played')}</th>
+                        <th className="pb-2 pr-4 text-right font-medium">{t('Win rate')}</th>
+                        <th className="pb-2 text-right font-medium">{t('Deepest')}</th>
+                        <th className="pb-2 text-right font-medium">{t('Points won')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-slate-300">
+                      {lastLonger.map((row) => (
+                        <tr key={row.player} className="border-b border-slate-800/60 last:border-0">
+                          <td
+                            className={`py-2 tabular-nums ${
+                              row.won > 0 && row.rank === 1 ? 'font-bold text-amber-300' : 'text-slate-500'
+                            }`}
+                          >
+                            {row.rank}
+                          </td>
+                          <td className="py-2 font-medium text-slate-100">{row.player}</td>
+                          <td className="py-2 text-right font-bold tabular-nums text-white">
+                            {row.won}
+                          </td>
+                          <td className="py-2 pr-4 text-right tabular-nums text-slate-500">
+                            {row.played}
+                          </td>
+                          <td className="py-2 pr-4 text-right tabular-nums text-slate-400">
+                            {row.winPct.toFixed(0)}%
+                          </td>
+                          <td className="py-2 text-right tabular-nums text-slate-400">
+                            {row.bestPlace ?? '—'}
+                          </td>
+                          <td className="py-2 text-right tabular-nums text-slate-400">
+                            {points(row.pointsFromWins)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <h3 className="mt-6 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  {t('{n} nights contested', { n: nights.length })}
+                </h3>
+                <div className="mt-2 overflow-x-auto">
+                  <table className="w-full min-w-[560px] text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-800 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                        <th className="pb-2 font-medium">{t('Date')}</th>
+                        <th className="pb-2 text-right font-medium">{t('Field')}</th>
+                        <th className="pb-2 pr-5 text-right font-medium">{t('In it')}</th>
+                        <th className="pb-2 font-medium">{t('Lasted longest')}</th>
+                        <th className="pb-2 text-right font-medium">{t('Position')}</th>
+                        <th className="pb-2 text-right font-medium">{t('Score')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-slate-300">
+                      {shown.map((night) => (
+                        <tr key={night.date} className="border-b border-slate-800/60 last:border-0">
+                          <td className="py-1.5 tabular-nums text-slate-500">{night.date}</td>
+                          <td className="py-1.5 text-right tabular-nums text-slate-400">
+                            {night.entrants.toLocaleString('en-US')}
+                          </td>
+                          <td className="py-1.5 pr-5 text-right tabular-nums text-slate-500">
+                            {night.contested}
+                          </td>
+                          <td className="py-1.5 font-medium text-slate-100">
+                            {night.winners.join(' & ')}
+                          </td>
+                          <td className="py-1.5 text-right tabular-nums text-amber-300">
+                            {night.place}
+                          </td>
+                          <td className="py-1.5 text-right font-semibold tabular-nums text-white">
+                            {points(night.score)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {nights.length > RECENT_NIGHTS && (
+                  <button
+                    type="button"
+                    onClick={() => setAllNights(!allNights)}
+                    className="mt-3 text-xs font-semibold text-indigo-400 transition-colors hover:text-indigo-300"
+                  >
+                    {allNights
+                      ? t('Show the last {n}', { n: RECENT_NIGHTS })
+                      : t('Show all {n} nights', { n: nights.length })}
+                  </button>
+                )}
+                <p className="mt-3 text-[11px] leading-relaxed text-slate-600">
+                  {t(
+                    'Position is where the winner finished in the Main itself, and the score is what that result was worth on the points formula — the last longer is its own competition, but the night still counts towards the tables above.',
+                  )}
+                </p>
+              </>
+            )}
+          </Panel>
+
+          <Panel>
             <h2 className="text-sm font-semibold text-white">{t('How a score is worked out')}</h2>
             <p className="mt-2 font-mono text-sm text-indigo-300">
               S = 100 × √(N / R) + 25 × (Bty / Bi)
@@ -330,7 +455,7 @@ export function LeaderboardPage() {
                         {points(bountyPoints(example.bounties, example.buyIn))}
                       </td>
                       <td className="py-1.5 text-right font-semibold tabular-nums text-white">
-                        {points(score({ ...example, id: example.label, player: '', date: '', event: '' }))}
+                        {points(score({ ...example, id: example.label, player: '', date: '', event: '', site: '' }))}
                       </td>
                     </tr>
                   ))}
@@ -345,6 +470,9 @@ export function LeaderboardPage() {
     </div>
   )
 }
+
+/** How many nights the last longer shows before it asks whether you want them all. */
+const RECENT_NIGHTS = 12
 
 /** A few results worth knowing the price of. */
 const EXAMPLES = [

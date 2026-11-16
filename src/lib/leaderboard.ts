@@ -29,6 +29,8 @@ export interface ChallengeResult {
   /** ISO date, day resolution. */
   date: string
   event: string
+  /** The room it ran in. A last longer is a contest in one room's lobby. */
+  site: string
   /** N: how many entered. */
   entrants: number
   /** R: where the player finished. 1 is a win. */
@@ -163,6 +165,170 @@ export function standings(
 /** What the entrants have put in. */
 export function pot(entrants: number, format: Format): number {
   return Math.max(0, entrants) * format.fee
+}
+
+/**
+ * A side contest inside one recurring tournament.
+ *
+ * A last longer is the simplest competition in poker: everybody signs up for
+ * the same event and whoever busts last takes it. No points, no formula, no
+ * argument — one tournament, one winner, and a result you know on the night.
+ * It sits alongside the points races rather than inside them because it asks
+ * a different question: not how well you ran over a season, but who was
+ * still in at two in the morning.
+ */
+export interface LastLongerRules {
+  /** The event name as the results spell it. */
+  event: string
+  /** The room, so the same name in another lobby is a different tournament. */
+  site: string
+  /** The buy-in, so a satellite or a Mini of the same name is not it. */
+  buyIn: number
+}
+
+/** The one being run: GGPoker's $54 Daily Main. */
+export const DAILY_MAIN: LastLongerRules = {
+  event: 'Daily Main',
+  site: 'GGPoker',
+  buyIn: 54,
+}
+
+/**
+ * Two, because one person in a tournament is not a last longer.
+ *
+ * Worth stating rather than leaving implicit: without it, every night the
+ * only entrant turned up alone would go in the books as a win, and the
+ * standings would reward being the only one awake.
+ */
+export const MIN_CONTESTED = 2
+
+export function isLastLonger(result: ChallengeResult, rules: LastLongerRules): boolean {
+  return (
+    result.event === rules.event &&
+    result.site === rules.site &&
+    result.buyIn === rules.buyIn
+  )
+}
+
+export interface LastLongerRound {
+  date: string
+  /** The size of the tournament itself. */
+  entrants: number
+  /** How many of the challenge field were in it. */
+  contested: number
+  /**
+   * Who lasted longest.
+   *
+   * A list because the data could say two people finished in the same place,
+   * which cannot happen in one tournament and therefore means somebody typed
+   * something wrong. Better to show both names than to pick one quietly.
+   */
+  winners: string[]
+  /** The winning finish. */
+  place: number
+  /** What that result scored, by the usual formula. */
+  score: number
+}
+
+/**
+ * Every night the contest actually ran, newest first.
+ *
+ * A night with fewer than MIN_CONTESTED entrants is left out entirely rather
+ * than recorded as a walkover.
+ */
+export function lastLongerRounds(
+  results: readonly ChallengeResult[],
+  rules: LastLongerRules = DAILY_MAIN,
+): LastLongerRound[] {
+  const nights = new Map<string, ChallengeResult[]>()
+  for (const result of results) {
+    if (!isLastLonger(result, rules)) continue
+    const bucket = nights.get(result.date)
+    if (bucket) bucket.push(result)
+    else nights.set(result.date, [result])
+  }
+
+  const rounds: LastLongerRound[] = []
+  for (const [date, field] of nights) {
+    if (field.length < MIN_CONTESTED) continue
+    const best = Math.min(...field.map((result) => result.place))
+    const winners = field.filter((result) => result.place === best)
+    rounds.push({
+      date,
+      entrants: Math.max(...field.map((result) => result.entrants)),
+      contested: field.length,
+      winners: winners.map((result) => result.player).sort((a, b) => a.localeCompare(b)),
+      place: best,
+      score: Math.max(...winners.map(score)),
+    })
+  }
+
+  return rounds.sort((a, b) => b.date.localeCompare(a.date))
+}
+
+export interface LastLongerStanding {
+  rank: number
+  player: string
+  /** Nights taken. */
+  won: number
+  /** Nights played, counting only the ones that were a contest. */
+  played: number
+  winPct: number
+  /** Their deepest finish in the event, won or not. */
+  bestPlace: number | null
+  /** What the nights they won were worth on the points formula. */
+  pointsFromWins: number
+}
+
+/**
+ * The last longer table, most wins first.
+ *
+ * Sorted on wins rather than on a rate, because a rate off four nights is a
+ * sentence about four nights — and the played column is right there for
+ * anybody who wants to make that judgement themselves.
+ */
+export function lastLongerStandings(
+  results: readonly ChallengeResult[],
+  rules: LastLongerRules = DAILY_MAIN,
+): LastLongerStanding[] {
+  const rounds = lastLongerRounds(results, rules)
+  const contested = new Set(rounds.map((round) => round.date))
+
+  const wins = new Map<string, number>()
+  const worth = new Map<string, number>()
+  for (const round of rounds) {
+    for (const player of round.winners) {
+      wins.set(player, (wins.get(player) ?? 0) + 1)
+      worth.set(player, (worth.get(player) ?? 0) + round.score)
+    }
+  }
+
+  const played = new Map<string, number>()
+  const best = new Map<string, number>()
+  for (const result of results) {
+    if (!isLastLonger(result, rules) || !contested.has(result.date)) continue
+    played.set(result.player, (played.get(result.player) ?? 0) + 1)
+    best.set(result.player, Math.min(best.get(result.player) ?? Infinity, result.place))
+  }
+
+  const rows = [...played.entries()]
+    .map(([player, nights]) => ({
+      player,
+      won: wins.get(player) ?? 0,
+      played: nights,
+      winPct: nights > 0 ? ((wins.get(player) ?? 0) / nights) * 100 : 0,
+      bestPlace: best.get(player) ?? null,
+      pointsFromWins: worth.get(player) ?? 0,
+    }))
+    .sort((a, b) => b.won - a.won || a.player.localeCompare(b.player))
+
+  let rank = 0
+  let previous: number | null = null
+  return rows.map((row, index) => {
+    if (previous === null || row.won !== previous) rank = index + 1
+    previous = row.won
+    return { rank, ...row }
+  })
 }
 
 /** Results inside one calendar month, given as YYYY-MM. */

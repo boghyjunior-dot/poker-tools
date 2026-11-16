@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FORMATS, inYear, standings } from './leaderboard'
+import { DAILY_MAIN, FORMATS, inYear, isLastLonger, lastLongerRounds, standings } from './leaderboard'
 import { PLAYERS, buildChallengeLog } from './leaderboardDemo'
 
 const log = (over: Partial<Parameters<typeof buildChallengeLog>[0]> = {}) =>
@@ -11,10 +11,12 @@ describe('a field that never played', () => {
     expect(log({ seed: 7 })[0]).not.toEqual(log()[0])
   })
 
-  it('plays everybody the number of tournaments their profile says', () => {
-    const results = log()
+  it('plays everybody the number of tournaments their own schedule says', () => {
+    // The Daily Main is on top of that: it is one shared tournament rather
+    // than part of anybody's private schedule.
+    const own = log().filter((row) => !isLastLonger(row, DAILY_MAIN))
     for (const profile of PLAYERS) {
-      expect(results.filter((row) => row.player === profile.name)).toHaveLength(profile.volume)
+      expect(own.filter((row) => row.player === profile.name)).toHaveLength(profile.volume)
     }
   })
 
@@ -32,7 +34,7 @@ describe('a field that never played', () => {
 
   it('keeps the fields inside the range the profile plays', () => {
     const byName = new Map(PLAYERS.map((profile) => [profile.name, profile]))
-    for (const row of log()) {
+    for (const row of log().filter((entry) => !isLastLonger(entry, DAILY_MAIN))) {
       const profile = byName.get(row.player)
       expect(row.entrants).toBeGreaterThanOrEqual(profile?.field[0] ?? 1)
       expect(row.entrants).toBeLessThanOrEqual(profile?.field[1] ?? Infinity)
@@ -64,6 +66,39 @@ describe('a field that never played', () => {
     const dry = results.filter((row) => row.bounties === 0)
     expect(dry.length).toBeGreaterThan(0)
     expect(dry.length).toBeLessThan(results.length)
+  })
+
+  it('runs the Daily Main as one tournament, not ten private ones', () => {
+    // The whole point of a last longer: the same field on the same night, so
+    // the finishing places can be compared at all.
+    const nights = new Map<string, Set<number>>()
+    for (const row of log().filter((entry) => isLastLonger(entry, DAILY_MAIN))) {
+      const seen = nights.get(row.date) ?? new Set<number>()
+      seen.add(row.entrants)
+      nights.set(row.date, seen)
+    }
+    expect(nights.size).toBeGreaterThan(100)
+    for (const sizes of nights.values()) expect(sizes.size).toBe(1)
+  })
+
+  it('never finishes two players in the same place on the same night', () => {
+    const nights = new Map<string, number[]>()
+    for (const row of log().filter((entry) => isLastLonger(entry, DAILY_MAIN))) {
+      nights.set(row.date, [...(nights.get(row.date) ?? []), row.place])
+    }
+    for (const places of nights.values()) {
+      expect(new Set(places).size).toBe(places.length)
+    }
+  })
+
+  it('gives the last longer a contest most nights, and a winner each time', () => {
+    const rounds = lastLongerRounds(log(), DAILY_MAIN)
+    expect(rounds.length).toBeGreaterThan(100)
+    for (const round of rounds) {
+      expect(round.contested).toBeGreaterThanOrEqual(2)
+      expect(round.winners).toHaveLength(1)
+      expect(round.score).toBeGreaterThan(0)
+    }
   })
 
   it('produces a field nobody runs away with', () => {

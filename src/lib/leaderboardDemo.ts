@@ -14,7 +14,7 @@
  * queries can be reproduced rather than argued about.
  */
 
-import type { ChallengeResult } from './leaderboard'
+import { DAILY_MAIN, type ChallengeResult } from './leaderboard'
 import { rng } from './seededRandom'
 
 export interface PlayerProfile {
@@ -39,6 +39,17 @@ export interface PlayerProfile {
   bountyShare: number
   /** Typical bounty collection, as a multiple of the buy-in. */
   bountyRate: number
+  /** The room most of their volume is in. */
+  site: string
+  /**
+   * How often they turn up for the $54 Daily Main, as a share of nights.
+   *
+   * Separate from everything else because the last longer is a standing
+   * arrangement rather than part of a schedule: somebody who grinds $5 turbos
+   * may still fire the Main most nights because it is the one everybody is
+   * in, and somebody who plays higher may not bother.
+   */
+  dailyMain: number
 }
 
 export const PLAYERS: PlayerProfile[] = [
@@ -51,6 +62,8 @@ export const PLAYERS: PlayerProfile[] = [
     skill: 1.15,
     bountyShare: 0.8,
     bountyRate: 0.4,
+    site: 'GGPoker',
+    dailyMain: 0.55,
   },
   {
     name: 'Ana R.',
@@ -61,6 +74,8 @@ export const PLAYERS: PlayerProfile[] = [
     skill: 1.35,
     bountyShare: 0.4,
     bountyRate: 0.3,
+    site: 'GGPoker',
+    dailyMain: 0.3,
   },
   {
     name: 'Costel V.',
@@ -71,6 +86,8 @@ export const PLAYERS: PlayerProfile[] = [
     skill: 1.1,
     bountyShare: 1,
     bountyRate: 0.75,
+    site: 'Coin Poker',
+    dailyMain: 0.2,
   },
   {
     name: 'Raul T.',
@@ -81,6 +98,8 @@ export const PLAYERS: PlayerProfile[] = [
     skill: 1.3,
     bountyShare: 0.55,
     bountyRate: 0.35,
+    site: 'GGPoker',
+    dailyMain: 0.7,
   },
   {
     name: 'Dana M.',
@@ -91,6 +110,8 @@ export const PLAYERS: PlayerProfile[] = [
     skill: 1.4,
     bountyShare: 0.5,
     bountyRate: 0.3,
+    site: 'PokerStars',
+    dailyMain: 0.25,
   },
   {
     name: 'Vlad N.',
@@ -101,6 +122,8 @@ export const PLAYERS: PlayerProfile[] = [
     skill: 1.25,
     bountyShare: 0.6,
     bountyRate: 0.35,
+    site: 'GGPoker',
+    dailyMain: 0.35,
   },
   {
     name: 'Iulia S.',
@@ -111,6 +134,8 @@ export const PLAYERS: PlayerProfile[] = [
     skill: 1.2,
     bountyShare: 0.65,
     bountyRate: 0.45,
+    site: 'iPoker',
+    dailyMain: 0.45,
   },
   {
     name: 'Sorin B.',
@@ -121,6 +146,8 @@ export const PLAYERS: PlayerProfile[] = [
     skill: 1.05,
     bountyShare: 0.7,
     bountyRate: 0.5,
+    site: 'GGPoker',
+    dailyMain: 0.6,
   },
   {
     name: 'Petru L.',
@@ -131,6 +158,8 @@ export const PLAYERS: PlayerProfile[] = [
     skill: 1.2,
     bountyShare: 0.6,
     bountyRate: 0.4,
+    site: '888 Poker',
+    dailyMain: 0.15,
   },
   {
     name: 'Elena D.',
@@ -141,6 +170,8 @@ export const PLAYERS: PlayerProfile[] = [
     skill: 1.28,
     bountyShare: 0.7,
     bountyRate: 0.45,
+    site: 'GGPoker',
+    dailyMain: 0.5,
   },
 ]
 
@@ -157,10 +188,11 @@ const EVENTS = [
   'Weekend Special',
 ]
 
-function dayWithin(from: string, days: number, random: () => number): string {
-  const start = new Date(`${from}T12:00:00Z`)
-  start.setUTCDate(start.getUTCDate() + Math.floor(random() * days))
-  return start.toISOString().slice(0, 10)
+/** The day `offset` days after `from`. */
+function dayAt(from: string, offset: number): string {
+  const date = new Date(`${from}T12:00:00Z`)
+  date.setUTCDate(date.getUTCDate() + offset)
+  return date.toISOString().slice(0, 10)
 }
 
 const round = (value: number) => Math.round(value * 100) / 100
@@ -215,10 +247,10 @@ function bountiesWon(
 /**
  * A year of results for the whole mock field.
  *
- * `days` is the window ending on `from` plus that many days, so a shorter
- * window simply compresses everybody's schedule rather than cutting the field
- * down — the comparison is between players, and it should not change shape
- * because the period did.
+ * `days` is the window starting at `from`, so a shorter window simply
+ * compresses everybody's schedule rather than cutting the field down — the
+ * comparison is between players, and it should not change shape because the
+ * period did.
  */
 export function buildChallengeLog(options: {
   seed: number
@@ -239,8 +271,9 @@ export function buildChallengeLog(options: {
       results.push({
         id: `c-${playerIndex.toString(36)}-${index.toString(36)}`,
         player: profile.name,
-        date: dayWithin(from, days, random),
+        date: dayAt(from, Math.floor(random() * days)),
         event: EVENTS[Math.floor(random() * EVENTS.length)],
+        site: profile.site,
         entrants,
         place,
         buyIn,
@@ -249,5 +282,68 @@ export function buildChallengeLog(options: {
     }
   })
 
+  results.push(...buildDailyMains({ seed, from, days, players }))
+
   return results.sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id))
+}
+
+/** Nights the Main does not run, or nobody is about. */
+const DARK_NIGHT = 0.08
+
+/**
+ * The $54 Daily Main, which everybody plays together.
+ *
+ * Built as one tournament rather than as ten private ones, because that is
+ * the whole point of a last longer: the same field, the same night, and
+ * finishing places that can be compared because they came out of the same
+ * event. The per-player generator above cannot do that — it gives each player
+ * their own field size for what is supposed to be one tournament — so the
+ * Main is built from the outside in: the field first, then who was in it,
+ * then where each of them finished.
+ */
+export function buildDailyMains(options: {
+  seed: number
+  from: string
+  days: number
+  players?: readonly PlayerProfile[]
+}): ChallengeResult[] {
+  const { seed, from, days, players = PLAYERS } = options
+  const random = rng(seed + 104729)
+  const out: ChallengeResult[] = []
+
+  for (let day = 0; day < days; day += 1) {
+    if (random() < DARK_NIGHT) continue
+
+    const entrants = Math.round(600 + random() * 1900)
+    const field = players.filter((profile) => random() < profile.dailyMain)
+    // One person is not a last longer, and the contest is the only reason
+    // this event is generated separately at all.
+    if (field.length < 2) continue
+
+    const date = dayAt(from, day)
+    const taken = new Set<number>()
+
+    field.forEach((profile, index) => {
+      // Distinct places: two people cannot finish 40th in the same
+      // tournament, so a collision is nudged down rather than left to look
+      // like a tie nobody can explain.
+      let place = finishPlace(entrants, profile.skill, random)
+      while (taken.has(place)) place += 1
+      taken.add(place)
+
+      out.push({
+        id: `m-${day.toString(36)}-${index.toString(36)}`,
+        player: profile.name,
+        date,
+        event: DAILY_MAIN.event,
+        site: DAILY_MAIN.site,
+        entrants,
+        place,
+        buyIn: DAILY_MAIN.buyIn,
+        bounties: bountiesWon(DAILY_MAIN.buyIn, 0.35, entrants, place, random),
+      })
+    })
+  }
+
+  return out
 }
