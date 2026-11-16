@@ -16,7 +16,7 @@ function App() {
       <div className="min-h-screen p-4 sm:p-6 max-w-7xl mx-auto">
         <header className="mb-6 flex items-start gap-4">
           <div className="flex-1">
-            <BackToMenu className="mb-1" />
+            <BackToMenu href="./home.html" className="mb-1" />
             <h1 className="text-2xl font-bold text-white mb-1">MDF Range Tool</h1>
             <p className="text-sm text-slate-400">
               Paint your range, pick a bet size, tag hands to call or fold, and track MDF fold %.

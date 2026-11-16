@@ -369,7 +369,7 @@ export function LeakFinderPage() {
   return (
     <div className="min-h-screen p-4 sm:p-6 max-w-5xl mx-auto">
       <header className="mb-6">
-        <BackToMenu className="mb-2" />
+        <BackToMenu href="./home.html" className="mb-2" />
         <h1 className="text-2xl font-bold text-white mb-1">Leak Finder</h1>
         <p className="text-sm text-slate-400">
           {t('Import a positional report from PokerTracker, Hold’em Manager or Hand2Note and compare every seat to healthy baselines.')}

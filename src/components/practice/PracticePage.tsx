@@ -41,7 +41,7 @@ function PracticeComingSoon() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md text-center">
-        <BackToMenu className="mb-6" />
+        <BackToMenu href="./home.html" className="mb-6" />
         <h1 className="text-2xl font-bold text-slate-500 mb-2">MDF Practice</h1>
         <p className="text-slate-600 text-sm">Coming soon</p>
       </div>
@@ -165,7 +165,7 @@ function PracticeGame() {
   return (
     <div className="min-h-screen p-4 sm:p-6 max-w-7xl mx-auto">
       <header className="mb-6">
-        <BackToMenu className="mb-2" />
+        <BackToMenu href="./home.html" className="mb-2" />
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white mb-1">MDF Practice</h1>

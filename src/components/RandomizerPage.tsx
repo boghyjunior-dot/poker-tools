@@ -173,7 +173,7 @@ export function RandomizerPage() {
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center p-4 gap-6">
       <div className="absolute top-4 left-4 sm:top-6 sm:left-6">
-        <BackToMenu />
+        <BackToMenu href="./home.html" />
       </div>
 
       <header className="text-center">

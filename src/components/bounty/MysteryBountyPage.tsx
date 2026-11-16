@@ -426,7 +426,7 @@ export function MysteryBountyPage() {
   return (
     <div className="min-h-screen px-4 py-6">
       <div className="mx-auto w-full max-w-4xl">
-        <BackToMenu className="mb-3" />
+        <BackToMenu href="./home.html" className="mb-3" />
         <h1 className="text-3xl font-bold text-white">Mystery Bounty</h1>
         <p className="mb-6 text-sm text-slate-400">
           {t('What a knockout is really worth — at the start of the phase, and right now.')}

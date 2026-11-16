@@ -246,7 +246,7 @@ export function EquityPage() {
   return (
     <div className="min-h-screen p-4 sm:p-6 max-w-6xl mx-auto">
       <header className="mb-6">
-        <BackToMenu className="mb-2" />
+        <BackToMenu href="./home.html" className="mb-2" />
         <h1 className="text-2xl font-bold text-white">Equity Calculator</h1>
         <p className="text-sm text-slate-400 mt-1">
           {t('Preflop equity via Monte Carlo — hand vs range, stacks, with or without PKO bounties.')}

@@ -176,7 +176,7 @@ export function BankrollPage() {
   return (
     <div className="min-h-screen px-4 py-6">
       <div className="mx-auto w-full max-w-4xl">
-        <BackToMenu className="mb-3" />
+        <BackToMenu href="./home.html" className="mb-3" />
         <h1 className="text-3xl font-bold text-white">Bankroll</h1>
         <p className="mb-6 text-sm text-slate-400">
           {t('What you can afford to play, from your edge and the fields you play — not a rule of thumb.')}
