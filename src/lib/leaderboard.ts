@@ -48,6 +48,14 @@ export interface ChallengeResult {
    * otherwise report everybody as cashing half the time.
    */
   cashed: number
+  /**
+   * The day this was entered into the challenge, if it is known.
+   *
+   * Not the day it was played — that is `date`. Results arrive after the
+   * fact and sometimes in batches, and a competition people pay into should
+   * be able to show when each row turned up as well as what it scored.
+   */
+  added?: string
 }
 
 /** The part of a score that comes from how deep you ran in how big a field. */
@@ -113,6 +121,61 @@ export function isEligible(result: ChallengeResult): boolean {
     result.buyIn >= STAKE_FLOOR &&
     result.buyIn <= STAKE_CEILING
   )
+}
+
+/**
+ * The scores that made a monthly top ten, pooled across the year.
+ *
+ * This is what the yearly race counts, and it is not the same as the best
+ * fifty of everything. A result has to earn its place twice: once in the
+ * month it was played, and again against the other months. The effect is
+ * that the monthly race is the qualifier rather than a separate contest —
+ * a quiet month cannot be padded out later, and a huge month is capped at
+ * ten however many good nights it held.
+ */
+export function monthlyQualifiers(
+  results: readonly ChallengeResult[],
+  best: number = FORMATS.monthly.best,
+): ChallengeResult[] {
+  const buckets = new Map<string, ChallengeResult[]>()
+  for (const result of results) {
+    const key = `${result.player}|${result.date.slice(0, 7)}`
+    const bucket = buckets.get(key)
+    if (bucket) bucket.push(result)
+    else buckets.set(key, [result])
+  }
+
+  const out: ChallengeResult[] = []
+  for (const bucket of buckets.values()) {
+    out.push(...[...bucket].sort((a, b) => score(b) - score(a)).slice(0, Math.max(0, best)))
+  }
+  return out
+}
+
+export interface HistoryEntry {
+  result: ChallengeResult
+  score: number
+  /** False for a result outside the buy-in band, which scores nothing. */
+  counts: boolean
+}
+
+/**
+ * Every result entered, newest first.
+ *
+ * Sorted by when it was added rather than when it was played, because that
+ * is the question this answers: what has gone in since I last looked. A row
+ * with no recorded entry date sorts to the bottom, where it reads as older
+ * rather than as a mistake.
+ */
+export function history(results: readonly ChallengeResult[]): HistoryEntry[] {
+  return [...results]
+    .sort(
+      (a, b) =>
+        (b.added ?? '').localeCompare(a.added ?? '') ||
+        b.date.localeCompare(a.date) ||
+        a.id.localeCompare(b.id),
+    )
+    .map((result) => ({ result, score: score(result), counts: isEligible(result) }))
 }
 
 /** The results that count. */

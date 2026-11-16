@@ -25,11 +25,13 @@ import {
   STAKE_CEILING,
   STAKE_FLOOR,
   eligible,
+  history,
   inMonth,
   inYear,
   ineligible,
   lastLongerRounds,
   lastLongerStandings,
+  monthlyQualifiers,
   PRIZE_SHARES,
   openingMonth,
   pot,
@@ -42,6 +44,7 @@ import {
   type ChallengeResult,
   type FormatId,
 } from '../../lib/leaderboard'
+import { CHALLENGE_RESULTS } from '../../content/challengeResults'
 import { DEMO_PROFILES, buildChallengeLog } from '../../lib/leaderboardDemo'
 import { profileFor } from '../../lib/playerProfiles'
 import { Avatar } from './Avatar'
@@ -104,7 +107,14 @@ export function LeaderboardPage() {
    */
   const [view, setView] = useState<ViewId>('monthly')
   const formatId: FormatId = view === 'monthly' ? 'monthly' : 'yearly'
-  const results: ChallengeResult[] = DEMO_LOG
+  /**
+   * What has actually been entered, or the mock field while nothing has.
+   *
+   * The first real row switches the page over; until then an empty season
+   * would be an empty page, which shows nobody what they are signing up to.
+   */
+  const pretend = CHALLENGE_RESULTS.length === 0
+  const results: ChallengeResult[] = pretend ? DEMO_LOG : CHALLENGE_RESULTS
 
   const months = useMemo(() => seasonMonths(results), [results])
   const years = useMemo(() => seasonYears(results), [results])
@@ -132,15 +142,33 @@ export function LeaderboardPage() {
    */
   const inPeriod = useMemo(() => eligible(everything), [everything])
   const skipped = useMemo(() => ineligible(everything).length, [everything])
-  const table = useMemo(() => standings(inPeriod, format), [inPeriod, format])
+  /**
+   * What the points race is scored over.
+   *
+   * The monthly race counts the month. The yearly one counts the scores that
+   * made a monthly top ten, pooled — so a result has to earn its place
+   * twice, and the months are the qualifiers rather than a separate contest.
+   * The last longer reads `inPeriod` instead: every night of the Main was
+   * contested whether or not the result made anybody's ten.
+   */
+  const scoring = useMemo(
+    () => (byMonth ? inPeriod : monthlyQualifiers(inPeriod, FORMATS.monthly.best)),
+    [inPeriod, byMonth],
+  )
+  const table = useMemo(() => standings(scoring, format), [scoring, format])
   const paid = useMemo(() => prizes(table, format), [table, format])
   const working = useMemo(
-    () => (open ? countedFor(inPeriod, open, format) : []),
-    [inPeriod, open, format],
+    () => (open ? countedFor(scoring, open, format) : []),
+    [scoring, open, format],
   )
   const nights = useMemo(() => lastLongerRounds(inPeriod, DAILY_MAIN), [inPeriod])
   const lastLonger = useMemo(() => lastLongerStandings(inPeriod, DAILY_MAIN), [inPeriod])
   const [allNights, setAllNights] = useState(false)
+  // The history shows everything entered for the period, band or no band:
+  // a result that scored nothing is still a thing somebody wrote down.
+  const entered = useMemo(() => history(everything), [everything])
+  const [allEntries, setAllEntries] = useState(false)
+  const shownEntries = allEntries ? entered.length : RECENT_ENTRIES
   const shown = allNights ? nights : nights.slice(0, RECENT_NIGHTS)
 
   return (
@@ -153,7 +181,7 @@ export function LeaderboardPage() {
         </h1>
         <p className="mb-5 max-w-2xl text-sm text-slate-400">
           {t(
-            'Two races off the same results. The monthly one counts your best ten scores in the month; the yearly one counts your best fifty. Points come from how deep you ran in how big a field, with a bit on top for bounties.',
+            'The monthly race counts your best ten scores in the month. The yearly one counts your best fifty of those — only a score that made a monthly top ten is in it, so the months are the qualifiers. Points come from how deep you ran in how big a field, with a bit on top for bounties.',
           )}
         </p>
 
@@ -163,11 +191,13 @@ export function LeaderboardPage() {
           className="mb-4"
         />
 
-        <p className="mb-6 rounded-lg border border-indigo-900/60 bg-indigo-950/30 px-4 py-3 text-xs leading-relaxed text-indigo-200">
-          {t(
-            'These standings are a mock field of ten invented players, built to a fixed seed so the table is the same every time. Nothing here is anybody’s real results — the challenge has no way to collect them yet.',
-          )}
-        </p>
+        {pretend && (
+          <p className="mb-6 rounded-lg border border-indigo-900/60 bg-indigo-950/30 px-4 py-3 text-xs leading-relaxed text-indigo-200">
+            {t(
+              'Nothing has been entered yet, so these standings are a mock field of eleven invented players, built to a fixed seed. The first real result switches the page over.',
+            )}
+          </p>
+        )}
 
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <div className="flex gap-0.5 rounded-md border border-slate-800 bg-slate-950/60 p-0.5">
@@ -474,6 +504,93 @@ export function LeaderboardPage() {
           )}
 
           <Panel>
+            <h2 className="text-sm font-semibold text-white">{t('What has been entered')}</h2>
+            <p className="mt-0.5 max-w-2xl text-xs text-slate-500">
+              {t(
+                'Every result in this period, newest entry first. Results are handed over and written down rather than submitted through the app, so this is the record of what has been counted and when it turned up.',
+              )}
+            </p>
+            {entered.length === 0 ? (
+              <p className="mt-4 text-sm text-slate-500">
+                {t('Nothing entered for this period yet.')}
+              </p>
+            ) : (
+              <>
+                <div className="mt-3 overflow-x-auto">
+                  <table className="w-full min-w-[720px] text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-800 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                        <th className="pb-2 font-medium">{t('Entered')}</th>
+                        <th className="pb-2 pl-3 font-medium">{t('Player')}</th>
+                        <th className="pb-2 pl-3 font-medium">{t('Date')}</th>
+                        <th className="pb-2 pl-3 font-medium">{t('Event')}</th>
+                        <th className="pb-2 pl-3 text-right font-medium">{t('Entries')}</th>
+                        <th className="pb-2 pl-3 text-right font-medium">{t('Place')}</th>
+                        <th className="pb-2 pl-3 text-right font-medium">{t('Buy-in')}</th>
+                        <th className="pb-2 pl-3 text-right font-medium">{t('Cashed')}</th>
+                        <th className="pb-2 pl-3 text-right font-medium">{t('Score')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-slate-300">
+                      {entered.slice(0, shownEntries).map(({ result, score: value, counts }) => (
+                        <tr key={result.id} className="border-b border-slate-800/60 last:border-0">
+                          <td className="py-1.5 tabular-nums text-slate-500">
+                            {result.added ?? '—'}
+                          </td>
+                          <td className="py-1.5 pl-3 font-medium text-slate-100">{result.player}</td>
+                          <td className="py-1.5 pl-3 tabular-nums text-slate-500">{result.date}</td>
+                          <td className="py-1.5 pl-3">{result.event}</td>
+                          <td className="py-1.5 pl-3 text-right tabular-nums">
+                            {result.entrants.toLocaleString('en-US')}
+                          </td>
+                          <td className="py-1.5 pl-3 text-right tabular-nums">{result.place}</td>
+                          <td className="py-1.5 pl-3 text-right tabular-nums text-slate-400">
+                            ${result.buyIn}
+                          </td>
+                          <td className="py-1.5 pl-3 text-right tabular-nums text-slate-400">
+                            {result.cashed > 0 ? `${formatMoney(result.cashed)}` : '—'}
+                          </td>
+                          <td
+                            className={`py-1.5 pl-3 text-right font-semibold tabular-nums ${
+                              counts ? 'text-white' : 'text-slate-600 line-through'
+                            }`}
+                            title={
+                              counts
+                                ? undefined
+                                : t('Outside the ${low}–${high} band, so it scores nothing.', {
+                                    low: STAKE_FLOOR,
+                                    high: STAKE_CEILING,
+                                  })
+                            }
+                          >
+                            {points(value)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {entered.length > RECENT_ENTRIES && (
+                  <button
+                    type="button"
+                    onClick={() => setAllEntries(!allEntries)}
+                    className="mt-3 text-xs font-semibold text-indigo-400 transition-colors hover:text-indigo-300"
+                  >
+                    {allEntries
+                      ? t('Show the last {n}', { n: RECENT_ENTRIES })
+                      : t('Show all {n} entries', { n: entered.length })}
+                  </button>
+                )}
+                <p className="mt-3 text-[11px] leading-relaxed text-slate-600">
+                  {t(
+                    'A struck-through score is a result outside the buy-in band: it is kept on the record, and it counts for nothing.',
+                  )}
+                </p>
+              </>
+            )}
+          </Panel>
+
+          <Panel>
             <h2 className="text-sm font-semibold text-white">{t('How a score is worked out')}</h2>
             <p className="mt-2 font-mono text-sm text-indigo-300">
               S = [ 100 × √(N / R) + 25 × (Bty / Bi) ] × ⁴√(Bi / {STAKE_FLOOR})
@@ -580,6 +697,9 @@ const VIEW_LABELS: Record<ViewId, string> = {
   yearly: 'Yearly',
   lastLonger: 'Last Longer',
 }
+
+/** How many entries the history shows before it asks whether you want them all. */
+const RECENT_ENTRIES = 15
 
 /** How many nights the last longer shows before it asks whether you want them all. */
 const RECENT_NIGHTS = 12

@@ -84,7 +84,7 @@ export function PlayerDialog({
         if (event.target === ref.current) onClose()
       }}
       aria-label={player ?? undefined}
-      className="w-[min(46rem,calc(100vw-2rem))] rounded-xl border border-slate-700 bg-slate-900 p-0 text-slate-300 shadow-2xl backdrop:bg-slate-950/80 open:backdrop:backdrop-blur-sm"
+      className="fixed inset-0 m-auto h-fit max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-[46rem] rounded-xl border border-slate-700 bg-slate-900 p-0 text-slate-300 shadow-2xl backdrop:bg-slate-950/80 open:backdrop:backdrop-blur-sm"
     >
       {player && card && (
         <div className="max-h-[85vh] overflow-y-auto p-5 sm:p-6">

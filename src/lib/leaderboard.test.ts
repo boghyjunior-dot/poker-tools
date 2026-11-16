@@ -14,11 +14,13 @@ import {
   inMonth,
   inYear,
   eligible,
+  history,
   isEligible,
   isLastLonger,
   ineligible,
   lastLongerRounds,
   lastLongerStandings,
+  monthlyQualifiers,
   monthsIn,
   pot,
   openingMonth,
@@ -578,5 +580,90 @@ describe('the prize money', () => {
     const monthly = prizes(rows, FORMATS.monthly).get('P0') ?? 0
     const yearly = prizes(rows, FORMATS.yearly).get('P0') ?? 0
     expect(yearly).toBeCloseTo(monthly * (FORMATS.yearly.fee / FORMATS.monthly.fee), 6)
+  })
+})
+
+describe('qualifying for the year', () => {
+  const night = (player: string, date: string, place: number) =>
+    result({ player, date, place, entrants: 1000, buyIn: 5 })
+
+  it('keeps each player a month at a time', () => {
+    const log = [
+      ...Array.from({ length: 5 }, (_, i) => night('Ana', '2027-01-0' + (i + 1), 10 + i)),
+      ...Array.from({ length: 5 }, (_, i) => night('Ana', '2027-02-0' + (i + 1), 10 + i)),
+    ]
+    expect(monthlyQualifiers(log, 3)).toHaveLength(6)
+  })
+
+  it('takes the best of a month and leaves the rest out', () => {
+    const log = [night('Ana', '2027-01-01', 1), night('Ana', '2027-01-02', 900), night('Ana', '2027-01-03', 5)]
+    const kept = monthlyQualifiers(log, 2).map((row) => row.place).sort((a, b) => a - b)
+    expect(kept).toEqual([1, 5])
+  })
+
+  it('does not let one player eat another player\'s places', () => {
+    const log = [
+      night('Ana', '2027-01-01', 1),
+      night('Ana', '2027-01-02', 2),
+      night('Bogdan', '2027-01-03', 800),
+    ]
+    const kept = monthlyQualifiers(log, 2)
+    expect(kept.filter((row) => row.player === 'Bogdan')).toHaveLength(1)
+  })
+
+  it('keeps everything when nobody fills their ten', () => {
+    const log = [night('Ana', '2027-01-01', 4), night('Ana', '2027-02-01', 9)]
+    expect(monthlyQualifiers(log, 10)).toHaveLength(2)
+  })
+
+  it('means a score outside a monthly ten can never reach the year', () => {
+    // The whole point of the rule: a result has to earn its place twice.
+    const strong = Array.from({ length: 10 }, (_, i) => night('Ana', '2027-01-0' + ((i % 9) + 1), i + 1))
+    const extra = night('Ana', '2027-01-15', 400)
+    const kept = monthlyQualifiers([...strong, extra], 10)
+    expect(kept).toHaveLength(10)
+    expect(kept.some((row) => row.id === extra.id)).toBe(false)
+  })
+
+  it('has nothing to qualify out of an empty log', () => {
+    expect(monthlyQualifiers([], 10)).toEqual([])
+  })
+})
+
+describe('what has been entered', () => {
+  it('puts the newest entry first, whenever it was played', () => {
+    const rows = history([
+      result({ id: 'a', date: '2027-03-01', added: '2027-03-02' }),
+      result({ id: 'b', date: '2027-01-01', added: '2027-05-09' }),
+    ])
+    expect(rows.map((row) => row.result.id)).toEqual(['b', 'a'])
+  })
+
+  it('sends a row with no entry date to the bottom rather than the top', () => {
+    const rows = history([
+      result({ id: 'old' }),
+      result({ id: 'new', added: '2027-02-02' }),
+    ])
+    expect(rows.map((row) => row.result.id)).toEqual(['new', 'old'])
+  })
+
+  it('falls back to the night played when two went in together', () => {
+    const rows = history([
+      result({ id: 'a', date: '2027-01-01', added: '2027-05-01' }),
+      result({ id: 'b', date: '2027-04-01', added: '2027-05-01' }),
+    ])
+    expect(rows.map((row) => row.result.id)).toEqual(['b', 'a'])
+  })
+
+  it('keeps a result the band throws out, and marks it', () => {
+    const rows = history([result({ buyIn: 215 }), result({ buyIn: 22 })])
+    expect(rows.map((row) => row.counts)).toContain(false)
+    expect(rows.map((row) => row.counts)).toContain(true)
+    expect(rows).toHaveLength(2)
+  })
+
+  it('carries the score each row produced', () => {
+    const [row] = history([result({ entrants: 1000, place: 10, buyIn: 5 })])
+    expect(row.score).toBeCloseTo(1000, 6)
   })
 })
