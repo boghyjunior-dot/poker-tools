@@ -9,6 +9,7 @@
 import { useT } from '../../lib/i18n'
 import type { Format, LastLongerStanding, Standing } from '../../lib/leaderboard'
 import { avatarTone, initials, profileFor, type PlayerCard } from '../../lib/playerProfiles'
+import { pressable } from './pressable'
 
 const points = (value: number) => Math.round(value).toLocaleString('en-US')
 
@@ -65,11 +66,16 @@ export function PlayerProfiles({
   lastLonger,
   cards,
   format,
+  open,
+  onPick,
 }: {
   standings: readonly Standing[]
   lastLonger: readonly LastLongerStanding[]
   cards: readonly PlayerCard[]
   format: Format
+  /** Whose scores are showing, so the open card can say so. */
+  open: string | null
+  onPick: (player: string) => void
 }) {
   const t = useT()
   if (standings.length === 0) return null
@@ -85,7 +91,10 @@ export function PlayerProfiles({
         return (
           <article
             key={row.player}
-            className="flex gap-4 rounded-xl border border-slate-800 bg-slate-950/50 p-4"
+            {...pressable(() => onPick(row.player), open === row.player)}
+            className={`flex cursor-pointer gap-4 rounded-xl border bg-slate-950/50 p-4 transition-colors hover:border-slate-700 hover:bg-slate-900/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+              open === row.player ? 'border-indigo-700' : 'border-slate-800'
+            }`}
           >
             <Avatar card={card} />
             <div className="min-w-0 flex-1">
@@ -97,6 +106,9 @@ export function PlayerProfiles({
                   }`}
                 >
                   #{row.rank}
+                </span>
+                <span className="ml-auto shrink-0 text-[10px] uppercase tracking-wider text-indigo-400">
+                  {open === row.player ? t('Showing') : t('Scores')}
                 </span>
               </div>
               <p className="mt-0.5 text-xs italic leading-relaxed text-slate-400">

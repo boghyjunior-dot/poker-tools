@@ -8,7 +8,7 @@
  * want to check rather than trust.
  */
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
 import { Footer } from '../Footer'
 import { LocalOnlyBanner } from '../LocalOnlyBanner'
@@ -42,6 +42,7 @@ import {
 import { DEMO_PROFILES, buildChallengeLog } from '../../lib/leaderboardDemo'
 import { PlayerProfiles } from './PlayerProfiles'
 import { ScoreCalculator } from './ScoreCalculator'
+import { SCORES_PANEL, pressable } from './pressable'
 
 function Panel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
@@ -97,6 +98,20 @@ export function LeaderboardPage() {
   const [month, setMonth] = useState(() => openingMonth(results))
   const [year, setYear] = useState(() => SEASON)
   const [open, setOpen] = useState<string | null>(null)
+  const scores = useRef<HTMLDivElement>(null)
+
+  /** Open a player's scores, or close them if they were already showing. */
+  const pick = (player: string) => setOpen((current) => (current === player ? null : player))
+
+  // Brought into view, because the cards that open it sit a long way below
+  // it: a panel that appears off-screen reads as a click that did nothing.
+  useEffect(() => {
+    if (!open || !scores.current) return
+    const still =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    scores.current.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'start' })
+  }, [open])
 
   const format = FORMATS[formatId]
   const period = formatId === 'monthly' ? month : year
@@ -241,8 +256,8 @@ export function LeaderboardPage() {
                   {table.map((row) => (
                     <tr
                       key={row.player}
-                      onClick={() => setOpen(open === row.player ? null : row.player)}
-                      className={`cursor-pointer border-b border-slate-800/60 transition-colors last:border-0 hover:bg-slate-800/40 ${
+                      {...pressable(() => pick(row.player), open === row.player)}
+                      className={`cursor-pointer border-b border-slate-800/60 transition-colors last:border-0 hover:bg-slate-800/40 focus:outline-none focus-visible:bg-slate-800/60 ${
                         open === row.player ? 'bg-slate-800/50' : ''
                       }`}
                     >
@@ -301,10 +316,20 @@ export function LeaderboardPage() {
           </Panel>
 
           {open && working.length > 0 && (
-            <Panel>
-              <h2 className="text-sm font-semibold text-white">
-                {t('{player} — the {n} scores counting', { player: open, n: working.length })}
-              </h2>
+            <div ref={scores} id={SCORES_PANEL} className="scroll-mt-4">
+              <Panel className="border-indigo-900/70">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h2 className="text-sm font-semibold text-white">
+                    {t('{player} — the {n} scores counting', { player: open, n: working.length })}
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setOpen(null)}
+                    className="text-xs font-semibold text-slate-500 transition-colors hover:text-slate-300"
+                  >
+                    {t('Close')}
+                  </button>
+                </div>
               <div className="mt-3 overflow-x-auto">
                 <table className="w-full min-w-[620px] text-sm">
                   <thead>
@@ -340,8 +365,9 @@ export function LeaderboardPage() {
                     ))}
                   </tbody>
                 </table>
-              </div>
-            </Panel>
+                </div>
+              </Panel>
+            </div>
           )}
 
           <Panel>
@@ -429,7 +455,20 @@ export function LeaderboardPage() {
                             {night.contested}
                           </td>
                           <td className="py-1.5 font-medium text-slate-100">
-                            {night.winners.join(' & ')}
+                            {night.winners.map((winner, index) => (
+                              <span key={winner}>
+                                {index > 0 && <span className="text-slate-500"> & </span>}
+                                <button
+                                  type="button"
+                                  onClick={() => pick(winner)}
+                                  aria-expanded={open === winner}
+                                  aria-controls={SCORES_PANEL}
+                                  className="rounded underline-offset-2 transition-colors hover:text-white hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                                >
+                                  {winner}
+                                </button>
+                              </span>
+                            ))}
                           </td>
                           <td className="py-1.5 text-right tabular-nums text-amber-300">
                             {night.place}
@@ -466,7 +505,7 @@ export function LeaderboardPage() {
             <h2 className="text-sm font-semibold text-white">{t('The field')}</h2>
             <p className="mt-0.5 max-w-2xl text-xs text-slate-500">
               {t(
-                'Who you are chasing, and where they are in this period. Every figure here is the same one the table above shows.',
+                'Who you are chasing, and where they are in this period. Every figure here is the same one the table above shows — pick anybody to see the scores behind it.',
               )}
             </p>
             <div className="mt-4">
@@ -475,6 +514,8 @@ export function LeaderboardPage() {
                 lastLonger={lastLonger}
                 cards={DEMO_PROFILES}
                 format={format}
+                open={open}
+                onPick={pick}
               />
             </div>
           </Panel>
