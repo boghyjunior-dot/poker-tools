@@ -410,6 +410,54 @@ export function monthsIn(results: readonly ChallengeResult[]): string[] {
   )
 }
 
+/**
+ * The season the challenge is running.
+ *
+ * A year, because the yearly competition is a calendar year and the monthly
+ * one is its twelve rounds. Named rather than inferred from the results, so
+ * the page has something to show on the first of January: a leaderboard that
+ * only exists once somebody has played is a leaderboard nobody can sign up
+ * to.
+ */
+export const SEASON = '2027'
+
+/** The years to offer, newest first, with the season always among them. */
+export function seasonYears(
+  results: readonly ChallengeResult[],
+  season: string = SEASON,
+): string[] {
+  return [...new Set([season, ...results.map((result) => result.date.slice(0, 4))])].sort((a, b) =>
+    b.localeCompare(a),
+  )
+}
+
+/**
+ * The months to offer, newest first: all twelve of the season, plus any month
+ * outside it that has results.
+ *
+ * All twelve from the start, because the monthly race is twelve separate
+ * competitions and knowing that March exists is part of deciding whether to
+ * enter it.
+ */
+export function seasonMonths(
+  results: readonly ChallengeResult[],
+  season: string = SEASON,
+): string[] {
+  const months = new Set(results.map((result) => result.date.slice(0, 7)))
+  for (let month = 1; month <= 12; month += 1) {
+    months.add(`${season}-${String(month).padStart(2, '0')}`)
+  }
+  return [...months].sort((a, b) => b.localeCompare(a))
+}
+
+/** The month to open on: the newest with anything in it, else the season's first. */
+export function openingMonth(
+  results: readonly ChallengeResult[],
+  season: string = SEASON,
+): string {
+  return monthsIn(results)[0] ?? `${season}-01`
+}
+
 /** Every year with a result in it, newest first. */
 export function yearsIn(results: readonly ChallengeResult[]): string[] {
   return [...new Set(results.map((result) => result.date.slice(0, 4)))].sort((a, b) =>

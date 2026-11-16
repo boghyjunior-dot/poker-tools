@@ -3,6 +3,7 @@ import {
   DAILY_MAIN,
   FORMATS,
   MIN_CONTESTED,
+  SEASON,
   STAKE_CEILING,
   STAKE_EXPONENT,
   STAKE_FLOOR,
@@ -19,7 +20,10 @@ import {
   lastLongerStandings,
   monthsIn,
   pot,
+  openingMonth,
   score,
+  seasonMonths,
+  seasonYears,
   stakeFactor,
   standings,
   yearsIn,
@@ -434,5 +438,49 @@ describe('the last longer table', () => {
 
   it('has no table without a contest', () => {
     expect(lastLongerStandings([])).toEqual([])
+  })
+})
+
+describe('the season', () => {
+  const log = [
+    result({ date: '2027-03-04' }),
+    result({ date: '2027-03-19' }),
+    result({ date: '2026-11-02' }),
+  ]
+
+  it('is a year the page knows without being told by the results', () => {
+    // A leaderboard that only exists once somebody has played is one nobody
+    // can sign up to.
+    expect(SEASON).toMatch(/^\d{4}$/)
+    expect(seasonYears([])).toEqual([SEASON])
+  })
+
+  it('offers every month of it, played or not', () => {
+    const months = seasonMonths([], '2027')
+    expect(months).toHaveLength(12)
+    expect(months[0]).toBe('2027-12')
+    expect(months[11]).toBe('2027-01')
+  })
+
+  it('keeps a month from outside the season when something was played in it', () => {
+    expect(seasonMonths(log, '2027')).toContain('2026-11')
+    expect(seasonMonths(log, '2027')).toHaveLength(13)
+  })
+
+  it('does not list a month twice when the season has results in it', () => {
+    const months = seasonMonths(log, '2027')
+    expect(new Set(months).size).toBe(months.length)
+  })
+
+  it('lists the years newest first, with the season among them', () => {
+    expect(seasonYears(log, '2027')).toEqual(['2027', '2026'])
+  })
+
+  it('opens on the newest month anybody has played', () => {
+    expect(openingMonth(log, '2027')).toBe('2027-03')
+  })
+
+  it('opens on January when nobody has played yet', () => {
+    expect(openingMonth([], '2027')).toBe('2027-01')
   })
 })

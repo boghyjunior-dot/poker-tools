@@ -20,6 +20,7 @@ import {
   bountyPoints,
   countedFor,
   finishPoints,
+  SEASON,
   STAKE_CEILING,
   STAKE_FLOOR,
   eligible,
@@ -28,17 +29,19 @@ import {
   ineligible,
   lastLongerRounds,
   lastLongerStandings,
-  monthsIn,
+  openingMonth,
   pot,
+  seasonMonths,
+  seasonYears,
   score,
   stakeFactor,
   standings,
-  yearsIn,
   type ChallengeResult,
   type FormatId,
 } from '../../lib/leaderboard'
 import { DEMO_PROFILES, buildChallengeLog } from '../../lib/leaderboardDemo'
 import { PlayerProfiles } from './PlayerProfiles'
+import { ScoreCalculator } from './ScoreCalculator'
 
 function Panel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
@@ -77,17 +80,22 @@ function monthLabel(month: string): string {
  * make the standings move while you read them. One seed, one field, and the
  * same table every time it is opened.
  */
-const DEMO_LOG = buildChallengeLog({ seed: 2026, from: '2026-01-01', days: 319 })
+const DEMO_LOG = buildChallengeLog({
+  seed: 2027,
+  from: `${SEASON}-01-01`,
+  days: 365,
+})
 
 export function LeaderboardPage() {
   const t = useT()
   const [formatId, setFormatId] = useState<FormatId>('monthly')
   const results: ChallengeResult[] = DEMO_LOG
 
-  const months = useMemo(() => monthsIn(results), [results])
-  const years = useMemo(() => yearsIn(results), [results])
-  const [month, setMonth] = useState(() => months[0] ?? '')
-  const [year, setYear] = useState(() => years[0] ?? '')
+  const months = useMemo(() => seasonMonths(results), [results])
+  const years = useMemo(() => seasonYears(results), [results])
+  // Opens on the newest month anybody has played, not on an empty December.
+  const [month, setMonth] = useState(() => openingMonth(results))
+  const [year, setYear] = useState(() => SEASON)
   const [open, setOpen] = useState<string | null>(null)
 
   const format = FORMATS[formatId]
@@ -119,7 +127,9 @@ export function LeaderboardPage() {
     <div className="min-h-screen px-4 py-6">
       <div className="mx-auto w-full max-w-5xl">
         <BackToMenu className="mb-3" />
-        <h1 className="text-3xl font-bold text-white">{t('MTT Challenge')}</h1>
+        <h1 className="text-3xl font-bold text-white">
+          {t('MTT Challenge')} <span className="text-slate-500">{SEASON}</span>
+        </h1>
         <p className="mb-5 max-w-2xl text-sm text-slate-400">
           {t(
             'Two races off the same results. The monthly one counts your best ten scores in the month; the yearly one counts your best fifty. Points come from how deep you ran in how big a field, with a bit on top for bounties.',
@@ -522,6 +532,18 @@ export function LeaderboardPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </Panel>
+
+          <Panel>
+            <h2 className="text-sm font-semibold text-white">{t('What would that be worth?')}</h2>
+            <p className="mt-0.5 max-w-2xl text-xs text-slate-500">
+              {t(
+                'Put a result in and see what it scores. Useful before you play rather than after: whether the dearer game is worth it, and how deep you would have to go in the cheap one to match it.',
+              )}
+            </p>
+            <div className="mt-4">
+              <ScoreCalculator />
             </div>
           </Panel>
         </div>
