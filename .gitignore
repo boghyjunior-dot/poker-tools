@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# An unfinished module from an abandoned thread: kept on disk, out of the
+# repo until something imports it.
+src/lib/tournamentLibrary.ts
