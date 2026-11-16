@@ -3,6 +3,7 @@ import {
   DAILY_MAIN,
   FORMATS,
   MIN_CONTESTED,
+  PRIZE_SHARES,
   SEASON,
   STAKE_CEILING,
   STAKE_EXPONENT,
@@ -21,6 +22,7 @@ import {
   monthsIn,
   pot,
   openingMonth,
+  prizes,
   score,
   seasonMonths,
   seasonYears,
@@ -482,5 +484,88 @@ describe('the season', () => {
 
   it('opens on January when nobody has played yet', () => {
     expect(openingMonth([], '2027')).toBe('2027-01')
+  })
+})
+
+describe('the prize money', () => {
+  const table = (points: number[]) =>
+    standings(
+      points.flatMap((value, index) =>
+        Array.from({ length: value }, () =>
+          result({ player: `P${index}`, entrants: 1000, place: 10 }),
+        ),
+      ),
+      { ...FORMATS.monthly, best: 1000 },
+    )
+
+  it('splits half, a third and a fifth', () => {
+    expect(PRIZE_SHARES).toEqual([0.5, 0.3, 0.2])
+  })
+
+  it('pays the top three out of the pot the entrants made', () => {
+    const rows = table([5, 4, 3, 2, 1])
+    const paid = prizes(rows, FORMATS.monthly)
+    const total = pot(rows.length, FORMATS.monthly)
+    expect(total).toBe(125)
+    expect(paid.get('P0')).toBeCloseTo(62.5, 6)
+    expect(paid.get('P1')).toBeCloseTo(37.5, 6)
+    expect(paid.get('P2')).toBeCloseTo(25, 6)
+  })
+
+  it('pays nobody below third', () => {
+    const paid = prizes(table([5, 4, 3, 2, 1]), FORMATS.monthly)
+    expect(paid.has('P3')).toBe(false)
+    expect(paid.has('P4')).toBe(false)
+  })
+
+  it('pays out the whole pot and not a penny more', () => {
+    const rows = table([5, 4, 3, 2, 1])
+    const paid = prizes(rows, FORMATS.monthly)
+    const handed = [...paid.values()].reduce((sum, value) => sum + value, 0)
+    expect(handed).toBeCloseTo(pot(rows.length, FORMATS.monthly), 6)
+  })
+
+  it('makes a tie share the places it occupies, not the better one', () => {
+    // Level at the top takes first and second between them; the next player
+    // is third, which is how every prize pool in poker has worked.
+    const rows = table([4, 4, 2, 1])
+    const paid = prizes(rows, FORMATS.monthly)
+    expect(rows.map((row) => row.rank)).toEqual([1, 1, 3, 4])
+    expect(paid.get('P0')).toBeCloseTo(40, 6)
+    expect(paid.get('P1')).toBeCloseTo(40, 6)
+    expect(paid.get('P2')).toBeCloseTo(20, 6)
+  })
+
+  it('still pays out everything when a tie spans the bubble', () => {
+    const rows = table([5, 3, 3, 3])
+    const paid = prizes(rows, FORMATS.monthly)
+    const handed = [...paid.values()].reduce((sum, value) => sum + value, 0)
+    expect(handed).toBeCloseTo(pot(rows.length, FORMATS.monthly), 6)
+  })
+
+  it('scales back up when the field is smaller than the places paid', () => {
+    // Three places out of two entrants would leave a fifth of the pot
+    // belonging to nobody.
+    const rows = table([5, 3])
+    const paid = prizes(rows, FORMATS.monthly)
+    expect([...paid.values()].reduce((sum, value) => sum + value, 0)).toBeCloseTo(50, 6)
+    expect(paid.get('P0')).toBeCloseTo(31.25, 6)
+    expect(paid.get('P1')).toBeCloseTo(18.75, 6)
+  })
+
+  it('gives one entrant the lot', () => {
+    const rows = table([3])
+    expect(prizes(rows, FORMATS.monthly).get('P0')).toBeCloseTo(25, 6)
+  })
+
+  it('has nothing to pay out of an empty table', () => {
+    expect(prizes([], FORMATS.yearly).size).toBe(0)
+  })
+
+  it('pays more out of the yearly pot than the monthly one', () => {
+    const rows = table([5, 4, 3])
+    const monthly = prizes(rows, FORMATS.monthly).get('P0') ?? 0
+    const yearly = prizes(rows, FORMATS.yearly).get('P0') ?? 0
+    expect(yearly).toBeCloseTo(monthly * (FORMATS.yearly.fee / FORMATS.monthly.fee), 6)
   })
 })

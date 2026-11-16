@@ -223,6 +223,45 @@ export function pot(entrants: number, format: Format): number {
   return Math.max(0, entrants) * format.fee
 }
 
+/** How the pot splits: half, then a third, then a fifth. */
+export const PRIZE_SHARES = [0.5, 0.3, 0.2] as const
+
+/**
+ * What each player is owed, by where they finished.
+ *
+ * Two things this has to get right that a lookup table would not. A tie
+ * shares the places it occupies rather than both taking the better one — two
+ * players level at the top split first and second between them, and the next
+ * player is third, which is how every prize pool in poker has ever worked.
+ * And a field smaller than the paid places is scaled back up, because the
+ * money people put in is the money that comes out: three places paid out of
+ * two entrants would leave a fifth of the pot belonging to nobody.
+ */
+export function prizes(table: readonly Standing[], format: Format): Map<string, number> {
+  const out = new Map<string, number>()
+  const paid = Math.min(PRIZE_SHARES.length, table.length)
+  if (paid === 0) return out
+
+  const total = pot(table.length, format)
+  const awarded = PRIZE_SHARES.slice(0, paid).reduce((sum, share) => sum + share, 0)
+  if (total <= 0 || awarded <= 0) return out
+
+  let start = 0
+  while (start < table.length) {
+    let end = start
+    while (end < table.length && table[end].rank === table[start].rank) end += 1
+
+    const shared = PRIZE_SHARES.slice(start, end).reduce((sum, share) => sum + share, 0)
+    if (shared > 0) {
+      const each = (total * shared) / awarded / (end - start)
+      for (let i = start; i < end; i += 1) out.set(table[i].player, each)
+    }
+    start = end
+  }
+
+  return out
+}
+
 /**
  * A side contest inside one recurring tournament.
  *
