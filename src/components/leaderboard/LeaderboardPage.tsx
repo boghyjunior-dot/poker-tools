@@ -384,7 +384,6 @@ export function LeaderboardPage() {
                       <th className="px-2 py-3 font-medium">{t('Player')}</th>
                       <th className="px-2 py-3 text-right font-medium">{t('Points')}</th>
                       <th className="px-2 py-3 text-right font-medium">{t('Counting')}</th>
-                      <th className="px-2 py-3 text-right font-medium">{t('Played')}</th>
                       <th className="px-2 py-3 text-right font-medium">{t('Best')}</th>
                       <th className="px-2 py-3 text-right font-medium">{t('Cutoff')}</th>
                       <th className="px-2 py-3 text-right font-medium">{t('Bounties')}</th>
@@ -429,9 +428,6 @@ export function LeaderboardPage() {
                           }
                         >
                           {row.counted} / {format.best}
-                        </td>
-                        <td className="px-2 py-2.5 text-right tabular-nums text-slate-500">
-                          {row.played}
                         </td>
                         <td className="px-2 py-2.5 text-right tabular-nums text-slate-400">
                           {points(row.best)}
