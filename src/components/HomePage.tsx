@@ -129,6 +129,17 @@ function VarianceIcon() {
   )
 }
 
+function TrophyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+      <path d="M8 4h8v5a4 4 0 0 1-8 0V4Z" />
+      <path d="M8 5.5H5.5a2.5 2.5 0 0 0 2.5 2.5M16 5.5h2.5A2.5 2.5 0 0 1 16 8" />
+      <path d="M12 13v4" />
+      <path d="M9 20h6M10 17h4l.6 3h-5.2l.6-3Z" />
+    </svg>
+  )
+}
+
 function EquityIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
@@ -151,6 +162,7 @@ function ToolCard({
   disabled,
   status,
   localOnly,
+  heading: Heading = 'h3',
 }: {
   href: string
   icon: React.ReactNode
@@ -161,6 +173,14 @@ function ToolCard({
   disabled?: boolean
   status: ToolStatus
   localOnly?: boolean
+  /**
+   * The level this title sits at.
+   *
+   * A card under a named section is one step below it; a card in a category
+   * that has no section heading is one step below the category. Passed in
+   * rather than guessed because only the menu knows where the card ended up.
+   */
+  heading?: 'h3' | 'h4'
 }) {
   const t = useT()
   const statusStyle = STATUS_STYLES[status]
@@ -176,9 +196,9 @@ function ToolCard({
         >
           {icon}
         </span>
-        <h3 className={`text-lg font-semibold ${disabled ? 'text-slate-500' : 'text-white'}`}>
+        <Heading className={`text-lg font-semibold ${disabled ? 'text-slate-500' : 'text-white'}`}>
           {t(title)}
-        </h3>
+        </Heading>
         {external ? (
           <svg className="ml-auto w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
@@ -243,12 +263,34 @@ interface Tool {
   localOnly?: boolean
 }
 
-/** The menu, grouped. Order here is the order on screen. */
+/**
+ * A row of tools that answer the same kind of question.
+ *
+ * The heading is optional: a category holding a single section has nothing to
+ * say twice, and an empty bar above one grid is furniture.
+ */
 interface Section {
-  name: string
-  blurb: string
+  name?: string
+  blurb?: string
   tools: Tool[]
   /** Omitted for sections that always ship; false hides the whole section. */
+  enabled?: boolean
+}
+
+/**
+ * The top level of the menu. Order here is the order on screen.
+ *
+ * A second level only became worth having when the challenge arrived: a
+ * leaderboard is not a tool, and filing it next to the calculators would say
+ * that it was. Everything that answers a question and hands you a number
+ * stays together under one heading; anything that is a thing you take part in
+ * gets its own.
+ */
+interface Category {
+  name: string
+  blurb: string
+  sections: Section[]
+  /** Omitted for categories that always ship; false hides the whole thing. */
   enabled?: boolean
 }
 
@@ -265,7 +307,7 @@ function local(enabled: boolean, published: boolean) {
   return { enabled, localOnly: !published }
 }
 
-const SECTIONS: Section[] = [
+const TOOL_SECTIONS: Section[] = [
   {
     name: 'Start here',
     enabled: FEATURE_ROADMAP_ENABLED,
@@ -403,17 +445,51 @@ const SECTIONS: Section[] = [
   },
 ]
 
+const CATEGORIES: Category[] = [
+  {
+    name: 'Poker tools',
+    blurb: 'Ask it something and it answers. Grouped by the kind of question.',
+    sections: TOOL_SECTIONS,
+  },
+  {
+    name: 'MTT Challenge',
+    blurb: 'The same schedule, everyone playing it, and a table that says who is ahead.',
+    sections: [
+      {
+        tools: [
+          {
+            href: 'leaderboard.html',
+            icon: <TrophyIcon />,
+            title: 'Leaderboard',
+            description:
+              'Where everyone in the challenge stands: tournaments played, profit, ROI, and the run that put them there.',
+            accent: 'border-yellow-800/60 hover:border-yellow-600/80',
+            status: 'coming-soon',
+            disabled: true,
+          },
+        ],
+      },
+    ],
+  },
+]
+
 /**
  * The menu as it stands in this build.
  *
  * A tool held back is dropped rather than greyed out, because the page it
  * points at is genuinely not in `dist` — and a section left with no tools
- * disappears rather than leaving an empty heading behind.
+ * disappears rather than leaving an empty heading behind, as does a category
+ * left with no sections.
  */
-const VISIBLE = SECTIONS.map((section) => ({
-  ...section,
-  tools: section.tools.filter((tool) => tool.enabled !== false),
-})).filter((section) => section.enabled !== false && section.tools.length > 0)
+const VISIBLE = CATEGORIES.map((category) => ({
+  ...category,
+  sections: category.sections
+    .map((section) => ({
+      ...section,
+      tools: section.tools.filter((tool) => tool.enabled !== false),
+    }))
+    .filter((section) => section.enabled !== false && section.tools.length > 0),
+})).filter((category) => category.enabled !== false && category.sections.length > 0)
 
 export function HomePage() {
   const t = useT()
@@ -429,21 +505,35 @@ export function HomePage() {
           <p className="text-slate-400 text-sm">{t('Choose a tool to get started')}</p>
         </header>
 
-        <div className="flex flex-col gap-9">
-          {VISIBLE.map((section) => (
-            <section key={section.name}>
-              <div className="mb-3 flex items-baseline gap-3 border-b border-slate-800 pb-2">
-                <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-300">
-                  {t(section.name)}
-                </h2>
-                <p className="text-xs text-slate-500">{t(section.blurb)}</p>
+        <div className="flex flex-col gap-12">
+          {VISIBLE.map((category) => (
+            <div key={category.name}>
+              <div className="mb-5">
+                <h2 className="text-xl font-bold text-white">{t(category.name)}</h2>
+                <p className="mt-1 text-sm text-slate-500">{t(category.blurb)}</p>
               </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {section.tools.map((tool) => (
-                  <ToolCard key={tool.href} {...tool} />
+              <div className="flex flex-col gap-9">
+                {category.sections.map((section, index) => (
+                  <section key={section.name ?? `section-${index}`}>
+                    {section.name && (
+                      <div className="mb-3 flex items-baseline gap-3 border-b border-slate-800 pb-2">
+                        <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-300">
+                          {t(section.name)}
+                        </h3>
+                        {section.blurb && (
+                          <p className="text-xs text-slate-500">{t(section.blurb)}</p>
+                        )}
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      {section.tools.map((tool) => (
+                        <ToolCard key={tool.href} {...tool} heading={section.name ? 'h4' : 'h3'} />
+                      ))}
+                    </div>
+                  </section>
                 ))}
               </div>
-            </section>
+            </div>
           ))}
         </div>
 
