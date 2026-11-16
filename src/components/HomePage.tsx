@@ -1,4 +1,6 @@
 import {
+  FEATURE_CHALLENGE_ENABLED,
+  FEATURE_CHALLENGE_PUBLISHED,
   FEATURE_KNOWLEDGE_ENABLED,
   FEATURE_KNOWLEDGE_PUBLISHED,
   FEATURE_PRACTICE_ENABLED,
@@ -461,11 +463,11 @@ const CATEGORIES: Category[] = [
             href: 'leaderboard.html',
             icon: <TrophyIcon />,
             title: 'Leaderboard',
+            ...local(FEATURE_CHALLENGE_ENABLED, FEATURE_CHALLENGE_PUBLISHED),
             description:
-              'Where everyone in the challenge stands: tournaments played, profit, ROI, and the run that put them there.',
+              'Two races off one set of results: best ten scores in a month, best fifty in a year. Points for how deep you ran in how big a field.',
             accent: 'border-yellow-800/60 hover:border-yellow-600/80',
-            status: 'coming-soon',
-            disabled: true,
+            status: 'in-progress',
           },
         ],
       },

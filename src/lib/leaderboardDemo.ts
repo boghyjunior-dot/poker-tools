@@ -1,0 +1,253 @@
+/**
+ * Ten players who never existed, for looking at the challenge with a field in
+ * it.
+ *
+ * The point of the mock field is not decoration, it is calibration. A scoring
+ * formula is a set of instructions about how to play, and you cannot read
+ * those instructions off the algebra — you read them off a table of people
+ * who played differently and see who the rules reward. So these ten are built
+ * to disagree with each other: a micro-stakes grinder against a big-field
+ * specialist, a bounty hunter against somebody who only plays Sundays, high
+ * volume against high skill. Whoever wins, wins because of the formula.
+ *
+ * Seeded, so the same table comes back every time and a number somebody
+ * queries can be reproduced rather than argued about.
+ */
+
+import type { ChallengeResult } from './leaderboard'
+import { rng } from './seededRandom'
+
+export interface PlayerProfile {
+  name: string
+  /** How they play, in a line. */
+  blurb: string
+  /** Tournaments over the whole period. */
+  volume: number
+  /** Field sizes they play, smallest and largest. */
+  field: [number, number]
+  /** The buy-in ladder they pick from. */
+  buyIns: number[]
+  /**
+   * How deep they run, as an exponent on a uniform finish.
+   *
+   * 1 is the average of the field — in a fair field everybody's finishing
+   * place is uniform, so 1 means no edge at all. Above 1 skews towards the
+   * low numbers, which is what an edge looks like from the outside.
+   */
+  skill: number
+  /** Share of their schedule that carries bounties. */
+  bountyShare: number
+  /** Typical bounty collection, as a multiple of the buy-in. */
+  bountyRate: number
+}
+
+export const PLAYERS: PlayerProfile[] = [
+  {
+    name: 'Mihai P.',
+    blurb: 'Micro grinder: everything on the schedule, every night.',
+    volume: 300,
+    field: [400, 4000],
+    buyIns: [2.2, 5.5, 11],
+    skill: 1.15,
+    bountyShare: 0.8,
+    bountyRate: 0.4,
+  },
+  {
+    name: 'Ana R.',
+    blurb: 'Big-field specialist: fewer tournaments, enormous ones.',
+    volume: 95,
+    field: [2000, 15000],
+    buyIns: [11, 22, 55],
+    skill: 1.35,
+    bountyShare: 0.4,
+    bountyRate: 0.3,
+  },
+  {
+    name: 'Costel V.',
+    blurb: 'Bounty hunter: nothing without a head on it.',
+    volume: 210,
+    field: [300, 2500],
+    buyIns: [5.5, 11, 22],
+    skill: 1.1,
+    bountyShare: 1,
+    bountyRate: 0.75,
+  },
+  {
+    name: 'Raul T.',
+    blurb: 'Mid-stakes regular, deep runs more often than most.',
+    volume: 150,
+    field: [500, 5000],
+    buyIns: [22, 55, 109],
+    skill: 1.3,
+    bountyShare: 0.55,
+    bountyRate: 0.35,
+  },
+  {
+    name: 'Dana M.',
+    blurb: 'High stakes, low volume: picks her spots.',
+    volume: 48,
+    field: [200, 1500],
+    buyIns: [109, 215, 530],
+    skill: 1.4,
+    bountyShare: 0.5,
+    bountyRate: 0.3,
+  },
+  {
+    name: 'Vlad N.',
+    blurb: 'Weekends only, and only the majors.',
+    volume: 72,
+    field: [1500, 9000],
+    buyIns: [22, 55],
+    skill: 1.25,
+    bountyShare: 0.6,
+    bountyRate: 0.35,
+  },
+  {
+    name: 'Iulia S.',
+    blurb: 'Steady schedule, mid fields, no heroics.',
+    volume: 130,
+    field: [400, 3000],
+    buyIns: [11, 22],
+    skill: 1.2,
+    bountyShare: 0.65,
+    bountyRate: 0.45,
+  },
+  {
+    name: 'Sorin B.',
+    blurb: 'Turbos, eight tables at a time, small fields.',
+    volume: 340,
+    field: [120, 700],
+    buyIns: [3.3, 5.5, 11],
+    skill: 1.05,
+    bountyShare: 0.7,
+    bountyRate: 0.5,
+  },
+  {
+    name: 'Petru L.',
+    blurb: 'Part-timer: two evenings a week when work allows.',
+    volume: 38,
+    field: [300, 2500],
+    buyIns: [11, 33],
+    skill: 1.2,
+    bountyShare: 0.6,
+    bountyRate: 0.4,
+  },
+  {
+    name: 'Elena D.',
+    blurb: 'All-rounder: a bit of everything, most days.',
+    volume: 165,
+    field: [500, 4000],
+    buyIns: [11, 33, 55],
+    skill: 1.28,
+    bountyShare: 0.7,
+    bountyRate: 0.45,
+  },
+]
+
+const EVENTS = [
+  'Bounty Hunters',
+  'Daily Guarantee',
+  'Nightly Deepstack',
+  'Sunday Major',
+  'Turbo Knockout',
+  'Big Antes',
+  'Mini Main',
+  'Global MILLION$',
+  'Midnight Turbo',
+  'Weekend Special',
+]
+
+function dayWithin(from: string, days: number, random: () => number): string {
+  const start = new Date(`${from}T12:00:00Z`)
+  start.setUTCDate(start.getUTCDate() + Math.floor(random() * days))
+  return start.toISOString().slice(0, 10)
+}
+
+const round = (value: number) => Math.round(value * 100) / 100
+
+/**
+ * A field size, log-uniform between the two ends.
+ *
+ * Log-uniform rather than flat because tournament fields are: somebody whose
+ * range is 400 to 4000 plays far more 600-runners than 3000-runners, and a
+ * flat draw would hand them big fields at a rate nobody sees.
+ */
+function fieldSize(range: [number, number], random: () => number): number {
+  const [low, high] = range
+  return Math.round(Math.exp(Math.log(low) + random() * (Math.log(high) - Math.log(low))))
+}
+
+/**
+ * Where they finished.
+ *
+ * In a field of equals your finishing place is uniform across the field, so
+ * the exponent is the whole of the edge: raising a uniform draw to a power
+ * above one pulls it towards the front without ever promising anything.
+ */
+function finishPlace(entrants: number, skill: number, random: () => number): number {
+  const draw = Math.pow(Math.max(random(), 1e-9), skill)
+  return Math.max(1, Math.min(entrants, Math.ceil(entrants * draw)))
+}
+
+/**
+ * What they collected in heads.
+ *
+ * Scaled by how deep they ran, because knockouts and survival are the same
+ * thing seen twice — a player still in at the final table has been collecting
+ * all night, and one who busted early has not.
+ */
+function bountiesWon(
+  buyIn: number,
+  rate: number,
+  entrants: number,
+  place: number,
+  random: () => number,
+): number {
+  if (buyIn <= 0) return 0
+  const depth = 1 - place / entrants
+  // Exponential with a mean of one, so most nights are ordinary and the
+  // occasional one is not.
+  const draw = -Math.log(Math.max(random(), 1e-9))
+  const multiple = Math.min(12, rate * draw * (0.4 + 1.8 * depth))
+  return round(buyIn * multiple)
+}
+
+/**
+ * A year of results for the whole mock field.
+ *
+ * `days` is the window ending on `from` plus that many days, so a shorter
+ * window simply compresses everybody's schedule rather than cutting the field
+ * down — the comparison is between players, and it should not change shape
+ * because the period did.
+ */
+export function buildChallengeLog(options: {
+  seed: number
+  from: string
+  days: number
+  players?: readonly PlayerProfile[]
+}): ChallengeResult[] {
+  const { seed, from, days, players = PLAYERS } = options
+  const results: ChallengeResult[] = []
+
+  players.forEach((profile, playerIndex) => {
+    const random = rng(seed + playerIndex * 7919)
+    for (let index = 0; index < profile.volume; index += 1) {
+      const entrants = fieldSize(profile.field, random)
+      const place = finishPlace(entrants, profile.skill, random)
+      const buyIn = profile.buyIns[Math.floor(random() * profile.buyIns.length)]
+      const bounty = random() < profile.bountyShare
+      results.push({
+        id: `c-${playerIndex.toString(36)}-${index.toString(36)}`,
+        player: profile.name,
+        date: dayWithin(from, days, random),
+        event: EVENTS[Math.floor(random() * EVENTS.length)],
+        entrants,
+        place,
+        buyIn,
+        bounties: bounty ? bountiesWon(buyIn, profile.bountyRate, entrants, place, random) : 0,
+      })
+    }
+  })
+
+  return results.sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id))
+}

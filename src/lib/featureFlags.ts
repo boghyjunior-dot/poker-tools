@@ -65,6 +65,20 @@ export const FEATURE_REVIEW_ENABLED = isEnabled(import.meta.env, REVIEW_VARIABLE
 /** True once the tools under review are set to ship. */
 export const FEATURE_REVIEW_PUBLISHED = isPublished(import.meta.env, REVIEW_VARIABLE)
 
+export const CHALLENGE_VARIABLE = 'VITE_PUBLISH_CHALLENGE'
+
+/**
+ * The MTT Challenge runs locally until it has somewhere to get results from.
+ *
+ * The standings are a mock field, and a mock field on a live page that asks
+ * people for an entry fee is the one thing this must not be — so the flag
+ * stays off until the leaderboard is reading something real.
+ */
+export const FEATURE_CHALLENGE_ENABLED = isEnabled(import.meta.env, CHALLENGE_VARIABLE)
+
+/** True once the challenge is set to ship. */
+export const FEATURE_CHALLENGE_PUBLISHED = isPublished(import.meta.env, CHALLENGE_VARIABLE)
+
 export const KNOWLEDGE_VARIABLE = 'VITE_PUBLISH_KNOWLEDGE'
 
 /** Preflop Charts and Quiz Me ship together, so they share one variable. */

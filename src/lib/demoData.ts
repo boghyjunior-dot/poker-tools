@@ -20,6 +20,7 @@
  * time you press the button, which is what makes it worth pressing twice.
  */
 
+import { pick, rng } from './seededRandom'
 import { SITES } from './sites'
 import type { SiteBankroll } from './siteBankrolls'
 import { entryProfit, type Entry } from './tracker'
@@ -31,34 +32,9 @@ export function isDemo(entry: { id: string }): boolean {
   return entry.id.startsWith(DEMO_PREFIX)
 }
 
-/** mulberry32: small, fast, and good enough for pretend tournaments. */
-function rng(seed: number): () => number {
-  let a = seed >>> 0
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0
-    let t = Math.imul(a ^ (a >>> 15), 1 | a)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
-
-interface Weighted<T> {
-  value: T
-  weight: number
-}
-
-function pick<T>(random: () => number, options: readonly Weighted<T>[]): T {
-  const total = options.reduce((sum, option) => sum + option.weight, 0)
-  let roll = random() * total
-  for (const option of options) {
-    roll -= option.weight
-    if (roll <= 0) return option.value
-  }
-  return options[options.length - 1].value
-}
 
 /** Rooms in the proportions of somebody with a main room and four others. */
-const ROOM_WEIGHTS: Weighted<string>[] = [
+const ROOM_WEIGHTS: { value: string; weight: number }[] = [
   { value: SITES[0], weight: 50 },
   { value: SITES[1], weight: 13 },
   { value: SITES[2], weight: 9 },
@@ -67,7 +43,7 @@ const ROOM_WEIGHTS: Weighted<string>[] = [
 ]
 
 /** A real buy-in ladder: lots of small ones, a few that matter. */
-const BUY_INS: Weighted<number>[] = [
+const BUY_INS: { value: number; weight: number }[] = [
   { value: 1.5, weight: 10 },
   { value: 3.0, weight: 14 },
   { value: 5.5, weight: 16 },
