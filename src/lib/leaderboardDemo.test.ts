@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DAILY_MAIN, FORMATS, inYear, isLastLonger, lastLongerRounds, standings } from './leaderboard'
-import { PLAYERS, buildChallengeLog } from './leaderboardDemo'
+import { DEMO_PROFILES, PLAYERS, buildChallengeLog } from './leaderboardDemo'
 
 const log = (over: Partial<Parameters<typeof buildChallengeLog>[0]> = {}) =>
   buildChallengeLog({ seed: 2026, from: '2026-01-01', days: 319, ...over })
@@ -107,5 +107,46 @@ describe('a field that never played', () => {
     const table = standings(inYear(log(), '2026'), FORMATS.yearly)
     expect(table).toHaveLength(PLAYERS.length)
     expect(table[0].points).toBeLessThan(table[table.length - 1].points * 6)
+  })
+})
+
+describe('Snapper', () => {
+  const snapper = () => PLAYERS.find((profile) => profile.name === 'Snapper')
+
+  it('is in the field, with a face and a line of his own', () => {
+    expect(snapper()).toBeDefined()
+    expect(snapper()?.avatar).toBe('./players/snapper.webp')
+    expect(snapper()?.blurb).toBe('I snap call ya')
+  })
+
+  it('has a profile card built from the same blurb the generator uses', () => {
+    const card = DEMO_PROFILES.find((profile) => profile.name === 'Snapper')
+    expect(card).toEqual({
+      name: 'Snapper',
+      description: 'I snap call ya',
+      avatar: './players/snapper.webp',
+    })
+  })
+
+  it('gives every player in the field a card', () => {
+    expect(DEMO_PROFILES.map((card) => card.name).sort()).toEqual(
+      PLAYERS.map((profile) => profile.name).sort(),
+    )
+    expect(DEMO_PROFILES.every((card) => card.description.length > 0)).toBe(true)
+  })
+
+  it('finishes worse than the field average, which is the joke', () => {
+    // A calling station should not quietly out-run the regulars in the mock.
+    expect(snapper()?.skill).toBeLessThan(1)
+  })
+
+  it('turns up for the Main more than anybody', () => {
+    const most = Math.max(...PLAYERS.map((profile) => profile.dailyMain))
+    expect(snapper()?.dailyMain).toBe(most)
+  })
+
+  it('actually plays, so the table has something to show', () => {
+    const results = log().filter((row) => row.player === 'Snapper')
+    expect(results.length).toBeGreaterThan(200)
   })
 })

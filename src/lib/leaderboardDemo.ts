@@ -15,6 +15,7 @@
  */
 
 import { DAILY_MAIN, type ChallengeResult } from './leaderboard'
+import type { PlayerCard } from './playerProfiles'
 import { rng } from './seededRandom'
 
 export interface PlayerProfile {
@@ -50,6 +51,8 @@ export interface PlayerProfile {
    * in, and somebody who plays higher may not bother.
    */
   dailyMain: number
+  /** Served path to their picture. Most of the mock field has none. */
+  avatar?: string
 }
 
 export const PLAYERS: PlayerProfile[] = [
@@ -160,6 +163,21 @@ export const PLAYERS: PlayerProfile[] = [
     bountyRate: 0.4,
     site: '888 Poker',
     dailyMain: 0.15,
+  },
+  {
+    name: 'Snapper',
+    blurb: 'I snap call ya',
+    volume: 220,
+    field: [300, 3000],
+    buyIns: [5.5, 11, 22],
+    // Below one: a calling station finishes worse than the field average,
+    // which is the whole joke and also what the results should say.
+    skill: 0.95,
+    bountyShare: 1,
+    bountyRate: 0.9,
+    site: 'GGPoker',
+    dailyMain: 0.85,
+    avatar: './players/snapper.webp',
   },
   {
     name: 'Elena D.',
@@ -347,3 +365,16 @@ export function buildDailyMains(options: {
 
   return out
 }
+
+/**
+ * The mock field's profiles, which are the same ten blurbs the generator
+ * already uses to decide how they play.
+ *
+ * Kept as a derived list rather than a second table of names, so a player
+ * cannot end up with a bio that disagrees with their results.
+ */
+export const DEMO_PROFILES: PlayerCard[] = PLAYERS.map((profile) => ({
+  name: profile.name,
+  description: profile.blurb,
+  avatar: profile.avatar,
+}))

@@ -32,7 +32,8 @@ import {
   type ChallengeResult,
   type FormatId,
 } from '../../lib/leaderboard'
-import { buildChallengeLog } from '../../lib/leaderboardDemo'
+import { DEMO_PROFILES, buildChallengeLog } from '../../lib/leaderboardDemo'
+import { PlayerProfiles } from './PlayerProfiles'
 
 function Panel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
@@ -412,6 +413,23 @@ export function LeaderboardPage() {
                 </p>
               </>
             )}
+          </Panel>
+
+          <Panel>
+            <h2 className="text-sm font-semibold text-white">{t('The field')}</h2>
+            <p className="mt-0.5 max-w-2xl text-xs text-slate-500">
+              {t(
+                'Who you are chasing, and where they are in this period. Every figure here is the same one the table above shows.',
+              )}
+            </p>
+            <div className="mt-4">
+              <PlayerProfiles
+                standings={table}
+                lastLonger={lastLonger}
+                cards={DEMO_PROFILES}
+                format={format}
+              />
+            </div>
           </Panel>
 
           <Panel>
