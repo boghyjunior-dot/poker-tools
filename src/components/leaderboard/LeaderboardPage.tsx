@@ -127,10 +127,23 @@ export function LeaderboardPage() {
     <div className="min-h-screen px-4 py-6">
       <div className="mx-auto w-full max-w-5xl">
         <BackToMenu className="mb-3" />
-        <h1 className="text-3xl font-bold text-white">
-          {t('MTT Challenge')} <span className="text-slate-500">{SEASON}</span>
+
+        {/* The banner carries the name, so the heading says it only for a
+            screen reader rather than printing it twice at full size. */}
+        <h1 className="sr-only">
+          {t('MTT Challenge')} {SEASON}
         </h1>
+        <img
+          src="./challenge/banner.webp"
+          alt=""
+          width={1473}
+          height={737}
+          decoding="async"
+          className="mb-5 w-full rounded-xl border border-slate-800"
+        />
+
         <p className="mb-5 max-w-2xl text-sm text-slate-400">
+          <span className="font-semibold text-slate-200">{t('{season} season.', { season: SEASON })}</span>{' '}
           {t(
             'Two races off the same results. The monthly one counts your best ten scores in the month; the yearly one counts your best fifty. Points come from how deep you ran in how big a field, with a bit on top for bounties.',
           )}
