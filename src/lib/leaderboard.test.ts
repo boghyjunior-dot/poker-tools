@@ -177,12 +177,26 @@ describe('the table', () => {
     expect(rows.map((row) => row.player)).toEqual(['Ana', 'Bogdan', 'Cristi'])
   })
 
-  it('scores a bounty result the same inside a table as outside one', () => {
+  it('says how much of a total came out of bounties', () => {
     const [row] = standings(
       [result({ player: 'Ana', entrants: 1000, place: 10, buyIn: 5, bounties: 10 })],
       FORMATS.monthly,
     )
+    expect(row.fromBounties).toBeCloseTo(50, 6)
     expect(row.points).toBeCloseTo(1050, 6)
+  })
+
+  it('counts the share over the scores that are counting, not every one', () => {
+    const format = { ...FORMATS.monthly, best: 1 }
+    const [row] = standings(
+      [
+        result({ player: 'Ana', entrants: 1000, place: 10, buyIn: 5, bounties: 10 }),
+        result({ player: 'Ana', entrants: 1000, place: 900, buyIn: 5, bounties: 100 }),
+      ],
+      format,
+    )
+    expect(row.counted).toBe(1)
+    expect(row.fromBounties).toBeCloseTo(50, 6)
   })
 
   it('has no table without results', () => {

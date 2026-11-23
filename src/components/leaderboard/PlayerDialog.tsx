@@ -90,7 +90,7 @@ export function PlayerDialog({
         if (event.target === ref.current) onClose()
       }}
       aria-label={player ?? undefined}
-      className="fixed inset-0 m-auto h-fit max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-[46rem] rounded-xl border border-slate-700 bg-slate-900 p-0 text-slate-300 shadow-2xl backdrop:bg-slate-950/80 open:backdrop:backdrop-blur-sm"
+      className="fixed inset-0 m-auto h-fit max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-[52rem] rounded-xl border border-slate-700 bg-slate-900 p-0 text-slate-300 shadow-2xl backdrop:bg-slate-950/80 open:backdrop:backdrop-blur-sm"
     >
       {player && card && (
         <div className="max-h-[85vh] overflow-y-auto p-5 sm:p-6">
@@ -152,6 +152,15 @@ export function PlayerDialog({
                   muted={!prize}
                 />
                 <Figure
+                  label="From bounties"
+                  value={
+                    standing.points > 0
+                      ? `${((standing.fromBounties / standing.points) * 100).toFixed(1)}%`
+                      : '—'
+                  }
+                  muted={standing.fromBounties === 0}
+                />
+                <Figure
                   label="Payout"
                   value={payout === undefined ? '—' : `$${formatMoney(payout)}`}
                   muted={payout === undefined}
@@ -192,34 +201,44 @@ export function PlayerDialog({
             {t('The {n} scores counting', { n: counted.length })}
           </h3>
           <div className="mt-2 overflow-x-auto">
-            <table className="w-full min-w-[520px] text-sm">
+            <table className="w-full min-w-[600px] text-sm">
               <thead>
                 <tr className="border-b border-slate-800 text-left text-[11px] uppercase tracking-wide text-slate-500">
                   <th className="pb-2 font-medium">{t('Date')}</th>
                   <th className="pb-2 font-medium">{t('Event')}</th>
-                  <th className="pb-2 pl-3 text-right font-medium">{t('Entries')}</th>
-                  <th className="pb-2 pl-3 text-right font-medium">{t('Place')}</th>
-                  <th className="pb-2 pl-3 text-right font-medium">{t('Buy-in')}</th>
-                  <th className="pb-2 pl-3 text-right font-medium">{t('Bounties')}</th>
-                  <th className="pb-2 pl-3 text-right font-medium">{t('Score')}</th>
+                  <th className="pb-2 pl-2.5 text-right font-medium">{t('Entries')}</th>
+                  <th className="pb-2 pl-2.5 text-right font-medium">{t('Place')}</th>
+                  <th className="pb-2 pl-2.5 text-right font-medium">{t('Buy-in')}</th>
+                  <th className="pb-2 pl-2.5 text-right font-medium">{t('Bounties')}</th>
+                  <th className="pb-2 pl-2.5 text-right font-medium">{t('Prize')}</th>
+                  <th className="pb-2 pl-2.5 text-right font-medium">{t('Score')}</th>
                 </tr>
               </thead>
               <tbody className="text-slate-300">
                 {counted.map(({ result, score }) => (
                   <tr key={result.id} className="border-b border-slate-800/60 last:border-0">
                     <td className="py-1.5 tabular-nums text-slate-500">{result.date}</td>
-                    <td className="py-1.5">{result.event}</td>
-                    <td className="py-1.5 pl-3 text-right tabular-nums">
+                    <td className="max-w-[10rem] truncate py-1.5" title={result.event}>
+                      {result.event}
+                    </td>
+                    <td className="py-1.5 pl-2.5 text-right tabular-nums">
                       {result.entrants.toLocaleString('en-US')}
                     </td>
-                    <td className="py-1.5 pl-3 text-right tabular-nums">{result.place}</td>
-                    <td className="py-1.5 pl-3 text-right tabular-nums text-slate-400">
+                    <td className="py-1.5 pl-2.5 text-right tabular-nums">{result.place}</td>
+                    <td className="py-1.5 pl-2.5 text-right tabular-nums text-slate-400">
                       ${result.buyIn}
                     </td>
-                    <td className="py-1.5 pl-3 text-right tabular-nums text-slate-400">
+                    <td className="py-1.5 pl-2.5 text-right tabular-nums text-slate-400">
                       {result.bounties > 0 ? `$${result.bounties.toFixed(0)}` : '—'}
                     </td>
-                    <td className="py-1.5 pl-3 text-right font-semibold tabular-nums text-white">
+                    <td
+                      className={`py-1.5 pl-2.5 text-right tabular-nums ${
+                        result.cashed > 0 ? 'text-emerald-400' : 'text-slate-600'
+                      }`}
+                    >
+                      {result.cashed > 0 ? `$${formatMoney(result.cashed)}` : '—'}
+                    </td>
+                    <td className="py-1.5 pl-2.5 text-right font-semibold tabular-nums text-white">
                       {points(score)}
                     </td>
                   </tr>

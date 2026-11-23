@@ -233,6 +233,8 @@ export interface Standing {
    * it has a value it is the bar: a new result under it changes nothing.
    */
   cutoff: number | null
+  /** How much of the total came from the bounty term. */
+  fromBounties: number
 }
 
 /**
@@ -256,16 +258,24 @@ export function standings(
 
   const rows = [...byPlayer.entries()]
     .map(([player, played]) => {
-      const scored = played.map(score).sort((a, b) => b - a)
+      const scored = played
+        .map((result) => ({
+          total: score(result),
+          // Scaled by the stake like the rest of the result, or the share
+          // this reports would not be a share of the total it sits beside.
+          bounty: bountyPoints(result.bounties, result.buyIn) * stakeFactor(result.buyIn),
+        }))
+        .sort((a, b) => b.total - a.total)
       const counting = scored.slice(0, format.best)
 
       return {
         player,
-        points: counting.reduce((sum, value) => sum + value, 0),
+        points: counting.reduce((sum, entry) => sum + entry.total, 0),
         counted: counting.length,
         played: played.length,
-        best: counting.length > 0 ? counting[0] : 0,
-        cutoff: counting.length === format.best ? counting[counting.length - 1] : null,
+        best: counting.length > 0 ? counting[0].total : 0,
+        cutoff: counting.length === format.best ? counting[counting.length - 1].total : null,
+        fromBounties: counting.reduce((sum, entry) => sum + entry.bounty, 0),
       }
     })
     .sort((a, b) => b.points - a.points || a.player.localeCompare(b.player))
