@@ -12,7 +12,14 @@ import { useMemo, useState } from 'react'
 import { BackToMenu } from '../BackToMenu'
 import { Footer } from '../Footer'
 import { LocalOnlyBanner } from '../LocalOnlyBanner'
-import { CHALLENGE_VARIABLE, FEATURE_CHALLENGE_PUBLISHED } from '../../lib/featureFlags'
+import { DeployedViewSwitch } from '../DeployedViewSwitch'
+import { showing, useDeployedView } from '../../lib/deployedView'
+import {
+  CHALLENGE_VARIABLE,
+  FEATURE_CHALLENGE_PUBLISHED,
+  FEATURE_LAST_LONGER_ENABLED,
+  FEATURE_LAST_LONGER_PUBLISHED,
+} from '../../lib/featureFlags'
 import { formatMoney } from '../../lib/formatNumber'
 import { useT } from '../../lib/i18n'
 import {
@@ -103,7 +110,19 @@ export function LeaderboardPage() {
    * the same question the tabs are asking, which is "who is winning what",
    * and that is what makes it belong in the same row of buttons.
    */
-  const [view, setView] = useState<ViewId>('monthly')
+  const pretending = useDeployedView()
+  const lastLongerOn = showing(
+    FEATURE_LAST_LONGER_ENABLED,
+    FEATURE_LAST_LONGER_PUBLISHED,
+    pretending,
+  )
+
+  const [picked, setPicked] = useState<ViewId>('monthly')
+  // Falling back rather than remembering: flipping the preview switch while
+  // standing on the last longer should not leave the page on a tab that is
+  // no longer there.
+  const view: ViewId = picked === 'lastLonger' && !lastLongerOn ? 'monthly' : picked
+  const setView = setPicked
   const formatId: FormatId = view === 'monthly' ? 'monthly' : 'yearly'
   /**
    * What has actually been entered, or the mock field while nothing has.
@@ -203,7 +222,7 @@ export function LeaderboardPage() {
 
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <div className="flex gap-0.5 rounded-md border border-slate-800 bg-slate-950/60 p-0.5">
-            {(['monthly', 'yearly', 'lastLonger'] as ViewId[]).map((option) => (
+            {(['monthly', 'yearly', ...(lastLongerOn ? (['lastLonger'] as const) : [])] as ViewId[]).map((option) => (
               <button
                 key={option}
                 type="button"
@@ -275,7 +294,7 @@ export function LeaderboardPage() {
         </div>
 
         <div className="flex flex-col gap-4">
-          {view === 'lastLonger' ? (
+          {lastLongerOn && view === 'lastLonger' ? (
             <Panel>
               <h2 className="text-sm font-semibold text-white">{t('Last Longer')}</h2>
               <p className="mt-0.5 max-w-2xl text-xs text-slate-500">
@@ -636,7 +655,8 @@ export function LeaderboardPage() {
         <PlayerDialog
           player={open}
           standing={table.find((row) => row.player === open)}
-          lastLonger={lastLonger.find((row) => row.player === open)}
+          lastLonger={lastLongerOn ? lastLonger.find((row) => row.player === open) : undefined}
+          showLastLonger={lastLongerOn}
           counted={working}
           payout={open ? paid.get(open) : undefined}
           prize={open ? (won.get(open) ?? 0) : undefined}
@@ -646,6 +666,7 @@ export function LeaderboardPage() {
         />
 
         <Footer />
+        <DeployedViewSwitch />
       </div>
     </div>
   )

@@ -43,6 +43,7 @@ export function PlayerDialog({
   player,
   standing,
   lastLonger,
+  showLastLonger,
   counted,
   payout,
   prize,
@@ -54,6 +55,8 @@ export function PlayerDialog({
   player: string | null
   standing: Standing | undefined
   lastLonger: LastLongerStanding | undefined
+  /** False hides the section entirely, rather than showing it empty. */
+  showLastLonger: boolean
   counted: { result: ChallengeResult; score: number }[]
   /** What they are owed out of the pot, if they are in the money. */
   payout: number | undefined
@@ -165,28 +168,32 @@ export function PlayerDialog({
             </>
           )}
 
-          <h3 className="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-400">
-            {t('Last Longer')}
-          </h3>
-          {lastLonger ? (
-            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <Figure label="Won" value={String(lastLonger.won)} muted={lastLonger.won === 0} />
-              <Figure label="Nights" value={String(lastLonger.played)} />
-              <Figure label="Win rate" value={`${lastLonger.winPct.toFixed(0)}%`} />
-              <Figure
-                label="Deepest"
-                value={lastLonger.bestPlace === null ? '—' : String(lastLonger.bestPlace)}
-              />
-              <Figure
-                label="Cashed"
-                value={`$${formatMoney(lastLonger.cashFromWins)}`}
-                muted={lastLonger.cashFromWins === 0}
-              />
-            </div>
-          ) : (
-            <p className="mt-2 text-xs text-slate-500">
-              {t('Has not contested the Daily Main in this period.')}
-            </p>
+          {showLastLonger && (
+            <>
+            <h3 className="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-400">
+              {t('Last Longer')}
+            </h3>
+            {lastLonger ? (
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <Figure label="Won" value={String(lastLonger.won)} muted={lastLonger.won === 0} />
+                <Figure label="Nights" value={String(lastLonger.played)} />
+                <Figure label="Win rate" value={`${lastLonger.winPct.toFixed(0)}%`} />
+                <Figure
+                  label="Deepest"
+                  value={lastLonger.bestPlace === null ? '—' : String(lastLonger.bestPlace)}
+                />
+                <Figure
+                  label="Cashed"
+                  value={`${formatMoney(lastLonger.cashFromWins)}`}
+                  muted={lastLonger.cashFromWins === 0}
+                />
+              </div>
+            ) : (
+              <p className="mt-2 text-xs text-slate-500">
+                {t('Has not contested the Daily Main in this period.')}
+              </p>
+            )}
+  </>
           )}
 
           <h3 className="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-400">

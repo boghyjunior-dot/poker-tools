@@ -65,6 +65,20 @@ export const FEATURE_REVIEW_ENABLED = isEnabled(import.meta.env, REVIEW_VARIABLE
 /** True once the tools under review are set to ship. */
 export const FEATURE_REVIEW_PUBLISHED = isPublished(import.meta.env, REVIEW_VARIABLE)
 
+export const LAST_LONGER_VARIABLE = 'VITE_PUBLISH_LAST_LONGER'
+
+/**
+ * The last longer is held back on its own flag, not the challenge's.
+ *
+ * It is a side contest that needs somebody to be running it, and the points
+ * races do not: shipping the leaderboard should not oblige anybody to have
+ * organised a nightly last longer as well.
+ */
+export const FEATURE_LAST_LONGER_ENABLED = isEnabled(import.meta.env, LAST_LONGER_VARIABLE)
+
+/** True once the last longer is set to ship. */
+export const FEATURE_LAST_LONGER_PUBLISHED = isPublished(import.meta.env, LAST_LONGER_VARIABLE)
+
 export const CHALLENGE_VARIABLE = 'VITE_PUBLISH_CHALLENGE'
 
 /**

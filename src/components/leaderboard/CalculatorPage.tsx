@@ -8,6 +8,7 @@
  */
 
 import { BackToMenu } from '../BackToMenu'
+import { DeployedViewSwitch } from '../DeployedViewSwitch'
 import { Footer } from '../Footer'
 import { LocalOnlyBanner } from '../LocalOnlyBanner'
 import { CHALLENGE_VARIABLE, FEATURE_CHALLENGE_PUBLISHED } from '../../lib/featureFlags'
@@ -62,6 +63,7 @@ export function CalculatorPage() {
         </p>
 
         <Footer />
+        <DeployedViewSwitch />
       </div>
     </div>
   )
