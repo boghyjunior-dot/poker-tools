@@ -29,7 +29,7 @@ import {
   FEATURE_LAST_LONGER_PUBLISHED,
 } from '../../lib/featureFlags'
 import { formatMoney } from '../../lib/formatNumber'
-import { useT } from '../../lib/i18n'
+import { useT, type TranslateFn } from '../../lib/i18n'
 import {
   DAILY_MAIN,
   FORMATS,
@@ -93,9 +93,10 @@ const MONTH_NAMES = [
   'December',
 ]
 
-function monthLabel(month: string): string {
+function monthLabel(month: string, t: TranslateFn): string {
   const index = Number(month.slice(5, 7)) - 1
-  return `${MONTH_NAMES[index] ?? month} ${month.slice(0, 4)}`
+  const name = MONTH_NAMES[index]
+  return name ? `${t(name)} ${month.slice(0, 4)}` : month
 }
 
 
@@ -308,7 +309,7 @@ export function LeaderboardPage() {
             >
               {(byMonth ? months : years).map((option) => (
                 <option key={option} value={option}>
-                  {byMonth ? monthLabel(option) : option}
+                  {byMonth ? monthLabel(option, t) : option}
                 </option>
               ))}
             </select>

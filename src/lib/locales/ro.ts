@@ -1733,6 +1733,193 @@ export const ro: Dictionary = {
   "A sample big enough that the number means roughly what it says.":
     "Un eșantion destul de mare cât cifra să însemne aproximativ ce spune.",
 
+  // ------------------------------------------------------- the challenge --
+  // The competition's own name stays as it is: it is what people call it in
+  // the group chat, and a translated name would be a second name.
+  'MTT December Challenge 2026': 'MTT December Challenge 2026',
+  Monthly: 'Lunar',
+  Yearly: 'Anual',
+  // Not translated: this is what the contest is called, in English, by
+  // everybody who plays it.
+  'Last Longer': 'Last Longer',
+  Field: 'Field',
+
+  // The two doors
+  'Pick a door': 'Alege o ușă',
+  'Ask it something and it answers.': 'Îi pui o întrebare și îți răspunde.',
+  'MDF ranges, equity, bankroll, variance, preflop charts, the leak finder and the rest — grouped by the kind of question they answer.':
+    'MDF ranges, equity, bankroll, variance, preflop charts, leak finder și restul — grupate după felul întrebării la care răspund.',
+  'A points race you are in or you are not.':
+    'O cursă de puncte în care ești sau nu ești.',
+  'Two tables off one set of results: your best ten scores in a month, your best fifty in a year. Points for how deep you ran in how big a field.':
+    'Două clasamente din același set de rezultate: cele mai bune zece scoruri într-o lună, cele mai bune cincizeci într-un an. Punctele vin din cât de departe ai ajuns într-un field cât de mare.',
+  'Open it': 'Deschide',
+
+  // The page, and the warning on it while the data is invented
+  'The monthly race counts your best ten scores in the month. The yearly one counts your best fifty of those — only a score that made a monthly top ten is in it, so the months are the qualifiers. Points come from how deep you ran in how big a field, with a bit on top for bounties.':
+    'Clasamentul lunar numără cele mai bune zece scoruri din lună. Cel anual numără cele mai bune cincizeci dintre acestea — intră doar un scor care a prins top zece lunar, așa că lunile sunt calificările. Punctele vin din cât de departe ai ajuns într-un field cât de mare, plus un pic pentru bounty-uri.',
+  'These results are made up.': 'Rezultatele astea sunt inventate.',
+  'Every figure on this page is invented, so the challenge can be looked at before it starts. Nothing here happened, and it all goes the moment the first real result is entered.':
+    'Toate cifrele din pagina asta sunt inventate, ca să poată fi văzută competiția înainte să înceapă. Nimic de aici nu s-a întâmplat, și totul dispare în clipa în care se introduce primul rezultat real.',
+
+  // The controls above the table
+  Period: 'Perioadă',
+  'Open Calculator': 'Deschide calculatorul',
+  'Best {n} scores · ${fee} to enter · ${pot} in the pot, paid {split}':
+    'Top {n} scoruri · ${fee} înscrierea · ${pot} în pot, împărțit {split}',
+  '${low}–${high} buy-ins only': 'Doar buy-in-uri de ${low}–${high}',
+  '· {n} results outside it are not counted':
+    '· {n} rămân în afara lui',
+
+  // The points table
+  Player: 'Jucător',
+  Points: 'Puncte',
+  Counting: 'Numărate',
+  Best: 'Cel mai bun',
+  Cutoff: 'Prag',
+  Prize: 'Premiu',
+  // Left in English: the money the pot pays you, which is not the same thing
+  // as the prize money you won at the table.
+  Payout: 'Payout',
+  Place: 'Loc',
+  Played: 'Jucate',
+  Event: 'Turneu',
+  Entered: 'Introdus',
+  'Short of the {n} that count, so every result still adds.':
+    'Încă nu sunt cele {n} care contează, așa că fiecare rezultat adaugă.',
+  'Nothing played in this period.': 'Nimic jucat în perioada asta.',
+  'Figures are coloured against the rest of this table: green is the top third of the column, amber the middle, red the bottom. A column where everybody is level stays amber.':
+    'Cifrele sunt colorate față de restul tabelului: verde e treimea de sus a coloanei, galben mijlocul, roșu partea de jos. O coloană în care toți sunt la egalitate rămâne galbenă.',
+  'Cutoff is the lowest score still counting: once the quota is full, a new result only moves the total if it beats that. Pick a player to see who they are and what their total is made of.':
+    'Pragul e cel mai mic scor care încă se numără: odată ce cota e plină, un rezultat nou mișcă totalul doar dacă îl bate. Alege un jucător ca să vezi cine e și din ce e făcut totalul lui.',
+
+  // Who has been ahead
+  'Who has been ahead': 'Cine a fost în față',
+  'Points down the season, one line each. The table says who leads; this says who has led, when it changed hands, and whether the gap is closing. A line holds flat until the night it moved, because that is when it moved.':
+    'Punctele pe parcursul sezonului, câte o linie pentru fiecare. Tabelul spune cine conduce; graficul spune cine a condus, când s-a schimbat și dacă diferența se micșorează. O linie stă dreaptă până în seara în care s-a mișcat, pentru că atunci s-a mișcat.',
+  'Points over time, one line per player':
+    'Punctele în timp, o linie pentru fiecare jucător',
+  'points as the table stood that evening':
+    'puncte, cum arăta tabelul în seara aceea',
+  '{player} — {n} points at the end of this period.':
+    '{player} — puncte la finalul perioadei: {n}.',
+  '{n} players have led this period: {names}.':
+    '{n} jucători au condus în perioada asta: {names}.',
+  ', then ': ', apoi ',
+  'Hover a line to pick a player out of it.':
+    'Trece cu mouse-ul peste o linie ca să vezi jucătorul.',
+
+  // What has been entered
+  'What has been entered': 'Ce a fost introdus',
+  'Every result in this period, newest entry first. Results are handed over and written down rather than submitted through the app, so this is the record of what has been counted and when it turned up.':
+    'Toate rezultatele din perioada asta, cel mai nou introdus primul. Rezultatele sunt predate și notate, nu trimise prin aplicație, așa că asta e evidența a ce s-a numărat și când a apărut.',
+  'Nothing entered for this period yet.':
+    'Nimic introdus pentru perioada asta încă.',
+  'Outside the ${low}–${high} band, so it scores nothing.':
+    'În afara intervalului ${low}–${high}, deci nu dă niciun punct.',
+  'Show all {n} entries': 'Arată toate rezultatele ({n})',
+  'Show the last {n}': 'Arată ultimele {n}',
+  'A struck-through score is a result outside the buy-in band: it is kept on the record, and it counts for nothing.':
+    'Un scor tăiat e un rezultat din afara intervalului de buy-in: rămâne în evidență, și nu contează deloc.',
+
+  // How a score is worked out
+  'How a score is worked out': 'Cum se calculează un scor',
+  'N is the number of entries, R is where you finished, Bty is the bounty money you collected and Bi is the buy-in. Finishing last in the field is worth 100, because N over R is one; everything above that is how far up you got, and the square root is what stops a win in a huge field being worth a hundred times a win in a small one.':
+    'N e numărul de înscrieri, R e locul pe care ai terminat, Bty sunt banii din bounty-uri și Bi e buy-in-ul. Să termini ultimul în field valorează 100, pentru că N supra R e unu; tot ce e peste arată cât de sus ai ajuns, iar radicalul e cel care împiedică un win într-un field uriaș să valoreze de o sută de ori mai mult decât un win într-unul mic.',
+  'The last part is the stake. Only ${low} to ${high} buy-ins are in the challenge, and inside that band a dearer game is worth a little more — a fourth root, so the whole band is {spread}x end to end. Because finishing points go as the square root of the field, that is the same as finishing {deeper}x deeper — a ${high} result matches a ${low} one that got that much further up the field. A good night at the bottom of the band still beats an ordinary one at the top, which is the point.':
+    'Ultima parte e stake-ul. În challenge intră doar buy-in-uri de la ${low} la ${high}, iar în intervalul ăsta un turneu mai scump valorează puțin mai mult — un radical de ordinul patru, deci tot intervalul e de {spread}x de la un capăt la altul. Pentru că punctele de clasare merg cu radicalul din field, e același lucru cu a termina de {deeper}x mai departe — un rezultat la ${high} egalează unul la ${low} care a urcat cu atât mai sus în field. O seară bună la capătul de jos al intervalului tot bate una obișnuită la capătul de sus, și asta e ideea.',
+
+  // The lookup tables under it
+  'At a buy-in of': 'La un buy-in de',
+  'everything below is multiplied by {factor}':
+    'tot ce e mai jos se înmulțește cu {factor}',
+  'By where you finished': 'După locul pe care ai terminat',
+  'Won it': 'Câștigat',
+  'Field size across the top. A dash is a place deeper than the field had.':
+    'Mărimea field-ului e pe orizontală. O liniuță e un loc mai departe decât a avut field-ul.',
+  'By how deep you got': 'După cât de departe ai ajuns',
+  Depth: 'Adâncime',
+  'which is': 'adică',
+  '{place} of {field}': '{place} din {field}',
+  'Min-cash — top 15%': 'Min-cash — top 15%',
+  'One number each, because a depth pays the same whatever the field: N over R is a ratio, so 150th of 1,000 and 2,250th of 15,000 are the same result. A bigger field is worth more only once you get absolutely deeper than a small one lets you.':
+    'Un singur număr pentru fiecare, pentru că o adâncime plătește la fel indiferent de field: N supra R e un raport, deci locul 150 din 1000 și locul 2250 din 15000 sunt același rezultat. Un field mai mare valorează mai mult doar când ajungi absolut mai departe decât te lasă unul mic.',
+  'What the bounties add': 'Cât adaugă bounty-urile',
+  Collected: 'Strânse',
+  'about the same as': 'cam ca',
+  'less than turning up': 'mai puțin decât prezența',
+  'finishing in the top {pct}': 'să termini în top {pct}',
+  'Bounties are a ratio to the buy-in, so a knockout schedule scores the same at ${low} as at ${high} for the same effort. Ordinary bounty play sits in the first two rows; the bottom of this table is a mystery hit, and it is worth knowing how far down it reaches.':
+    'Bounty-urile sunt un raport față de buy-in, deci un turneu knockout dă aceleași puncte la ${low} ca la ${high} pentru același efort. Jocul obișnuit de bounty stă în primele două rânduri; partea de jos a tabelului e un mystery, și merită știut cât de departe ajunge.',
+
+  // The player window
+  'No description yet — still scores all the same.':
+    'Încă fără descriere — scorul se adună oricum.',
+  '{label} race': 'Clasamentul {label}',
+  'The {n} scores counting': 'Scorurile care se numără ({n})',
+  'Best score': 'Cel mai bun scor',
+  'From bounties': 'Din bounty-uri',
+  Nights: 'Seri',
+  'Has not contested the Daily Main in this period.':
+    'Nu a avut adversari în Daily Main în perioada asta.',
+
+  // The last longer
+  'A side contest in the $54 Daily Main on GGPoker: everybody in it plays the same tournament, and whoever busts last takes the night. No formula and no argument — you know who won before you go to bed.':
+    'O competiție secundară în $54 Daily Main de pe GGPoker: toți cei înscriși joacă același turneu, iar cine iese ultimul ia seara. Fără formulă și fără discuții — știi cine a câștigat înainte să te culci.',
+  'Nobody has contested the Main in this period. A night with one entrant is not a last longer, so it is not counted.':
+    'Nimeni nu a avut adversari în Main în perioada asta. O seară cu un singur înscris nu e un last longer, deci nu se numără.',
+  Won: 'Câștigate',
+  'Win rate': 'Rată de câștig',
+  Deepest: 'Cel mai departe',
+  '{n} nights contested': 'Seri cu adversari ({n})',
+  'In it': 'Înscriși',
+  'Lasted longest': 'A rezistat cel mai mult',
+  'Show all {n} nights': 'Arată toate serile ({n})',
+  'Position is where the winner finished in the Main itself, and the money is what the prize pool paid them for it: cashes only, with the buy-in not taken off and the bounties counted separately. The last longer is its own competition, but the night still counts towards the points tables.':
+    'Poziția e locul pe care a terminat câștigătorul în Main, iar banii sunt ce i-a plătit prize pool-ul pentru el: doar cash-uri, fără buy-in-ul scăzut și cu bounty-urile numărate separat. Last longer-ul e competiția lui, dar seara contează oricum pentru clasamentele de puncte.',
+
+  // The score calculator, on its own page
+  'Score calculator': 'Calculator de scor',
+  'What a result is worth, before you play it. Put the tournament in and see the score broken out term by term — whether the dearer game is worth it, and how deep you would have to go in the cheap one to match it.':
+    'Cât valorează un rezultat, înainte să-l joci. Pune turneul și vezi scorul desfăcut termen cu termen — dacă merită turneul mai scump, și cât de departe ar trebui să ajungi în cel ieftin ca să-l egalezi.',
+  'N entries, R where you finished, Bty the bounty money, Bi the buy-in — and only ${low} to ${high} buy-ins are in the challenge at all.':
+    'N înscrierile, R locul pe care ai terminat, Bty banii din bounty-uri, Bi buy-in-ul — și în challenge intră doar buy-in-uri de la ${low} la ${high}.',
+  'The full points table for the {season} season is on the':
+    'Tabelul complet de puncte pentru sezonul {season} e pe',
+  'challenge page': 'pagina competiției',
+  'N — the size of the field': 'N — mărimea field-ului',
+  'R — where you finished': 'R — locul pe care ai terminat',
+  'Bi — what the seat cost': 'Bi — cât a costat locul',
+  'Bty — heads collected, in money': 'Bty — capete strânse, în bani',
+  'Finish — 100 × √(N / R)': 'Clasare — 100 × √(N / R)',
+  'Bounty — 25 × (Bty / Bi)': 'Bounty — 25 × (Bty / Bi)',
+  'Stake — ⁴√(Bi / 5)': 'Stake — ⁴√(Bi / 5)',
+  'A ${bi} buy-in is outside the ${low}–${high} band, so a result like this would not be in the challenge at all. The score below is what the arithmetic gives, not what you would be credited.':
+    'Un buy-in de ${bi} e în afara intervalului ${low}–${high}, deci un rezultat ca ăsta nu ar intra deloc în challenge. Scorul de mai jos e ce dă aritmetica, nu ce ți s-ar credita.',
+  'Nobody finishes below the size of the field, so this is being scored as last.':
+    'Nimeni nu termină mai jos de mărimea field-ului, deci e punctat ca ultimul loc.',
+  'That finishing depth alone is worth {low} at the bottom of the band and {high} at the top, before bounties.':
+    'Doar adâncimea asta de clasare valorează {low} la capătul de jos al intervalului și {high} la cel de sus, înainte de bounty-uri.',
+
+  // Months, for the period picker
+  January: 'Ianuarie',
+  February: 'Februarie',
+  March: 'Martie',
+  April: 'Aprilie',
+  May: 'Mai',
+  June: 'Iunie',
+  July: 'Iulie',
+  August: 'August',
+  September: 'Septembrie',
+  October: 'Octombrie',
+  November: 'Noiembrie',
+  December: 'Decembrie',
+
+  // What is on the live site and what is not, which only shows locally
+  'Viewing as': 'Vezi ca',
+  Local: 'Local',
+  Deployed: 'Publicat',
+
   // ----------------------------------------------------------------- misc --
   Save: 'Salvează',
   Reset: 'Resetează',

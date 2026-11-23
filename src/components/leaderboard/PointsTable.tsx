@@ -157,7 +157,12 @@ export function PointsTable() {
                   {points(finishPoints(1 / share, 1) * factor)}
                 </td>
                 <td className="py-1.5 pl-3 text-[11px] tabular-nums text-slate-600">
-                  {FIELDS.map((field) => `${Math.round(field * share)} of ${field / 1000 >= 1 ? `${field / 1000}k` : field}`).join(' · ')}
+                  {FIELDS.map((field) =>
+                    t('{place} of {field}', {
+                      place: Math.round(field * share),
+                      field: field / 1000 >= 1 ? `${field / 1000}k` : field,
+                    }),
+                  ).join(' · ')}
                 </td>
               </tr>
             ))}

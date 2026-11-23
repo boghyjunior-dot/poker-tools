@@ -198,7 +198,7 @@ export function RaceChart({ steps, roster }: { steps: RaceStep[]; roster: readon
           : leaders.length > 1
             ? t('{n} players have led this period: {names}.', {
                 n: leaders.length,
-                names: leaders.join(', then '),
+                names: leaders.join(t(', then ')),
               })
             : t('Hover a line to pick a player out of it.')}
       </p>

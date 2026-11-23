@@ -92,7 +92,7 @@ function DoorCard({ door }: { door: Door }) {
       </p>
       {door.enabled ? (
         <span className="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-400 transition-colors group-hover:text-indigo-300">
-          {t('Open')}
+          {t('Open it')}
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5" aria-hidden>
             <path d="m6 4 4 4-4 4" />
           </svg>
