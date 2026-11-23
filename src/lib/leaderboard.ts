@@ -248,8 +248,12 @@ export interface Standing {
 export function standings(
   results: readonly ChallengeResult[],
   format: Format,
+  roster: readonly string[] = [],
 ): Standing[] {
+  // Seeded with everybody entered, so a player who has paid and not yet
+  // played is on the table at nought rather than missing from it.
   const byPlayer = new Map<string, ChallengeResult[]>()
+  for (const player of roster) byPlayer.set(player, [])
   for (const result of results) {
     const bucket = byPlayer.get(result.player)
     if (bucket) bucket.push(result)
@@ -327,24 +331,31 @@ export const PRIZE_SHARES = [0.5, 0.3, 0.2] as const
  * money people put in is the money that comes out: three places paid out of
  * two entrants would leave a fifth of the pot belonging to nobody.
  */
-export function prizes(table: readonly Standing[], format: Format): Map<string, number> {
+export function prizes(
+  table: readonly Standing[],
+  format: Format,
+  entrants: number = table.length,
+): Map<string, number> {
   const out = new Map<string, number>()
-  const paid = Math.min(PRIZE_SHARES.length, table.length)
+  // Somebody who has not scored is not in the money, however few others
+  // there are: a prize for nought points would be paid for playing nothing.
+  const scoring = table.filter((row) => row.points > 0)
+  const paid = Math.min(PRIZE_SHARES.length, scoring.length)
   if (paid === 0) return out
 
-  const total = pot(table.length, format)
+  const total = pot(entrants, format)
   const awarded = PRIZE_SHARES.slice(0, paid).reduce((sum, share) => sum + share, 0)
   if (total <= 0 || awarded <= 0) return out
 
   let start = 0
-  while (start < table.length) {
+  while (start < scoring.length) {
     let end = start
-    while (end < table.length && table[end].rank === table[start].rank) end += 1
+    while (end < scoring.length && scoring[end].rank === scoring[start].rank) end += 1
 
     const shared = PRIZE_SHARES.slice(start, end).reduce((sum, share) => sum + share, 0)
     if (shared > 0) {
       const each = (total * shared) / awarded / (end - start)
-      for (let i = start; i < end; i += 1) out.set(table[i].player, each)
+      for (let i = start; i < end; i += 1) out.set(scoring[i].player, each)
     }
     start = end
   }
@@ -557,14 +568,27 @@ export function monthsIn(results: readonly ChallengeResult[]): string[] {
  */
 export const SEASON = '2027'
 
+/**
+ * The month the challenge opened, ahead of the season proper.
+ *
+ * December 2026 is a monthly round like any other and is not part of the
+ * 2027 yearly race — a year is a year. It is named here so the month picker
+ * offers it from the start rather than waiting for somebody to play in it.
+ */
+export const OPENING_MONTH = '2026-12'
+
 /** The years to offer, newest first, with the season always among them. */
 export function seasonYears(
   results: readonly ChallengeResult[],
   season: string = SEASON,
 ): string[] {
-  return [...new Set([season, ...results.map((result) => result.date.slice(0, 4))])].sort((a, b) =>
-    b.localeCompare(a),
-  )
+  return [
+    ...new Set([
+      season,
+      OPENING_MONTH.slice(0, 4),
+      ...results.map((result) => result.date.slice(0, 4)),
+    ]),
+  ].sort((a, b) => b.localeCompare(a))
 }
 
 /**
@@ -580,6 +604,7 @@ export function seasonMonths(
   season: string = SEASON,
 ): string[] {
   const months = new Set(results.map((result) => result.date.slice(0, 7)))
+  months.add(OPENING_MONTH)
   for (let month = 1; month <= 12; month += 1) {
     months.add(`${season}-${String(month).padStart(2, '0')}`)
   }
@@ -587,11 +612,8 @@ export function seasonMonths(
 }
 
 /** The month to open on: the newest with anything in it, else the season's first. */
-export function openingMonth(
-  results: readonly ChallengeResult[],
-  season: string = SEASON,
-): string {
-  return monthsIn(results)[0] ?? `${season}-01`
+export function openingMonth(results: readonly ChallengeResult[]): string {
+  return monthsIn(results)[0] ?? OPENING_MONTH
 }
 
 /** Every year with a result in it, newest first. */

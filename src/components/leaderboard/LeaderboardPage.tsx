@@ -50,8 +50,8 @@ import {
   type ChallengeResult,
   type FormatId,
 } from '../../lib/leaderboard'
+import { CHALLENGE_PLAYERS, ROSTER } from '../../content/challengePlayers'
 import { CHALLENGE_RESULTS } from '../../content/challengeResults'
-import { DEMO_PROFILES, buildChallengeLog } from '../../lib/leaderboardDemo'
 import { profileFor } from '../../lib/playerProfiles'
 import { Avatar } from './Avatar'
 import { PlayerDialog } from './PlayerDialog'
@@ -88,18 +88,6 @@ function monthLabel(month: string): string {
   return `${MONTH_NAMES[index] ?? month} ${month.slice(0, 4)}`
 }
 
-/**
- * The mock field, built once.
- *
- * Nothing feeds this page yet, and inventing a result on every render would
- * make the standings move while you read them. One seed, one field, and the
- * same table every time it is opened.
- */
-const DEMO_LOG = buildChallengeLog({
-  seed: 2027,
-  from: `${SEASON}-01-01`,
-  days: 365,
-})
 
 export function LeaderboardPage() {
   const t = useT()
@@ -125,14 +113,7 @@ export function LeaderboardPage() {
   const view: ViewId = picked === 'lastLonger' && !lastLongerOn ? 'monthly' : picked
   const setView = setPicked
   const formatId: FormatId = view === 'monthly' ? 'monthly' : 'yearly'
-  /**
-   * What has actually been entered, or the mock field while nothing has.
-   *
-   * The first real row switches the page over; until then an empty season
-   * would be an empty page, which shows nobody what they are signing up to.
-   */
-  const pretend = CHALLENGE_RESULTS.length === 0
-  const results: ChallengeResult[] = pretend ? DEMO_LOG : CHALLENGE_RESULTS
+  const results: ChallengeResult[] = CHALLENGE_RESULTS
 
   const months = useMemo(() => seasonMonths(results), [results])
   const years = useMemo(() => seasonYears(results), [results])
@@ -173,8 +154,10 @@ export function LeaderboardPage() {
     () => (byMonth ? inPeriod : monthlyQualifiers(inPeriod, FORMATS.monthly.best)),
     [inPeriod, byMonth],
   )
-  const table = useMemo(() => standings(scoring, format), [scoring, format])
-  const paid = useMemo(() => prizes(table, format), [table, format])
+  const table = useMemo(() => standings(scoring, format, ROSTER), [scoring, format])
+  // The pot is what the entrants put in, which is everybody on the roster
+  // whether or not they have played yet.
+  const paid = useMemo(() => prizes(table, format, ROSTER.length), [table, format])
   // Over every result in the period, not only the scoring ones: a figure
   // that moved when a score fell out of somebody's top ten would be one
   // nobody could reconcile against their own records.
@@ -241,13 +224,6 @@ export function LeaderboardPage() {
           className="mb-4"
         />
 
-        {pretend && (
-          <p className="mb-6 rounded-lg border border-indigo-900/60 bg-indigo-950/30 px-4 py-3 text-xs leading-relaxed text-indigo-200">
-            {t(
-              'Nothing has been entered yet, so these standings are a mock field of eleven invented players, built to a fixed seed. The first real result switches the page over.',
-            )}
-          </p>
-        )}
 
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <div className="flex gap-0.5 rounded-md border border-slate-800 bg-slate-950/60 p-0.5">
@@ -305,7 +281,7 @@ export function LeaderboardPage() {
             {t('Best {n} scores · ${fee} to enter · ${pot} in the pot, paid {split}', {
               n: format.best,
               fee: format.fee,
-              pot: pot(table.length, format),
+              pot: pot(ROSTER.length, format),
               split: PRIZE_SHARES.map((share) => `${share * 100}%`).join(' / '),
             })}
           </span>
@@ -367,7 +343,7 @@ export function LeaderboardPage() {
                             </td>
                             <td className="py-2">
                             <span className="flex items-center gap-2.5">
-                              <Avatar card={profileFor(row.player, DEMO_PROFILES)} size={24} />
+                              <Avatar card={profileFor(row.player, CHALLENGE_PLAYERS)} size={24} />
                               <span className="font-medium text-slate-100">{row.player}</span>
                             </span>
                           </td>
@@ -520,7 +496,7 @@ export function LeaderboardPage() {
                         </td>
                         <td className="px-2 py-2.5">
                           <span className="flex items-center gap-2.5">
-                            <Avatar card={profileFor(row.player, DEMO_PROFILES)} size={28} />
+                            <Avatar card={profileFor(row.player, CHALLENGE_PLAYERS)} size={28} />
                             <span className="font-medium text-slate-100">{row.player}</span>
                           </span>
                         </td>
@@ -718,7 +694,7 @@ export function LeaderboardPage() {
           counted={working}
           payout={open ? paid.get(open) : undefined}
           prize={open ? (won.get(open) ?? 0) : undefined}
-          cards={DEMO_PROFILES}
+          cards={CHALLENGE_PLAYERS}
           format={format}
           columns={columns}
           nightColumns={llColumns}

@@ -3,6 +3,7 @@ import {
   DAILY_MAIN,
   FORMATS,
   MIN_CONTESTED,
+  OPENING_MONTH,
   PRIZE_SHARES,
   SEASON,
   STAKE_CEILING,
@@ -481,19 +482,21 @@ describe('the season', () => {
     // A leaderboard that only exists once somebody has played is one nobody
     // can sign up to.
     expect(SEASON).toMatch(/^\d{4}$/)
-    expect(seasonYears([])).toEqual([SEASON])
+    // The opening month sits in the year before, so that year is offered too.
+    expect(seasonYears([])).toEqual([SEASON, OPENING_MONTH.slice(0, 4)])
   })
 
-  it('offers every month of it, played or not', () => {
+  it('offers every month of it, played or not, and the one it opened in', () => {
     const months = seasonMonths([], '2027')
-    expect(months).toHaveLength(12)
+    expect(months).toHaveLength(13)
     expect(months[0]).toBe('2027-12')
     expect(months[11]).toBe('2027-01')
+    expect(months[12]).toBe(OPENING_MONTH)
   })
 
   it('keeps a month from outside the season when something was played in it', () => {
     expect(seasonMonths(log, '2027')).toContain('2026-11')
-    expect(seasonMonths(log, '2027')).toHaveLength(13)
+    expect(seasonMonths(log, '2027')).toHaveLength(14)
   })
 
   it('does not list a month twice when the season has results in it', () => {
@@ -506,11 +509,19 @@ describe('the season', () => {
   })
 
   it('opens on the newest month anybody has played', () => {
-    expect(openingMonth(log, '2027')).toBe('2027-03')
+    expect(openingMonth(log)).toBe('2027-03')
   })
 
-  it('opens on January when nobody has played yet', () => {
-    expect(openingMonth([], '2027')).toBe('2027-01')
+  it('opens on the month the challenge started when nobody has played yet', () => {
+    expect(openingMonth([])).toBe(OPENING_MONTH)
+  })
+
+  it('offers the opening month, which is before the season', () => {
+    // December 2026 is a monthly round of its own; a year is still a year,
+    // so it is not part of the 2027 yearly race.
+    expect(seasonMonths([], '2027')).toContain(OPENING_MONTH)
+    expect(seasonMonths([], '2027')).toHaveLength(13)
+    expect(seasonYears([])).toEqual(['2027', '2026'])
   })
 })
 
@@ -711,5 +722,65 @@ describe('prize money per player', () => {
 
   it('ignores a negative, which is not a cash', () => {
     expect(cashByPlayer([result({ player: 'Ana', cashed: -50 })]).get('Ana')).toBe(0)
+  })
+})
+
+describe('a roster of players who have not played', () => {
+  const roster = ['Ana', 'Bogdan', 'Cristi', 'Dana']
+
+  it('puts everybody entered on the table, at nought', () => {
+    // They have paid and they are in the pot; hiding them until their first
+    // result would tell everybody the field is smaller than it is.
+    const table = standings([], FORMATS.monthly, roster)
+    expect(table.map((row) => row.player).sort()).toEqual([...roster].sort())
+    expect(table.every((row) => row.points === 0 && row.played === 0)).toBe(true)
+  })
+
+  it('ranks them all level while nobody has scored', () => {
+    expect(standings([], FORMATS.monthly, roster).every((row) => row.rank === 1)).toBe(true)
+  })
+
+  it('lets somebody who has played rise above the rest', () => {
+    const table = standings(
+      [result({ player: 'Bogdan', entrants: 1000, place: 10 })],
+      FORMATS.monthly,
+      roster,
+    )
+    expect(table[0].player).toBe('Bogdan')
+    expect(table).toHaveLength(4)
+    expect(table[1].rank).toBe(2)
+  })
+
+  it('still counts somebody with results who is not on the roster', () => {
+    const table = standings([result({ player: 'Guest' })], FORMATS.monthly, roster)
+    expect(table.map((row) => row.player)).toContain('Guest')
+  })
+
+  it('pays nobody while nobody has scored', () => {
+    const table = standings([], FORMATS.monthly, roster)
+    expect(prizes(table, FORMATS.monthly, roster.length).size).toBe(0)
+  })
+
+  it('pays only those who have scored, out of the whole pot', () => {
+    const table = standings(
+      [
+        result({ player: 'Ana', entrants: 1000, place: 5 }),
+        result({ player: 'Bogdan', entrants: 1000, place: 50 }),
+      ],
+      FORMATS.monthly,
+      roster,
+    )
+    const paid = prizes(table, FORMATS.monthly, roster.length)
+    // Four entrants paid in; two of them are in the money and split the lot.
+    expect(paid.size).toBe(2)
+    expect([...paid.values()].reduce((sum, v) => sum + v, 0)).toBeCloseTo(
+      pot(roster.length, FORMATS.monthly),
+      6,
+    )
+  })
+
+  it('pots the fee for everybody entered, not just those who played', () => {
+    expect(pot(roster.length, FORMATS.monthly)).toBe(100)
+    expect(pot(roster.length, FORMATS.yearly)).toBe(400)
   })
 })
