@@ -156,14 +156,6 @@ export function PlayerDialog({
                   value={payout === undefined ? '—' : `$${formatMoney(payout)}`}
                   muted={payout === undefined}
                 />
-                <Figure
-                  label="From bounties"
-                  value={
-                    standing.points > 0
-                      ? `${((standing.fromBounties / standing.points) * 100).toFixed(1)}%`
-                      : '—'
-                  }
-                />
               </div>
             </>
           )}

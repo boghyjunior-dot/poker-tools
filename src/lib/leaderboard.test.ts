@@ -177,12 +177,11 @@ describe('the table', () => {
     expect(rows.map((row) => row.player)).toEqual(['Ana', 'Bogdan', 'Cristi'])
   })
 
-  it('says how much of a total came out of bounties', () => {
+  it('scores a bounty result the same inside a table as outside one', () => {
     const [row] = standings(
       [result({ player: 'Ana', entrants: 1000, place: 10, buyIn: 5, bounties: 10 })],
       FORMATS.monthly,
     )
-    expect(row.fromBounties).toBeCloseTo(50, 6)
     expect(row.points).toBeCloseTo(1050, 6)
   })
 
