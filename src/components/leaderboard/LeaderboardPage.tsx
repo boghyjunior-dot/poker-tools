@@ -14,6 +14,7 @@ import { Footer } from '../Footer'
 import { LocalOnlyBanner } from '../LocalOnlyBanner'
 import { DeployedViewSwitch } from '../DeployedViewSwitch'
 import { showing, useDeployedView } from '../../lib/deployedView'
+import { racePath } from '../../lib/racePath'
 import { BAND_TEXT, BAND_TEXT_SOFT, band } from '../../lib/metricBand'
 import {
   CHALLENGE_VARIABLE,
@@ -56,6 +57,7 @@ import { profileFor } from '../../lib/playerProfiles'
 import { Avatar } from './Avatar'
 import { PlayerDialog } from './PlayerDialog'
 import { PointsTable } from './PointsTable'
+import { RaceChart } from './RaceChart'
 import { pressable } from './pressable'
 
 function Panel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -158,6 +160,20 @@ export function LeaderboardPage() {
   // The pot is what the entrants put in, which is everybody on the roster
   // whether or not they have played yet.
   const paid = useMemo(() => prizes(table, format, ROSTER.length), [table, format])
+  /**
+   * The table on every night of the period.
+   *
+   * Qualified up to each date rather than over the period as a whole, so the
+   * line is what the standings said that evening instead of what hindsight
+   * makes of it.
+   */
+  const race = useMemo(
+    () =>
+      racePath(inPeriod, format, ROSTER, (rows) =>
+        byMonth ? rows : monthlyQualifiers(rows, FORMATS.monthly.best),
+      ),
+    [inPeriod, format, byMonth],
+  )
   // Over every result in the period, not only the scoring ones: a figure
   // that moved when a score fell out of somebody's top ten would be one
   // nobody could reconcile against their own records.
@@ -570,6 +586,20 @@ export function LeaderboardPage() {
             </Panel>
 
             </>
+          )}
+
+          {race.length > 1 && (
+            <Panel>
+              <h2 className="text-sm font-semibold text-white">{t('Who has been ahead')}</h2>
+              <p className="mt-0.5 max-w-2xl text-xs text-slate-500">
+                {t(
+                  'Points down the season, one line each. The table says who leads; this says who has led, when it changed hands, and whether the gap is closing. A line holds flat until the night it moved, because that is when it moved.',
+                )}
+              </p>
+              <div className="mt-4">
+                <RaceChart steps={race} />
+              </div>
+            </Panel>
           )}
 
           <Panel>
