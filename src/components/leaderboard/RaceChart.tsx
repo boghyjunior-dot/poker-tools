@@ -27,6 +27,9 @@ const PLOT_W = W - PAD.left - PAD.right
 const PLOT_H = H - PAD.top - PAD.bottom
 
 const day = (date: string) => Math.floor(Date.parse(`${date}T12:00:00Z`) / 86_400_000)
+
+/** Day before month, which is how a date is written here. */
+const dayMonth = (date: string) => `${date.slice(8)}-${date.slice(5, 7)}`
 const points = (value: number) => Math.round(value).toLocaleString('en-US')
 
 export function RaceChart({ steps, roster }: { steps: RaceStep[]; roster: readonly string[] }) {
@@ -148,7 +151,7 @@ export function RaceChart({ steps, roster }: { steps: RaceStep[]; roster: readon
             className="fill-slate-500"
             fontSize="11"
           >
-            {date.slice(5)}
+            {dayMonth(date)}
           </text>
         ))}
         <text

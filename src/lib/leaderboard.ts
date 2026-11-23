@@ -566,6 +566,14 @@ export function monthsIn(results: readonly ChallengeResult[]): string[] {
  * only exists once somebody has played is a leaderboard nobody can sign up
  * to.
  */
+/**
+ * What the competition is called, wherever it is named.
+ *
+ * One constant rather than a string in six components, because a half
+ * renamed competition is worse than one with the old name throughout.
+ */
+export const CHALLENGE_NAME = 'MTT December Challenge 2026'
+
 export const SEASON = '2027'
 
 /**

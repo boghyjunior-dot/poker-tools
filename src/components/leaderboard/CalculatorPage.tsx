@@ -13,7 +13,7 @@ import { Footer } from '../Footer'
 import { LocalOnlyBanner } from '../LocalOnlyBanner'
 import { CHALLENGE_VARIABLE, FEATURE_CHALLENGE_PUBLISHED } from '../../lib/featureFlags'
 import { useT } from '../../lib/i18n'
-import { SEASON, STAKE_CEILING, STAKE_FLOOR } from '../../lib/leaderboard'
+import { CHALLENGE_NAME, SEASON, STAKE_CEILING, STAKE_FLOOR } from '../../lib/leaderboard'
 import { ScoreCalculator } from './ScoreCalculator'
 
 export function CalculatorPage() {
@@ -22,7 +22,7 @@ export function CalculatorPage() {
   return (
     <div className="min-h-screen px-4 py-6">
       <div className="mx-auto w-full max-w-4xl">
-        <BackToMenu className="mb-3" href="./leaderboard.html" label="MTT Challenge" />
+        <BackToMenu className="mb-3" href="./leaderboard.html" label={CHALLENGE_NAME} />
         <h1 className="text-3xl font-bold text-white">{t('Score calculator')}</h1>
         <p className="mb-5 max-w-2xl text-sm text-slate-400">
           {t(

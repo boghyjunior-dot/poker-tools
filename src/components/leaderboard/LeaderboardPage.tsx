@@ -34,7 +34,7 @@ import {
   DAILY_MAIN,
   FORMATS,
   countedFor,
-  SEASON,
+  CHALLENGE_NAME,
   STAKE_CEILING,
   STAKE_FLOOR,
   cashByPlayer,
@@ -247,7 +247,7 @@ export function LeaderboardPage() {
         <BackToMenu className="mb-3" />
 
         <h1 className="text-3xl font-bold text-white">
-          {t('MTT Challenge')} <span className="text-slate-500">{SEASON}</span>
+          {t(CHALLENGE_NAME)}
         </h1>
         <p className="mb-5 max-w-2xl text-sm text-slate-400">
           {t(

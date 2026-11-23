@@ -9,6 +9,7 @@
  */
 
 import { FEATURE_CHALLENGE_ENABLED } from '../lib/featureFlags'
+import { CHALLENGE_NAME } from '../lib/leaderboard'
 import { useT } from '../lib/i18n'
 import { Footer } from './Footer'
 import { LanguageSwitcher } from './LanguageSwitcher'
@@ -60,7 +61,7 @@ const DOORS: Door[] = [
   },
   {
     href: './leaderboard.html',
-    title: 'MTT Challenge',
+    title: CHALLENGE_NAME,
     blurb: 'A points race you are in or you are not.',
     inside:
       'Two tables off one set of results: your best ten scores in a month, your best fifty in a year. Points for how deep you ran in how big a field.',
