@@ -26,6 +26,7 @@ import {
   monthsIn,
   pot,
   openingMonth,
+  openingYear,
   prizes,
   score,
   seasonMonths,
@@ -782,5 +783,21 @@ describe('a roster of players who have not played', () => {
   it('pots the fee for everybody entered, not just those who played', () => {
     expect(pot(roster.length, FORMATS.monthly)).toBe(100)
     expect(pot(roster.length, FORMATS.yearly)).toBe(400)
+  })
+})
+
+describe('the year to open on', () => {
+  it('is the newest with anything in it', () => {
+    expect(openingYear([result({ date: '2026-12-04' })])).toBe('2026')
+  })
+
+  it('falls back to the season before anybody plays', () => {
+    // Defaulting to the season year would show an empty table during the
+    // only month that has results in it.
+    expect(openingYear([])).toBe(SEASON)
+  })
+
+  it('prefers the newest when both years have results', () => {
+    expect(openingYear([result({ date: '2026-12-04' }), result({ date: '2027-02-01' })])).toBe('2027')
   })
 })

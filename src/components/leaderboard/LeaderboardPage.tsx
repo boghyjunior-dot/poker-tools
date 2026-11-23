@@ -14,6 +14,12 @@ import { Footer } from '../Footer'
 import { LocalOnlyBanner } from '../LocalOnlyBanner'
 import { DeployedViewSwitch } from '../DeployedViewSwitch'
 import { showing, useDeployedView } from '../../lib/deployedView'
+import {
+  csvName,
+  downloadCsv,
+  lastLongerCsv,
+  standingsCsv,
+} from '../../lib/leaderboardCsv'
 import { racePath } from '../../lib/racePath'
 import { BAND_TEXT, BAND_TEXT_SOFT, band } from '../../lib/metricBand'
 import {
@@ -42,6 +48,7 @@ import {
   monthlyQualifiers,
   PRIZE_SHARES,
   openingMonth,
+  openingYear,
   pot,
   prizes,
   seasonMonths,
@@ -121,7 +128,7 @@ export function LeaderboardPage() {
   const years = useMemo(() => seasonYears(results), [results])
   // Opens on the newest month anybody has played, not on an empty December.
   const [month, setMonth] = useState(() => openingMonth(results))
-  const [year, setYear] = useState(() => SEASON)
+  const [year, setYear] = useState(() => openingYear(results))
   /** Whose window is open, if any. */
   const [open, setOpen] = useState<string | null>(null)
   const pick = (player: string) => setOpen(player)
@@ -217,6 +224,20 @@ export function LeaderboardPage() {
   // a result that scored nothing is still a thing somebody wrote down.
   const entered = useMemo(() => history(everything), [everything])
   const [allEntries, setAllEntries] = useState(false)
+
+  /** The table on screen, as a file. Figures handed over, never recomputed. */
+  const exportCsv = () => {
+    const csv =
+      view === 'lastLonger'
+        ? lastLongerCsv(lastLonger)
+        : standingsCsv(
+            table,
+            format,
+            (player) => won.get(player) ?? 0,
+            (player) => paid.get(player),
+          )
+    downloadCsv(csvName(view === 'lastLonger' ? 'last-longer' : view, period), csv)
+  }
   const shownEntries = allEntries ? entered.length : RECENT_ENTRIES
   const shown = allNights ? nights : nights.slice(0, RECENT_NIGHTS)
 
@@ -302,6 +323,17 @@ export function LeaderboardPage() {
             })}
           </span>
           )}
+
+          <button
+            type="button"
+            onClick={exportCsv}
+            className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-950/60 px-3 py-1.5 text-xs font-semibold text-slate-300 transition-colors hover:border-slate-600 hover:text-white"
+          >
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" className="h-3.5 w-3.5" aria-hidden>
+              <path d="M8 2v8M5 7l3 3 3-3M3 13h10" />
+            </svg>
+            {t('Export CSV')}
+          </button>
 
           <span className="rounded border border-slate-800 bg-slate-950/60 px-2 py-1 text-[11px] text-slate-400">
             {t('${low}–${high} buy-ins only', { low: STAKE_FLOOR, high: STAKE_CEILING })}

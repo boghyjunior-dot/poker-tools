@@ -611,6 +611,17 @@ export function seasonMonths(
   return [...months].sort((a, b) => b.localeCompare(a))
 }
 
+/**
+ * The year to open on: the newest with anything in it, else the season.
+ *
+ * The season opens in the December before it, so defaulting to the season
+ * year would show an empty table to anybody looking during the only month
+ * that has results in it.
+ */
+export function openingYear(results: readonly ChallengeResult[]): string {
+  return yearsIn(results)[0] ?? SEASON
+}
+
 /** The month to open on: the newest with anything in it, else the season's first. */
 export function openingMonth(results: readonly ChallengeResult[]): string {
   return monthsIn(results)[0] ?? OPENING_MONTH
