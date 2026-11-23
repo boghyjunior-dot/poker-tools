@@ -671,7 +671,7 @@ export function LeaderboardPage() {
             </p>
             <p className="mt-2 max-w-2xl text-xs leading-relaxed text-slate-500">
               {t(
-                'The last part is the stake. Only ${low} to ${high} buy-ins are in the challenge, and inside that band a dearer game is worth a little more — a fourth root, so the whole band is {spread}x end to end. Because finishing points go as the square root of the field, that is the same as finishing {deeper}x deeper: a ${high} result matches a ${low} one that got three and a half times further up. A good night at the bottom of the band still beats an ordinary one at the top, which is the point.',
+                'The last part is the stake. Only ${low} to ${high} buy-ins are in the challenge, and inside that band a dearer game is worth a little more — a fourth root, so the whole band is {spread}x end to end. Because finishing points go as the square root of the field, that is the same as finishing {deeper}x deeper — a ${high} result matches a ${low} one that got that much further up the field. A good night at the bottom of the band still beats an ordinary one at the top, which is the point.',
                 {
                   low: STAKE_FLOOR,
                   high: STAKE_CEILING,

@@ -90,19 +90,19 @@ export function bountyPoints(bounties: number, buyIn: number): number {
  * breaks is the one who could least afford to follow it.
  */
 export const STAKE_FLOOR = 5
-export const STAKE_CEILING = 60
+export const STAKE_CEILING = 66
 
 /**
  * How much a stake is worth, as a multiple of the cheapest one that counts.
  *
  * A fourth root, which is deliberately shallow. Because finishing points go
  * as the square root of the field, a factor of f is worth finishing f² higher
- * up: at the fourth root the whole band is 1.86x, so a $60 result matches a
- * $5 one that finished three and a half times deeper. A $5 player having a
- * better night still beats a $60 player having an ordinary one, which is the
- * test the exponent has to pass. At the square root the same gap would be
- * twelve times, and the stake would stop being a nudge and start being the
- * competition.
+ * up: at the fourth root the whole band is a little over 1.9x, so a $60 result matches a
+ * cheap one that finished three or four times deeper. A player at the floor
+ * having a better night still beats one at the ceiling having an ordinary
+ * one, which is the test the exponent has to pass. At the square root the
+ * same gap would be an order of magnitude, and the stake would stop being a
+ * nudge and start being the competition.
  */
 export const STAKE_EXPONENT = 0.25
 

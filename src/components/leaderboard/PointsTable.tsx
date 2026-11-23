@@ -25,7 +25,7 @@ import {
 const points = (value: number) => Math.round(value).toLocaleString('en-US')
 
 /** The rungs people actually play inside the band. */
-const STAKES = [5.5, 11, 22, 33, 54, 60]
+const STAKES = [5.5, 11, 22, 33, 54, 66]
 
 const FIELDS = [500, 1000, 2500, 5000, 10000, 15000]
 
