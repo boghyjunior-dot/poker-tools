@@ -44,6 +44,7 @@ export function PlayerDialog({
   standing,
   lastLonger,
   counted,
+  payout,
   prize,
   cards,
   format,
@@ -55,6 +56,8 @@ export function PlayerDialog({
   lastLonger: LastLongerStanding | undefined
   counted: { result: ChallengeResult; score: number }[]
   /** What they are owed out of the pot, if they are in the money. */
+  payout: number | undefined
+  /** Prize money won over the period, across every result. */
   prize: number | undefined
   cards: readonly PlayerCard[]
   format: Format
@@ -142,8 +145,13 @@ export function PlayerDialog({
                 />
                 <Figure
                   label="Prize"
-                  value={prize === undefined ? '—' : `${formatMoney(prize)}`}
-                  muted={prize === undefined}
+                  value={prize === undefined ? '—' : `$${formatMoney(prize)}`}
+                  muted={!prize}
+                />
+                <Figure
+                  label="Payout"
+                  value={payout === undefined ? '—' : `$${formatMoney(payout)}`}
+                  muted={payout === undefined}
                 />
                 <Figure
                   label="From bounties"

@@ -22,6 +22,7 @@ import {
   SEASON,
   STAKE_CEILING,
   STAKE_FLOOR,
+  cashByPlayer,
   eligible,
   history,
   inMonth,
@@ -155,6 +156,10 @@ export function LeaderboardPage() {
   )
   const table = useMemo(() => standings(scoring, format), [scoring, format])
   const paid = useMemo(() => prizes(table, format), [table, format])
+  // Over every result in the period, not only the scoring ones: a figure
+  // that moved when a score fell out of somebody's top ten would be one
+  // nobody could reconcile against their own records.
+  const won = useMemo(() => cashByPlayer(inPeriod), [inPeriod])
   const working = useMemo(
     () => (open ? countedFor(scoring, open, format) : []),
     [scoring, open, format],
@@ -422,8 +427,8 @@ export function LeaderboardPage() {
                       <th className="px-2 py-3 text-right font-medium">{t('Counting')}</th>
                       <th className="px-2 py-3 text-right font-medium">{t('Best')}</th>
                       <th className="px-2 py-3 text-right font-medium">{t('Cutoff')}</th>
-                      <th className="px-2 py-3 text-right font-medium">{t('Bounties')}</th>
-                      <th className="px-4 py-3 text-right font-medium">{t('Prize')}</th>
+                      <th className="px-2 py-3 text-right font-medium">{t('Prize')}</th>
+                      <th className="px-4 py-3 text-right font-medium">{t('Payout')}</th>
                     </tr>
                   </thead>
                   <tbody className="text-slate-300">
@@ -471,15 +476,19 @@ export function LeaderboardPage() {
                         <td className="px-2 py-2.5 text-right tabular-nums text-slate-500">
                           {row.cutoff === null ? '—' : points(row.cutoff)}
                         </td>
-                        <td className="px-2 py-2.5 text-right tabular-nums text-slate-500">
-                          {row.points > 0 ? `${((row.fromBounties / row.points) * 100).toFixed(1)}%` : '—'}
+                        <td
+                          className={`px-2 py-2.5 text-right tabular-nums ${
+                            (won.get(row.player) ?? 0) > 0 ? 'text-slate-300' : 'text-slate-600'
+                          }`}
+                        >
+                          ${formatMoney(won.get(row.player) ?? 0)}
                         </td>
                         <td
                           className={`px-4 py-2.5 text-right font-semibold tabular-nums ${
                             paid.has(row.player) ? 'text-emerald-400' : 'text-slate-700'
                           }`}
                         >
-                          {paid.has(row.player) ? `${formatMoney(paid.get(row.player) ?? 0)}` : '—'}
+                          {paid.has(row.player) ? `$${formatMoney(paid.get(row.player) ?? 0)}` : '—'}
                         </td>
                       </tr>
                     ))}
@@ -546,7 +555,7 @@ export function LeaderboardPage() {
                             ${result.buyIn}
                           </td>
                           <td className="py-1.5 pl-3 text-right tabular-nums text-slate-400">
-                            {result.cashed > 0 ? `${formatMoney(result.cashed)}` : '—'}
+                            {result.cashed > 0 ? `$${formatMoney(result.cashed)}` : '—'}
                           </td>
                           <td
                             className={`py-1.5 pl-3 text-right font-semibold tabular-nums ${
@@ -632,7 +641,8 @@ export function LeaderboardPage() {
           standing={table.find((row) => row.player === open)}
           lastLonger={lastLonger.find((row) => row.player === open)}
           counted={working}
-          prize={open ? paid.get(open) : undefined}
+          payout={open ? paid.get(open) : undefined}
+          prize={open ? (won.get(open) ?? 0) : undefined}
           cards={DEMO_PROFILES}
           format={format}
           onClose={() => setOpen(null)}

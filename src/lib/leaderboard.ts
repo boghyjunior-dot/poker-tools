@@ -290,6 +290,25 @@ export function standings(
   })
 }
 
+/**
+ * Prize money won per player, over whatever results are handed in.
+ *
+ * Every result counts towards it, not only the ones scoring — a quiet
+ * month's cash is still cash, and a figure that moved when a score dropped
+ * out of somebody's top ten would be a number nobody could reconcile with
+ * their own records.
+ *
+ * Prize only: bounties are money too and are counted in the points, but
+ * they are not a cash, and the buy-ins are not taken off.
+ */
+export function cashByPlayer(results: readonly ChallengeResult[]): Map<string, number> {
+  const out = new Map<string, number>()
+  for (const result of results) {
+    out.set(result.player, (out.get(result.player) ?? 0) + Math.max(0, result.cashed))
+  }
+  return out
+}
+
 /** What the entrants have put in. */
 export function pot(entrants: number, format: Format): number {
   return Math.max(0, entrants) * format.fee

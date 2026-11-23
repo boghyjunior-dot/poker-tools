@@ -9,6 +9,7 @@ import {
   STAKE_EXPONENT,
   STAKE_FLOOR,
   bountyPoints,
+  cashByPlayer,
   countedFor,
   finishPoints,
   inMonth,
@@ -665,5 +666,37 @@ describe('what has been entered', () => {
   it('carries the score each row produced', () => {
     const [row] = history([result({ entrants: 1000, place: 10, buyIn: 5 })])
     expect(row.score).toBeCloseTo(1000, 6)
+  })
+})
+
+describe('prize money per player', () => {
+  it('adds up what each of them cashed', () => {
+    const paid = cashByPlayer([
+      result({ player: 'Ana', cashed: 120 }),
+      result({ player: 'Ana', cashed: 40 }),
+      result({ player: 'Bogdan', cashed: 500 }),
+    ])
+    expect(paid.get('Ana')).toBe(160)
+    expect(paid.get('Bogdan')).toBe(500)
+  })
+
+  it('counts a result that scored nothing, because the money is still money', () => {
+    // Out of the band, so no points — but they did win it.
+    const paid = cashByPlayer([result({ player: 'Ana', buyIn: 215, cashed: 900 })])
+    expect(paid.get('Ana')).toBe(900)
+  })
+
+  it('leaves bounties out and the buy-in on', () => {
+    const paid = cashByPlayer([result({ player: 'Ana', buyIn: 54, cashed: 200, bounties: 300 })])
+    expect(paid.get('Ana')).toBe(200)
+  })
+
+  it('gives a player who never cashed a nought rather than nothing', () => {
+    const paid = cashByPlayer([result({ player: 'Ana', cashed: 0 })])
+    expect(paid.get('Ana')).toBe(0)
+  })
+
+  it('ignores a negative, which is not a cash', () => {
+    expect(cashByPlayer([result({ player: 'Ana', cashed: -50 })]).get('Ana')).toBe(0)
   })
 })
