@@ -35,6 +35,10 @@ export const CHALLENGE_PLAYERS: PlayerCard[] = [
     name: 'Alecs',
     description: '',
   },
+  {
+    name: 'LucianT',
+    description: '',
+  },
 ]
 
 /** Just the names, for seeding a table with players who have not played. */
