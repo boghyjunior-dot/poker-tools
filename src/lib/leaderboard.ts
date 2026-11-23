@@ -178,6 +178,20 @@ export function history(results: readonly ChallengeResult[]): HistoryEntry[] {
     .map((result) => ({ result, score: score(result), counts: isEligible(result) }))
 }
 
+/**
+ * What an invented row's id begins with.
+ *
+ * Nothing real ever will, so a page can tell whether it is showing a
+ * competition or a demonstration of one without being told separately —
+ * and the notice clears itself the moment the placeholder rows go, which
+ * is the only way a notice like that stays honest.
+ */
+export const PLACEHOLDER_PREFIX = 'demo-'
+
+export function isPlaceholder(results: readonly ChallengeResult[]): boolean {
+  return results.some((result) => result.id.startsWith(PLACEHOLDER_PREFIX))
+}
+
 /** The results that count. */
 export function eligible(results: readonly ChallengeResult[]): ChallengeResult[] {
   return results.filter(isEligible)

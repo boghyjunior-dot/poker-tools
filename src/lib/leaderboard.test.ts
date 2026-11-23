@@ -18,6 +18,7 @@ import {
   eligible,
   history,
   isEligible,
+  isPlaceholder,
   isLastLonger,
   ineligible,
   lastLongerRounds,
@@ -799,5 +800,24 @@ describe('the year to open on', () => {
 
   it('prefers the newest when both years have results', () => {
     expect(openingYear([result({ date: '2026-12-04' }), result({ date: '2027-02-01' })])).toBe('2027')
+  })
+})
+
+describe('telling a demonstration from a competition', () => {
+  it('spots a placeholder row by its id', () => {
+    expect(isPlaceholder([result({ id: 'demo-0001' })])).toBe(true)
+  })
+
+  it('says no for a log of real results', () => {
+    expect(isPlaceholder([result({ id: 'r-0001' }), result({ id: '2026-12-04-ferdi' })])).toBe(false)
+  })
+
+  it('says no for an empty log, which is a competition nobody has played', () => {
+    expect(isPlaceholder([])).toBe(false)
+  })
+
+  it('still says yes when one placeholder is left among real rows', () => {
+    // A half-cleared file is the dangerous case: it reads as real.
+    expect(isPlaceholder([result({ id: 'r-0001' }), result({ id: 'demo-0099' })])).toBe(true)
   })
 })

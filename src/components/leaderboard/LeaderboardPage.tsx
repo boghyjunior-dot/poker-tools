@@ -43,6 +43,7 @@ import {
   inMonth,
   inYear,
   ineligible,
+  isPlaceholder,
   lastLongerRounds,
   lastLongerStandings,
   monthlyQualifiers,
@@ -123,6 +124,7 @@ export function LeaderboardPage() {
   const setView = setPicked
   const formatId: FormatId = view === 'monthly' ? 'monthly' : 'yearly'
   const results: ChallengeResult[] = CHALLENGE_RESULTS
+  const madeUp = isPlaceholder(results)
 
   const months = useMemo(() => seasonMonths(results), [results])
   const years = useMemo(() => seasonYears(results), [results])
@@ -254,6 +256,15 @@ export function LeaderboardPage() {
             'The monthly race counts your best ten scores in the month. The yearly one counts your best fifty of those — only a score that made a monthly top ten is in it, so the months are the qualifiers. Points come from how deep you ran in how big a field, with a bit on top for bounties.',
           )}
         </p>
+
+        {madeUp && (
+          <p className="mb-5 rounded-lg border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-sm leading-relaxed text-amber-200">
+            <span className="font-semibold">{t('These results are made up.')}</span>{' '}
+            {t(
+              'Every figure on this page is invented, so the challenge can be looked at before it starts. Nothing here happened, and it all goes the moment the first real result is entered.',
+            )}
+          </p>
+        )}
 
         <LocalOnlyBanner
           published={FEATURE_CHALLENGE_PUBLISHED}

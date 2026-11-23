@@ -34,6 +34,11 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+        env:
+          # The challenge ships; the last longer does not yet. Both are
+          # build-time, so this file is the only place that decides what is
+          # on the live site.
+          VITE_PUBLISH_CHALLENGE: 'true'
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
