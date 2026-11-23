@@ -14,6 +14,7 @@ import { Footer } from '../Footer'
 import { LocalOnlyBanner } from '../LocalOnlyBanner'
 import { DeployedViewSwitch } from '../DeployedViewSwitch'
 import { showing, useDeployedView } from '../../lib/deployedView'
+import { BAND_TEXT, BAND_TEXT_SOFT, band } from '../../lib/metricBand'
 import {
   CHALLENGE_VARIABLE,
   FEATURE_CHALLENGE_PUBLISHED,
@@ -178,12 +179,40 @@ export function LeaderboardPage() {
   // that moved when a score fell out of somebody's top ten would be one
   // nobody could reconcile against their own records.
   const won = useMemo(() => cashByPlayer(inPeriod), [inPeriod])
+
+  /**
+   * Each column's figures, so a cell can be coloured against its own column.
+   *
+   * Gathered once rather than per cell: a band is a comparison against every
+   * other row, and recomputing that inside the render of each row would turn
+   * a table into a quadratic.
+   */
+  const columns = useMemo(
+    () => ({
+      points: table.map((row) => row.points),
+      counted: table.map((row) => row.counted),
+      best: table.map((row) => row.best),
+      cutoff: table.map((row) => row.cutoff ?? 0),
+      prize: table.map((row) => won.get(row.player) ?? 0),
+    }),
+    [table, won],
+  )
   const working = useMemo(
     () => (open ? countedFor(scoring, open, format) : []),
     [scoring, open, format],
   )
   const nights = useMemo(() => lastLongerRounds(inPeriod, DAILY_MAIN), [inPeriod])
   const lastLonger = useMemo(() => lastLongerStandings(inPeriod, DAILY_MAIN), [inPeriod])
+  const llColumns = useMemo(
+    () => ({
+      won: lastLonger.map((row) => row.won),
+      played: lastLonger.map((row) => row.played),
+      winPct: lastLonger.map((row) => row.winPct),
+      best: lastLonger.map((row) => row.bestPlace ?? Number.POSITIVE_INFINITY),
+      cash: lastLonger.map((row) => row.cashFromWins),
+    }),
+    [lastLonger],
+  )
   const [allNights, setAllNights] = useState(false)
   // The history shows everything entered for the period, band or no band:
   // a result that scored nothing is still a thing somebody wrote down.
@@ -342,21 +371,35 @@ export function LeaderboardPage() {
                               <span className="font-medium text-slate-100">{row.player}</span>
                             </span>
                           </td>
-                            <td className="py-2 text-right font-bold tabular-nums text-white">
+                            <td
+                              className={`py-2 text-right font-bold tabular-nums ${
+                                BAND_TEXT[band(row.won, llColumns.won)]
+                              }`}
+                            >
                               {row.won}
                             </td>
                             <td className="py-2 pr-4 text-right tabular-nums text-slate-500">
                               {row.played}
                             </td>
-                            <td className="py-2 pr-4 text-right tabular-nums text-slate-400">
+                            <td
+                              className={`py-2 pr-4 text-right tabular-nums ${
+                                BAND_TEXT_SOFT[band(row.winPct, llColumns.winPct)]
+                              }`}
+                            >
                               {row.winPct.toFixed(0)}%
                             </td>
-                            <td className="py-2 text-right tabular-nums text-slate-400">
+                            <td
+                              className={`py-2 text-right tabular-nums ${
+                                row.bestPlace === null
+                                  ? 'text-slate-600'
+                                  : BAND_TEXT_SOFT[band(row.bestPlace, llColumns.best, false)]
+                              }`}
+                            >
                               {row.bestPlace ?? '—'}
                             </td>
                             <td
                               className={`py-2 text-right font-semibold tabular-nums ${
-                                row.cashFromWins > 0 ? 'text-emerald-400' : 'text-slate-600'
+                                BAND_TEXT_SOFT[band(row.cashFromWins, llColumns.cash)]
                               }`}
                             >
                               ${formatMoney(row.cashFromWins)}
@@ -481,12 +524,16 @@ export function LeaderboardPage() {
                             <span className="font-medium text-slate-100">{row.player}</span>
                           </span>
                         </td>
-                        <td className="px-2 py-2.5 text-right font-bold tabular-nums text-white">
+                        <td
+                          className={`px-2 py-2.5 text-right font-bold tabular-nums ${
+                            BAND_TEXT[band(row.points, columns.points)]
+                          }`}
+                        >
                           {points(row.points)}
                         </td>
                         <td
                           className={`px-2 py-2.5 text-right tabular-nums ${
-                            row.counted < format.best ? 'text-amber-400' : 'text-slate-400'
+                            BAND_TEXT_SOFT[band(row.counted, columns.counted)]
                           }`}
                           title={
                             row.counted < format.best
@@ -498,15 +545,25 @@ export function LeaderboardPage() {
                         >
                           {row.counted} / {format.best}
                         </td>
-                        <td className="px-2 py-2.5 text-right tabular-nums text-slate-400">
+                        <td
+                          className={`px-2 py-2.5 text-right tabular-nums ${
+                            BAND_TEXT_SOFT[band(row.best, columns.best)]
+                          }`}
+                        >
                           {points(row.best)}
                         </td>
-                        <td className="px-2 py-2.5 text-right tabular-nums text-slate-500">
+                        <td
+                          className={`px-2 py-2.5 text-right tabular-nums ${
+                            row.cutoff === null
+                              ? 'text-slate-600'
+                              : BAND_TEXT_SOFT[band(row.cutoff, columns.cutoff)]
+                          }`}
+                        >
                           {row.cutoff === null ? '—' : points(row.cutoff)}
                         </td>
                         <td
                           className={`px-2 py-2.5 text-right tabular-nums ${
-                            (won.get(row.player) ?? 0) > 0 ? 'text-slate-300' : 'text-slate-600'
+                            BAND_TEXT_SOFT[band(won.get(row.player) ?? 0, columns.prize)]
                           }`}
                         >
                           ${formatMoney(won.get(row.player) ?? 0)}
@@ -529,6 +586,7 @@ export function LeaderboardPage() {
                 </p>
               )}
               <p className="border-t border-slate-800 px-4 py-3 text-[11px] leading-relaxed text-slate-600">
+                {t('Figures are coloured against the rest of this table: green is the top third of the column, amber the middle, red the bottom. A column where everybody is level stays amber.')}{' '}
                 {t(
                   'Cutoff is the lowest score still counting: once the quota is full, a new result only moves the total if it beats that. Pick a player to see who they are and what their total is made of.',
                 )}
