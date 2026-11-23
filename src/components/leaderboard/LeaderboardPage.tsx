@@ -18,9 +18,7 @@ import { useT } from '../../lib/i18n'
 import {
   DAILY_MAIN,
   FORMATS,
-  bountyPoints,
   countedFor,
-  finishPoints,
   SEASON,
   STAKE_CEILING,
   STAKE_FLOOR,
@@ -38,7 +36,6 @@ import {
   prizes,
   seasonMonths,
   seasonYears,
-  score,
   stakeFactor,
   standings,
   type ChallengeResult,
@@ -49,6 +46,7 @@ import { DEMO_PROFILES, buildChallengeLog } from '../../lib/leaderboardDemo'
 import { profileFor } from '../../lib/playerProfiles'
 import { Avatar } from './Avatar'
 import { PlayerDialog } from './PlayerDialog'
+import { PointsTable } from './PointsTable'
 import { ScoreCalculator } from './ScoreCalculator'
 import { pressable } from './pressable'
 
@@ -611,51 +609,8 @@ export function LeaderboardPage() {
                 },
               )}
             </p>
-            <div className="mt-4 overflow-x-auto">
-              <table className="w-full min-w-[760px] text-sm">
-                <thead>
-                  <tr className="border-b border-slate-800 text-left text-[11px] uppercase tracking-wide text-slate-500">
-                    <th className="pb-2 font-medium">{t('A night like this')}</th>
-                    <th className="pb-2 pl-4 text-right font-medium">N</th>
-                    <th className="pb-2 pl-4 text-right font-medium">R</th>
-                    <th className="pb-2 pl-4 text-right font-medium">Bi</th>
-                    <th className="pb-2 pl-4 text-right font-medium">Bty / Bi</th>
-                    <th className="pb-2 pl-4 text-right font-medium">{t('Finish')}</th>
-                    <th className="pb-2 pl-4 text-right font-medium">{t('Bounty')}</th>
-                    <th className="pb-2 pl-4 text-right font-medium">{t('Stake')}</th>
-                    <th className="pb-2 pl-4 text-right font-medium">{t('Score')}</th>
-                  </tr>
-                </thead>
-                <tbody className="text-slate-300">
-                  {EXAMPLES.map((example) => (
-                    <tr key={example.label} className="border-b border-slate-800/60 last:border-0">
-                      <td className="py-1.5 text-slate-400">{t(example.label)}</td>
-                      <td className="py-1.5 pl-4 text-right tabular-nums">
-                        {example.entrants.toLocaleString('en-US')}
-                      </td>
-                      <td className="py-1.5 pl-4 text-right tabular-nums">{example.place}</td>
-                      <td className="py-1.5 pl-4 text-right tabular-nums text-slate-400">
-                        ${example.buyIn}
-                      </td>
-                      <td className="py-1.5 pl-4 text-right tabular-nums text-slate-500">
-                        {(example.bounties / example.buyIn).toFixed(1)}
-                      </td>
-                      <td className="py-1.5 pl-4 text-right tabular-nums text-slate-400">
-                        {points(finishPoints(example.entrants, example.place))}
-                      </td>
-                      <td className="py-1.5 pl-4 text-right tabular-nums text-slate-400">
-                        {points(bountyPoints(example.bounties, example.buyIn))}
-                      </td>
-                      <td className="py-1.5 pl-4 text-right tabular-nums text-slate-500">
-                        ×{stakeFactor(example.buyIn).toFixed(2)}
-                      </td>
-                      <td className="py-1.5 text-right font-semibold tabular-nums text-white">
-                        {points(score({ ...example, id: example.label, player: '', date: '', event: '', site: '', cashed: 0 }))}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="mt-5">
+              <PointsTable />
             </div>
           </Panel>
 
@@ -704,14 +659,3 @@ const RECENT_ENTRIES = 15
 /** How many nights the last longer shows before it asks whether you want them all. */
 const RECENT_NIGHTS = 12
 
-/** A few results worth knowing the price of. */
-const EXAMPLES = [
-  { label: 'Busting last in a 1,000-runner', entrants: 1000, place: 1000, buyIn: 5, bounties: 0 },
-  { label: 'A min-cash, 150th of 1,000, at the bottom of the band', entrants: 1000, place: 150, buyIn: 5, bounties: 0 },
-  { label: 'The same min-cash at the top of it', entrants: 1000, place: 150, buyIn: 60, bounties: 0 },
-  { label: 'The same again, with ten buy-ins in heads', entrants: 1000, place: 150, buyIn: 60, bounties: 600 },
-  { label: 'What a $5 player needs to match that bare min-cash', entrants: 1000, place: 43, buyIn: 5, bounties: 0 },
-  { label: 'Final table, 7th of 1,000, in the Daily Main', entrants: 1000, place: 7, buyIn: 54, bounties: 0 },
-  { label: 'Winning a 1,000-runner at $22', entrants: 1000, place: 1, buyIn: 22, bounties: 0 },
-  { label: 'Winning a 10,000-runner at $60', entrants: 10_000, place: 1, buyIn: 60, bounties: 0 },
-]
