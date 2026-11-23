@@ -720,6 +720,8 @@ export function LeaderboardPage() {
           prize={open ? (won.get(open) ?? 0) : undefined}
           cards={DEMO_PROFILES}
           format={format}
+          columns={columns}
+          nightColumns={llColumns}
           onClose={() => setOpen(null)}
         />
 

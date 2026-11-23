@@ -22,17 +22,55 @@ import {
   type LastLongerStanding,
   type Standing,
 } from '../../lib/leaderboard'
+import { BAND_TEXT, BAND_TEXT_SOFT, band } from '../../lib/metricBand'
 import { profileFor, type PlayerCard } from '../../lib/playerProfiles'
 import { Avatar } from './Avatar'
 
 const points = (value: number) => Math.round(value).toLocaleString('en-US')
 
-function Figure({ label, value, muted = false }: { label: string; value: string; muted?: boolean }) {
+/**
+ * The figures the standings table colours itself against.
+ *
+ * Passed in rather than worked out here: a band means "compared with
+ * everybody else in this period", and the window only knows one player.
+ */
+export interface RaceColumns {
+  points: number[]
+  counted: number[]
+  best: number[]
+  cutoff: number[]
+  prize: number[]
+}
+
+export interface NightColumns {
+  won: number[]
+  played: number[]
+  winPct: number[]
+  best: number[]
+  cash: number[]
+}
+
+function Figure({
+  label,
+  value,
+  muted = false,
+  tone,
+}: {
+  label: string
+  value: string
+  muted?: boolean
+  /** Colour for the band this figure sits in; plain white without one. */
+  tone?: string
+}) {
   const t = useT()
   return (
     <div className="rounded-md border border-slate-800 bg-slate-950/60 px-3 py-2">
       <p className="text-[10px] uppercase tracking-wider text-slate-500">{t(label)}</p>
-      <p className={`text-lg font-bold tabular-nums ${muted ? 'text-slate-500' : 'text-white'}`}>
+      <p
+        className={`text-lg font-bold tabular-nums ${
+          muted ? 'text-slate-500' : (tone ?? 'text-white')
+        }`}
+      >
         {value}
       </p>
     </div>
@@ -49,6 +87,8 @@ export function PlayerDialog({
   prize,
   cards,
   format,
+  columns,
+  nightColumns,
   onClose,
 }: {
   /** Whose window this is, or null for none open. */
@@ -64,6 +104,8 @@ export function PlayerDialog({
   prize: number | undefined
   cards: readonly PlayerCard[]
   format: Format
+  columns: RaceColumns
+  nightColumns: NightColumns
   onClose: () => void
 }) {
   const t = useT()
@@ -77,6 +119,15 @@ export function PlayerDialog({
   }, [player])
 
   const card = player ? profileFor(player, cards) : null
+  /**
+   * This player's own results, so the rows below can be banded against each
+   * other: which of their nights carry the total, rather than how they
+   * compare with anybody else.
+   */
+  const own = {
+    scores: counted.map((entry) => entry.score),
+    cashed: counted.map((entry) => entry.result.cashed),
+  }
 
   return (
     <dialog
@@ -133,23 +184,39 @@ export function PlayerDialog({
                 {t('{label} race', { label: t(format.label) })}
               </h3>
               <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                <Figure label="Points" value={points(standing.points)} />
+                <Figure
+                  label="Points"
+                  value={points(standing.points)}
+                  tone={BAND_TEXT[band(standing.points, columns.points)]}
+                />
                 <Figure
                   label="Counting"
                   value={`${standing.counted} / ${format.best}`}
-                  muted={standing.counted < format.best}
+                  tone={BAND_TEXT_SOFT[band(standing.counted, columns.counted)]}
                 />
                 <Figure label="Played" value={String(standing.played)} />
-                <Figure label="Best score" value={points(standing.best)} />
+                <Figure
+                  label="Best score"
+                  value={points(standing.best)}
+                  tone={BAND_TEXT_SOFT[band(standing.best, columns.best)]}
+                />
                 <Figure
                   label="Cutoff"
                   value={standing.cutoff === null ? '—' : points(standing.cutoff)}
                   muted={standing.cutoff === null}
+                  tone={
+                    standing.cutoff === null
+                      ? undefined
+                      : BAND_TEXT_SOFT[band(standing.cutoff, columns.cutoff)]
+                  }
                 />
                 <Figure
                   label="Prize"
                   value={prize === undefined ? '—' : `$${formatMoney(prize)}`}
                   muted={!prize}
+                  tone={
+                    prize === undefined ? undefined : BAND_TEXT_SOFT[band(prize, columns.prize)]
+                  }
                 />
                 <Figure
                   label="From bounties"
@@ -176,17 +243,32 @@ export function PlayerDialog({
             </h3>
             {lastLonger ? (
               <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <Figure label="Won" value={String(lastLonger.won)} muted={lastLonger.won === 0} />
+                <Figure
+                  label="Won"
+                  value={String(lastLonger.won)}
+                  tone={BAND_TEXT[band(lastLonger.won, nightColumns.won)]}
+                />
                 <Figure label="Nights" value={String(lastLonger.played)} />
-                <Figure label="Win rate" value={`${lastLonger.winPct.toFixed(0)}%`} />
+                <Figure
+                  label="Win rate"
+                  value={`${lastLonger.winPct.toFixed(0)}%`}
+                  tone={BAND_TEXT_SOFT[band(lastLonger.winPct, nightColumns.winPct)]}
+                />
                 <Figure
                   label="Deepest"
                   value={lastLonger.bestPlace === null ? '—' : String(lastLonger.bestPlace)}
+                  muted={lastLonger.bestPlace === null}
+                  tone={
+                    lastLonger.bestPlace === null
+                      ? undefined
+                      : BAND_TEXT_SOFT[band(lastLonger.bestPlace, nightColumns.best, false)]
+                  }
                 />
                 <Figure
                   label="Cashed"
-                  value={`${formatMoney(lastLonger.cashFromWins)}`}
+                  value={`$${formatMoney(lastLonger.cashFromWins)}`}
                   muted={lastLonger.cashFromWins === 0}
+                  tone={BAND_TEXT_SOFT[band(lastLonger.cashFromWins, nightColumns.cash)]}
                 />
               </div>
             ) : (
@@ -233,12 +315,18 @@ export function PlayerDialog({
                     </td>
                     <td
                       className={`py-1.5 pl-2.5 text-right tabular-nums ${
-                        result.cashed > 0 ? 'text-emerald-400' : 'text-slate-600'
+                        result.cashed > 0
+                          ? BAND_TEXT_SOFT[band(result.cashed, own.cashed)]
+                          : 'text-slate-600'
                       }`}
                     >
                       {result.cashed > 0 ? `$${formatMoney(result.cashed)}` : '—'}
                     </td>
-                    <td className="py-1.5 pl-2.5 text-right font-semibold tabular-nums text-white">
+                    <td
+                      className={`py-1.5 pl-2.5 text-right font-semibold tabular-nums ${
+                        BAND_TEXT[band(score, own.scores)]
+                      }`}
+                    >
                       {points(score)}
                     </td>
                   </tr>
