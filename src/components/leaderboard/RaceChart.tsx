@@ -8,15 +8,16 @@
  *
  * Spaced by the calendar rather than by result, so a fortnight nobody played
  * looks like a fortnight nobody played. A step chart rather than a smooth
- * one, because points arrive on the night a tournament finished and pretending
- * they accrued gently in between would be drawing something that never
- * happened.
+ * one, because points arrive on the night a tournament finished and
+ * pretending they accrued gently in between would be drawing something that
+ * never happened.
  */
 
+import { useState } from 'react'
 import { niceBounds } from '../../lib/chartScale'
 import { formatCompact } from '../../lib/formatNumber'
 import { useT } from '../../lib/i18n'
-import { avatarTone } from '../../lib/playerProfiles'
+import { playerColour } from '../../lib/playerColours'
 import { everLed, runners, type RaceStep } from '../../lib/racePath'
 
 const W = 760
@@ -26,12 +27,11 @@ const PLOT_W = W - PAD.left - PAD.right
 const PLOT_H = H - PAD.top - PAD.bottom
 
 const day = (date: string) => Math.floor(Date.parse(`${date}T12:00:00Z`) / 86_400_000)
+const points = (value: number) => Math.round(value).toLocaleString('en-US')
 
-/** A player's line takes the colour their avatar already uses. */
-const colourOf = (player: string) => avatarTone(player).text
-
-export function RaceChart({ steps }: { steps: RaceStep[] }) {
+export function RaceChart({ steps, roster }: { steps: RaceStep[]; roster: readonly string[] }) {
   const t = useT()
+  const [hovered, setHovered] = useState<string | null>(null)
   const field = runners(steps)
   if (steps.length === 0 || field.length === 0) return null
 
@@ -51,12 +51,12 @@ export function RaceChart({ steps }: { steps: RaceStep[] }) {
   /** Held flat until the night it moved, which is when it actually moved. */
   const line = (player: string) => {
     const parts: string[] = []
-    let previous: number | null = null
+    let previous = 0
     steps.forEach((step, index) => {
       const value = step.points.get(player) ?? 0
       if (index === 0) parts.push(`M${x(step.date)},${y(value)}`)
       else {
-        parts.push(`L${x(step.date)},${y(previous ?? 0)}`)
+        parts.push(`L${x(step.date)},${y(previous)}`)
         parts.push(`L${x(step.date)},${y(value)}`)
       }
       previous = value
@@ -67,6 +67,7 @@ export function RaceChart({ steps }: { steps: RaceStep[] }) {
   const leaders = everLed(steps)
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((at) => steps[Math.round(at * (steps.length - 1))])
   const labelled = [...new Set(ticks.map((step) => step.date))]
+  const finalOf = (player: string) => steps[steps.length - 1].points.get(player) ?? 0
 
   return (
     <div>
@@ -75,6 +76,7 @@ export function RaceChart({ steps }: { steps: RaceStep[] }) {
         className="h-auto w-full"
         role="img"
         aria-label={t('Points over time, one line per player')}
+        onMouseLeave={() => setHovered(null)}
       >
         {bounds.ticks.map((tick) => (
           <g key={tick}>
@@ -97,32 +99,45 @@ export function RaceChart({ steps }: { steps: RaceStep[] }) {
           </g>
         ))}
 
-        {field.map((player) => (
-          <path
-            key={player}
-            d={line(player)}
-            fill="none"
-            stroke={colourOf(player)}
-            strokeWidth="2"
-            strokeLinejoin="round"
-          >
-            <title>{player}</title>
-          </path>
-        ))}
-
-        {/* A dot on the last point, so a player with one result is visible. */}
         {field.map((player) => {
-          const value = steps[steps.length - 1].points.get(player) ?? 0
+          const dimmed = hovered !== null && hovered !== player
           return (
-            <circle
-              key={player}
-              cx={x(steps[steps.length - 1].date)}
-              cy={y(value)}
-              r="3"
-              fill={colourOf(player)}
-            />
+            <g key={player} opacity={dimmed ? 0.25 : 1}>
+              <path
+                d={line(player)}
+                fill="none"
+                stroke={playerColour(player, roster)}
+                strokeWidth={hovered === player ? 3.25 : 2}
+                strokeLinejoin="round"
+              />
+              <circle
+                cx={x(steps[steps.length - 1].date)}
+                cy={y(finalOf(player))}
+                r={hovered === player ? 4.5 : 3}
+                fill={playerColour(player, roster)}
+              />
+            </g>
           )
         })}
+
+        {/*
+          A fat transparent copy of each line, purely to be hovered. A 2px
+          stroke is a hard thing to put a mouse on, and widening the visible
+          line to catch the pointer would be solving the wrong problem.
+        */}
+        {field.map((player) => (
+          <path
+            key={`hit-${player}`}
+            d={line(player)}
+            fill="none"
+            stroke="transparent"
+            strokeWidth="14"
+            style={{ cursor: 'pointer' }}
+            onMouseEnter={() => setHovered(player)}
+          >
+            <title>{`${player} — ${points(finalOf(player))}`}</title>
+          </path>
+        ))}
 
         {labelled.map((date) => (
           <text
@@ -149,25 +164,41 @@ export function RaceChart({ steps }: { steps: RaceStep[] }) {
 
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px]">
         {[...field].reverse().map((player) => (
-          <span key={player} className="inline-flex items-center gap-1.5">
+          <button
+            key={player}
+            type="button"
+            onMouseEnter={() => setHovered(player)}
+            onMouseLeave={() => setHovered(null)}
+            onFocus={() => setHovered(player)}
+            onBlur={() => setHovered(null)}
+            className={`inline-flex items-center gap-1.5 rounded px-1 py-0.5 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+              hovered !== null && hovered !== player ? 'opacity-50' : ''
+            }`}
+          >
             <span
               aria-hidden
               className="h-0.5 w-4 rounded"
-              style={{ background: colourOf(player) }}
+              style={{ background: playerColour(player, roster) }}
             />
             <span className="text-slate-300">{player}</span>
-          </span>
+            <span className="tabular-nums text-slate-500">{points(finalOf(player))}</span>
+          </button>
         ))}
       </div>
 
-      {leaders.length > 1 && (
-        <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
-          {t('{n} players have led this period: {names}.', {
-            n: leaders.length,
-            names: leaders.join(', then '),
-          })}
-        </p>
-      )}
+      <p className="mt-2 min-h-[1.25rem] text-[11px] leading-relaxed text-slate-500">
+        {hovered
+          ? t('{player} — {n} points at the end of this period.', {
+              player: hovered,
+              n: points(finalOf(hovered)),
+            })
+          : leaders.length > 1
+            ? t('{n} players have led this period: {names}.', {
+                n: leaders.length,
+                names: leaders.join(', then '),
+              })
+            : t('Hover a line to pick a player out of it.')}
+      </p>
     </div>
   )
 }

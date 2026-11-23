@@ -597,7 +597,7 @@ export function LeaderboardPage() {
                 )}
               </p>
               <div className="mt-4">
-                <RaceChart steps={race} />
+                <RaceChart steps={race} roster={ROSTER} />
               </div>
             </Panel>
           )}
