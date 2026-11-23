@@ -57,7 +57,7 @@ export interface PlayerProfile {
 
 export const PLAYERS: PlayerProfile[] = [
   {
-    name: 'Mihai P.',
+    name: 'Simion',
     blurb: 'Grinds the bottom of the band, every night.',
     volume: 300,
     field: [400, 4000],
@@ -81,7 +81,7 @@ export const PLAYERS: PlayerProfile[] = [
     dailyMain: 0.3,
   },
   {
-    name: 'Costel V.',
+    name: 'Sw1ngKKing',
     blurb: 'Bounty hunter: nothing without a head on it.',
     volume: 210,
     field: [300, 2500],
@@ -93,7 +93,7 @@ export const PLAYERS: PlayerProfile[] = [
     dailyMain: 0.2,
   },
   {
-    name: 'Raul T.',
+    name: 'Ferdi',
     blurb: 'Mid-stakes regular, deep runs more often than most.',
     volume: 150,
     field: [500, 5000],

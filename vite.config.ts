@@ -33,6 +33,7 @@ const LOCAL_ONLY: { name: string; variable: string }[] = [
   { name: 'charts', variable: 'VITE_PUBLISH_KNOWLEDGE' },
   { name: 'quiz', variable: 'VITE_PUBLISH_KNOWLEDGE' },
   { name: 'leaderboard', variable: 'VITE_PUBLISH_CHALLENGE' },
+  { name: 'calculator', variable: 'VITE_PUBLISH_CHALLENGE' },
 ]
 
 function isOn(value: string | undefined): boolean {

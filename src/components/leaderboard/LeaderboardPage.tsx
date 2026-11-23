@@ -48,7 +48,6 @@ import { profileFor } from '../../lib/playerProfiles'
 import { Avatar } from './Avatar'
 import { PlayerDialog } from './PlayerDialog'
 import { PointsTable } from './PointsTable'
-import { ScoreCalculator } from './ScoreCalculator'
 import { pressable } from './pressable'
 
 function Panel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -242,6 +241,16 @@ export function LeaderboardPage() {
               ))}
             </select>
           </label>
+
+          <a
+            href="./calculator.html"
+            className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-950/60 px-3 py-1.5 text-xs font-semibold text-indigo-400 transition-colors hover:border-indigo-700 hover:text-indigo-300"
+          >
+            {t('Open Calculator')}
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3" aria-hidden>
+              <path d="m6 4 4 4-4 4" />
+            </svg>
+          </a>
 
           {view !== 'lastLonger' && (
           <span className="text-xs text-slate-500">
@@ -620,18 +629,6 @@ export function LeaderboardPage() {
             </p>
             <div className="mt-5">
               <PointsTable />
-            </div>
-          </Panel>
-
-          <Panel>
-            <h2 className="text-sm font-semibold text-white">{t('What would that be worth?')}</h2>
-            <p className="mt-0.5 max-w-2xl text-xs text-slate-500">
-              {t(
-                'Put a result in and see what it scores. Useful before you play rather than after: whether the dearer game is worth it, and how deep you would have to go in the cheap one to match it.',
-              )}
-            </p>
-            <div className="mt-4">
-              <ScoreCalculator />
             </div>
           </Panel>
         </div>
