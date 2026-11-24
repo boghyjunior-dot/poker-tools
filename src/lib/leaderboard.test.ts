@@ -25,6 +25,7 @@ import {
   lastLongerStandings,
   monthlyQualifiers,
   monthsIn,
+  payouts,
   pot,
   openingMonth,
   openingYear,
@@ -607,6 +608,50 @@ describe('the prize money', () => {
     const monthly = prizes(rows, FORMATS.monthly).get('P0') ?? 0
     const yearly = prizes(rows, FORMATS.yearly).get('P0') ?? 0
     expect(yearly).toBeCloseTo(monthly * (FORMATS.yearly.fee / FORMATS.monthly.fee), 6)
+  })
+
+  describe('in whole dollars', () => {
+    it('hands out every dollar that was put in, and no more', () => {
+      // Eleven at $25 is $275, and the exact shares are $137.50, $82.50
+      // and $55 — the case that rounds to $276 if each is rounded alone.
+      const rows = table([5, 4, 3, 2, 1])
+      const paid = payouts(rows, FORMATS.monthly, 11)
+      const handed = [...paid.values()].reduce((sum, value) => sum + value, 0)
+      expect(pot(11, FORMATS.monthly)).toBe(275)
+      expect(handed).toBe(275)
+      expect(paid.get('P0')).toBe(138)
+      expect(paid.get('P1')).toBe(82)
+      expect(paid.get('P2')).toBe(55)
+    })
+
+    it('gives nobody a fraction of a dollar', () => {
+      const paid = payouts(table([5, 4, 3, 2, 1]), FORMATS.monthly, 11)
+      for (const value of paid.values()) expect(Number.isInteger(value)).toBe(true)
+    })
+
+    it('adds up whatever the number of entrants', () => {
+      for (let entrants = 1; entrants <= 40; entrants += 1) {
+        const paid = payouts(table([5, 4, 3, 2, 1]), FORMATS.monthly, entrants)
+        const handed = [...paid.values()].reduce((sum, value) => sum + value, 0)
+        expect(handed).toBe(pot(entrants, FORMATS.monthly))
+      }
+    })
+
+    it('sends the odd dollar up the standings, not down', () => {
+      const paid = payouts(table([5, 4, 3, 2, 1]), FORMATS.monthly, 11)
+      expect(paid.get('P0')).toBeGreaterThan(paid.get('P1') ?? 0)
+    })
+
+    it('pays the same people prizes does', () => {
+      const rows = table([5, 4, 3, 2, 1])
+      expect([...payouts(rows, FORMATS.monthly, 11).keys()].sort()).toEqual(
+        [...prizes(rows, FORMATS.monthly, 11).keys()].sort(),
+      )
+    })
+
+    it('has nothing to hand out of an empty table', () => {
+      expect(payouts([], FORMATS.monthly, 11).size).toBe(0)
+    })
   })
 })
 

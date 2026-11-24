@@ -50,8 +50,8 @@ import {
   PRIZE_SHARES,
   openingMonth,
   openingYear,
+  payouts,
   pot,
-  prizes,
   seasonMonths,
   seasonYears,
   stakeFactor,
@@ -169,7 +169,7 @@ export function LeaderboardPage() {
   const table = useMemo(() => standings(scoring, format, ROSTER), [scoring, format])
   // The pot is what the entrants put in, which is everybody on the roster
   // whether or not they have played yet.
-  const paid = useMemo(() => prizes(table, format, ROSTER.length), [table, format])
+  const paid = useMemo(() => payouts(table, format, ROSTER.length), [table, format])
   /**
    * The table on every night of the period.
    *

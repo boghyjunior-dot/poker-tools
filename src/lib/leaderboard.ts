@@ -378,6 +378,57 @@ export function prizes(
 }
 
 /**
+ * The same split, in whole dollars that add up to the pot.
+ *
+ * `prizes` works in exact shares, which is right for the arithmetic and
+ * wrong for a page. Eleven players at $25 make a $275 pot, and the shares
+ * come to $137.50, $82.50 and $55 — rounded one at a time that reads
+ * $138, $83 and $55, so anyone adding the column finds a dollar nobody put
+ * in. A pot that pays out more than it took is the one mistake a leaderboard
+ * people have paid into cannot make.
+ *
+ * So the dollars are apportioned rather than rounded: everybody takes their
+ * floor, and the remainder goes a dollar at a time to the largest fractions,
+ * highest finisher first. That is the odd-chip rule every live room already
+ * uses, and it means a tie can be split a dollar apart — which is what
+ * happens at a real table when the chips do not divide.
+ */
+export function payouts(
+  table: readonly Standing[],
+  format: Format,
+  entrants: number = table.length,
+): Map<string, number> {
+  const exact = prizes(table, format, entrants)
+  if (exact.size === 0) return exact
+
+  // Walked in table order rather than the map's, so the odd dollar goes up
+  // the standings instead of wherever the entries happened to be made.
+  const rows = table.filter((row) => exact.has(row.player))
+
+  const whole = new Map<string, number>()
+  let handed = 0
+  for (const row of rows) {
+    const floor = Math.floor(exact.get(row.player) ?? 0)
+    whole.set(row.player, floor)
+    handed += floor
+  }
+
+  const total = Math.round([...exact.values()].reduce((sum, value) => sum + value, 0))
+  // A stable sort, so players left on the same fraction keep their order and
+  // the dollar goes to the better finish.
+  const spare = rows
+    .map((row) => ({ player: row.player, part: (exact.get(row.player) ?? 0) % 1 }))
+    .sort((a, b) => b.part - a.part)
+
+  for (let i = 0; handed < total && i < spare.length; i += 1) {
+    whole.set(spare[i].player, (whole.get(spare[i].player) ?? 0) + 1)
+    handed += 1
+  }
+
+  return whole
+}
+
+/**
  * A side contest inside one recurring tournament.
  *
  * A last longer is the simplest competition in poker: everybody signs up for
