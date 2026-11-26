@@ -14,11 +14,6 @@ import type { PlayerCard } from '../lib/playerProfiles'
 
 export const CHALLENGE_PLAYERS: PlayerCard[] = [
   {
-    name: 'Ferdi',
-    description: 'Cento per cento',
-    avatar: './players/ferdi.webp',
-  },
-  {
     name: 'Snapper',
     description: 'I snap call ya',
     avatar: './players/snapper.webp',
