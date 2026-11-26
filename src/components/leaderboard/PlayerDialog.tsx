@@ -14,7 +14,8 @@
  */
 
 import { useEffect, useRef } from 'react'
-import { AWARD_LABELS, awardsFor, type Award } from '../../lib/awards'
+import { awardsFor, type Award } from '../../lib/awards'
+import { AwardBadge } from './AwardBadge'
 import { STAT_HELP } from './statHelp'
 import { formatMoney } from '../../lib/formatNumber'
 import { useT } from '../../lib/i18n'
@@ -48,51 +49,6 @@ export interface RaceColumns {
   cutoff: number[]
   prize: number[]
   money: number[]
-}
-
-/**
- * A title, worn under the name.
- *
- * The label is the whole of it and the reason sits in the tooltip, because
- * a row of badges is read at a glance and a row of sentences is not.
- */
-function Title({ award }: { award: Award }) {
-  const t = useT()
-
-  const pct = (value: number, places = 1) => `${(value * 100).toFixed(places)}%`
-
-  const why =
-    award.id === 'giantKiller'
-      ? t(
-          'The best finish in the biggest field anybody played this period. Largest field first, then the highest place in it: {place} of {entrants}.',
-          {
-            place: award.value.toLocaleString('en-US'),
-            entrants: (award.entrants ?? 0).toLocaleString('en-US'),
-          },
-        )
-      : award.id === 'bountyHunter'
-        ? t(
-            'The largest share of a total that came out of the bounty term. Their bounty points over their points: {pct}.',
-            { pct: pct(award.value) },
-          )
-        : award.id === 'consistent'
-          ? t(
-              'The steadiest full quota of counting scores. The spread of those scores over their own average, so it is unevenness relative to their level rather than in points: {pct}. Needs a full quota, and at least one other player with one.',
-              { pct: pct(award.value, 0) },
-            )
-          : t(
-              'The total leaning hardest on a single night. Their best score over their points: {pct}. Needs a full quota, and at least one other player with one.',
-              { pct: pct(award.value, 0) },
-            )
-
-  return (
-    <span
-      title={why}
-      className="rounded-full border border-amber-800/60 bg-amber-950/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-300"
-    >
-      {t(AWARD_LABELS[award.id])}
-    </span>
-  )
 }
 
 export interface NightColumns {
@@ -253,7 +209,7 @@ export function PlayerDialog({
               {titles.length > 0 && (
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                   {titles.map((award) => (
-                    <Title key={award.id} award={award} />
+                    <AwardBadge key={award.id} award={award} />
                   ))}
                 </div>
               )}

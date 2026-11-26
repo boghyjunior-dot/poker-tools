@@ -20,7 +20,7 @@ import {
   lastLongerCsv,
   standingsCsv,
 } from '../../lib/leaderboardCsv'
-import { awards } from '../../lib/awards'
+import { awards, awardsFor } from '../../lib/awards'
 import { racePath } from '../../lib/racePath'
 import { BAND_TEXT, BAND_TEXT_SOFT, band } from '../../lib/metricBand'
 import {
@@ -69,6 +69,7 @@ import { CHALLENGE_PLAYERS, ROSTER } from '../../content/challengePlayers'
 import { CHALLENGE_RESULTS } from '../../content/challengeResults'
 import { profileFor } from '../../lib/playerProfiles'
 import { Avatar } from './Avatar'
+import { AwardBadge } from './AwardBadge'
 import { CutoffTargets } from './CutoffTargets'
 import { PlayerDialog } from './PlayerDialog'
 import { PointsTable } from './PointsTable'
@@ -265,6 +266,19 @@ export function LeaderboardPage() {
    * somebody has decided who holds it.
    */
   const titles = useMemo(() => awards(scoring, table, format), [scoring, table, format])
+  /**
+   * The titles each player holds, by player.
+   *
+   * Worked out once for the table rather than filtered row by row: the rows
+   * are drawn in a loop and the titles do not change inside it.
+   */
+  const held = useMemo(
+    () =>
+      new Map(
+        table.map((row) => [row.player, awardsFor(titles, row.player)] as const),
+      ),
+    [titles, table],
+  )
   const nights = useMemo(() => lastLongerRounds(inPeriod, DAILY_MAIN), [inPeriod])
   const lastLonger = useMemo(() => lastLongerStandings(inPeriod, DAILY_MAIN), [inPeriod])
   const llColumns = useMemo(
@@ -642,7 +656,16 @@ export function LeaderboardPage() {
                         <td className="px-2 py-2.5">
                           <span className="flex items-center gap-2.5">
                             <Avatar card={profileFor(row.player, CHALLENGE_PLAYERS)} size={28} />
-                            <span className="font-medium text-slate-100">{row.player}</span>
+                            <span className="min-w-0">
+                              <span className="block font-medium text-slate-100">{row.player}</span>
+                              {held.get(row.player)?.length ? (
+                                <span className="mt-1 flex flex-wrap items-center gap-1">
+                                  {held.get(row.player)?.map((award) => (
+                                    <AwardBadge key={award.id} award={award} compact />
+                                  ))}
+                                </span>
+                              ) : null}
+                            </span>
                           </span>
                         </td>
                         <td
