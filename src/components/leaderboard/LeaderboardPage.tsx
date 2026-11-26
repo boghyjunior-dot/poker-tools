@@ -74,6 +74,7 @@ import { PlayerDialog } from './PlayerDialog'
 import { PointsTable } from './PointsTable'
 import { RaceChart } from './RaceChart'
 import { pressable } from './pressable'
+import { STAT_HELP } from './statHelp'
 
 function Panel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
@@ -84,6 +85,36 @@ function Panel({ children, className = '' }: { children: React.ReactNode; classN
 }
 
 const points = (value: number) => Math.round(value).toLocaleString('en-US')
+
+/**
+ * A column heading that says what its figure is when you hover it.
+ *
+ * Dotted underline because a tooltip nobody knows is there is a tooltip
+ * nobody reads, and the headings are the one place to say so without
+ * putting a paragraph above every table.
+ */
+function Hint({
+  help,
+  vars,
+  children,
+}: {
+  help: string
+  vars?: Record<string, string | number>
+  children: React.ReactNode
+}) {
+  const t = useT()
+  return (
+    <span
+      title={t(help, vars)}
+      className="cursor-help underline decoration-slate-700 decoration-dotted underline-offset-4"
+    >
+      {children}
+    </span>
+  )
+}
+
+/** The split, as the payout tooltips say it. */
+const SPLIT = PRIZE_SHARES.map((share) => `${share * 100}%`).join(' / ')
 
 const MONTH_NAMES = [
   'January',
@@ -404,11 +435,21 @@ export function LeaderboardPage() {
                         <tr className="border-b border-slate-800 text-left text-[11px] uppercase tracking-wide text-slate-500">
                           <th className="pb-2 font-medium">{t('#')}</th>
                           <th className="pb-2 font-medium">{t('Player')}</th>
-                          <th className="pb-2 text-right font-medium">{t('Won')}</th>
-                          <th className="pb-2 pr-4 text-right font-medium">{t('Played')}</th>
-                          <th className="pb-2 pr-4 text-right font-medium">{t('Win rate')}</th>
-                          <th className="pb-2 text-right font-medium">{t('Deepest')}</th>
-                          <th className="pb-2 text-right font-medium">{t('Cashed')}</th>
+                          <th className="pb-2 text-right font-medium">
+                            <Hint help={STAT_HELP.llWon}>{t('Won')}</Hint>
+                          </th>
+                          <th className="pb-2 pr-4 text-right font-medium">
+                            <Hint help={STAT_HELP.llNights}>{t('Played')}</Hint>
+                          </th>
+                          <th className="pb-2 pr-4 text-right font-medium">
+                            <Hint help={STAT_HELP.llWinPct}>{t('Win rate')}</Hint>
+                          </th>
+                          <th className="pb-2 text-right font-medium">
+                            <Hint help={STAT_HELP.llDeepest}>{t('Deepest')}</Hint>
+                          </th>
+                          <th className="pb-2 text-right font-medium">
+                            <Hint help={STAT_HELP.llCashed}>{t('Cashed')}</Hint>
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="text-slate-300">
@@ -552,14 +593,34 @@ export function LeaderboardPage() {
                 <table className="w-full min-w-[720px] text-sm">
                   <thead>
                     <tr className="border-b border-slate-800 text-left text-[11px] uppercase tracking-wide text-slate-500">
-                      <th className="px-4 py-3 font-medium">{t('#')}</th>
+                      <th className="px-4 py-3 font-medium">
+                        <Hint help={STAT_HELP.rank}>{t('#')}</Hint>
+                      </th>
                       <th className="px-2 py-3 font-medium">{t('Player')}</th>
-                      <th className="px-2 py-3 text-right font-medium">{t('Points')}</th>
-                      <th className="px-2 py-3 text-right font-medium">{t('Counting')}</th>
-                      <th className="px-2 py-3 text-right font-medium">{t('Best')}</th>
-                      <th className="px-2 py-3 text-right font-medium">{t('Cutoff')}</th>
-                      <th className="px-2 py-3 text-right font-medium">{t('Prizes')}</th>
-                      <th className="px-4 py-3 text-right font-medium">{t('Payout')}</th>
+                      <th className="px-2 py-3 text-right font-medium">
+                        <Hint help={STAT_HELP.points} vars={{ n: format.best }}>
+                          {t('Points')}
+                        </Hint>
+                      </th>
+                      <th className="px-2 py-3 text-right font-medium">
+                        <Hint help={STAT_HELP.counting} vars={{ n: format.best }}>
+                          {t('Counting')}
+                        </Hint>
+                      </th>
+                      <th className="px-2 py-3 text-right font-medium">
+                        <Hint help={STAT_HELP.best}>{t('Best')}</Hint>
+                      </th>
+                      <th className="px-2 py-3 text-right font-medium">
+                        <Hint help={STAT_HELP.cutoff}>{t('Cutoff')}</Hint>
+                      </th>
+                      <th className="px-2 py-3 text-right font-medium">
+                        <Hint help={STAT_HELP.money}>{t('Prizes')}</Hint>
+                      </th>
+                      <th className="px-4 py-3 text-right font-medium">
+                        <Hint help={STAT_HELP.payout} vars={{ split: SPLIT }}>
+                          {t('Payout')}
+                        </Hint>
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="text-slate-300">
@@ -625,7 +686,6 @@ export function LeaderboardPage() {
                           className={`px-2 py-2.5 text-right tabular-nums ${
                             BAND_TEXT_SOFT[band(money.get(row.player) ?? 0, columns.money)]
                           }`}
-                          title={t('Cashes and bounties together. The player window has them apart.')}
                         >
                           ${formatMoney(money.get(row.player) ?? 0)}
                         </td>

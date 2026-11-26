@@ -15,15 +15,21 @@
 
 import { countedFor, type ChallengeResult, type Format, type Standing } from './leaderboard'
 
-export type AwardId = 'giantKiller' | 'bountyHunter' | 'consistent'
+export type AwardId = 'giantKiller' | 'bountyHunter' | 'consistent' | 'oneHitWonder'
 
 /** The names, in the order a profile shows them. */
-export const AWARD_IDS: readonly AwardId[] = ['giantKiller', 'bountyHunter', 'consistent']
+export const AWARD_IDS: readonly AwardId[] = [
+  'giantKiller',
+  'bountyHunter',
+  'consistent',
+  'oneHitWonder',
+]
 
 export const AWARD_LABELS: Record<AwardId, string> = {
   giantKiller: 'Giant Killer',
   bountyHunter: 'Bounty Hunter',
   consistent: 'Mr. Consistent',
+  oneHitWonder: 'One Hit Wonder',
 }
 
 export interface Award {
@@ -104,28 +110,67 @@ function bountyHunter(table: readonly Standing[]): Award | null {
 }
 
 /**
- * The tightest spread across a full quota of counting scores.
+ * The players a full-quota title can go to.
  *
  * A full quota is the condition, not a detail: somebody with three results
  * has three nights that happen to look alike, and calling that the steadiest
  * month in the competition would be rewarding a small sample rather than a
  * consistent one.
+ *
+ * Two of them, at least. A title with one candidate has not been won by
+ * anybody — and in an early month, when one player alone has filled their
+ * ten, it would hand them both of these at once: the steadiest month in the
+ * competition and the most one-sided, which cannot both be true of anyone.
  */
-function consistent(
+function qualified(
   results: readonly ChallengeResult[],
   table: readonly Standing[],
   format: Format,
-): Award | null {
-  if (format.best < 2) return null
+): { player: string; scores: number[]; points: number; best: number }[] {
+  if (format.best < 2) return []
 
+  const rows = table
+    .filter((row) => row.counted >= format.best && row.points > 0)
+    .map((row) => ({
+      player: row.player,
+      scores: countedFor(results, row.player, format).map((entry) => entry.score),
+      points: row.points,
+      best: row.best,
+    }))
+    .filter((row) => row.scores.length >= 2)
+
+  return rows.length >= 2 ? rows : []
+}
+
+/** The tightest spread across a full quota of counting scores. */
+function consistent(
+  rows: ReturnType<typeof qualified>,
+): Award | null {
   let held: Award | null = null
-  for (const row of table) {
-    if (row.counted < format.best) continue
-    const scores = countedFor(results, row.player, format).map((entry) => entry.score)
-    if (scores.length < 2) continue
-    const value = spread(scores)
+  for (const row of rows) {
+    const value = spread(row.scores)
     if (held === null || value < held.value) {
       held = { id: 'consistent', player: row.player, value }
+    }
+  }
+  return held
+}
+
+/**
+ * The total leaning hardest on a single night.
+ *
+ * The other end of the same question Mr. Consistent asks, and the funnier
+ * end: a best score that is most of a total is a month somebody spiked in
+ * week one and has been living off since. A share rather than the score
+ * itself, so it is about the shape of the month and not about who is
+ * winning — the leader has the biggest best score almost by definition.
+ */
+function oneHitWonder(rows: ReturnType<typeof qualified>): Award | null {
+  let held: Award | null = null
+  for (const row of rows) {
+    const value = row.best / row.points
+    if (held === null || value > held.value) {
+      held = { id: 'oneHitWonder', player: row.player, value }
     }
   }
   return held
@@ -142,7 +187,13 @@ export function awards(
   table: readonly Standing[],
   format: Format,
 ): Award[] {
-  const found = [giantKiller(results), bountyHunter(table), consistent(results, table, format)]
+  const rows = qualified(results, table, format)
+  const found = [
+    giantKiller(results),
+    bountyHunter(table),
+    consistent(rows),
+    oneHitWonder(rows),
+  ]
   return found.filter((award): award is Award => award !== null)
 }
 

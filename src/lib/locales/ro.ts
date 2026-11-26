@@ -1782,8 +1782,6 @@ export const ro: Dictionary = {
   Prize: 'Premiu',
   // The standings column, which is cashes and bounties together.
   Prizes: 'Premii',
-  'Cashes and bounties together. The player window has them apart.':
-    'Cash-urile și bounty-urile la un loc. În fereastra jucătorului sunt separate.',
   'Total won': 'Total câștigat',
   // Left in English: the money the pot pays you, which is not the same thing
   // as the prize money you won at the table.
@@ -1891,12 +1889,15 @@ export const ro: Dictionary = {
   'Giant Killer': 'Giant Killer',
   'Bounty Hunter': 'Bounty Hunter',
   'Mr. Consistent': 'Mr. Consistent',
-  'Best finish in the biggest field anybody played: {place} of {entrants}.':
-    'Cel mai bun loc în cel mai mare field jucat de cineva: {place} din {entrants}.',
-  'The largest share of a total that came out of bounties: {pct}.':
-    'Cea mai mare parte dintr-un total venită din bounty-uri: {pct}.',
-  'The tightest spread across a full quota of counting scores: {pct} off their own average.':
-    'Cea mai mică împrăștiere pe o cotă plină de scoruri numărate: {pct} față de propria medie.',
+  'One Hit Wonder': 'One Hit Wonder',
+  'The best finish in the biggest field anybody played this period. Largest field first, then the highest place in it: {place} of {entrants}.':
+    'Cel mai bun loc în cel mai mare field jucat de cineva în perioada asta. Întâi cel mai mare field, apoi cel mai bun loc din el: {place} din {entrants}.',
+  'The largest share of a total that came out of the bounty term. Their bounty points over their points: {pct}.':
+    'Cea mai mare parte dintr-un total venită din termenul de bounty. Punctele din bounty raportate la punctele totale: {pct}.',
+  'The steadiest full quota of counting scores. The spread of those scores over their own average, so it is unevenness relative to their level rather than in points: {pct}. Needs a full quota, and at least one other player with one.':
+    'Cea mai constantă cotă plină de scoruri numărate. Împrăștierea lor raportată la propria medie, deci neuniformitate față de nivelul lui, nu în puncte: {pct}. Cere o cotă plină și cel puțin un alt jucător cu una.',
+  'The total leaning hardest on a single night. Their best score over their points: {pct}. Needs a full quota, and at least one other player with one.':
+    'Totalul care se sprijină cel mai mult pe o singură seară. Cel mai bun scor raportat la punctele totale: {pct}. Cere o cotă plină și cel puțin un alt jucător cu una.',
   '{label} race': 'Clasamentul {label}',
   'The {n} scores counting': 'Scorurile care se numără ({n})',
   'Best score': 'Cel mai bun scor',
@@ -1904,6 +1905,40 @@ export const ro: Dictionary = {
   Nights: 'Seri',
   'Has not contested the Daily Main in this period.':
     'Nu a avut adversari în Daily Main în perioada asta.',
+
+
+  // What each figure means and how it was worked out, on hover
+  'Ties share a rank, so two players level on points are both first and the next is third. Alphabetical within a tie, because the rules give no tiebreak and inventing one here would quietly decide who gets paid.':
+    'Egalii împart locul, deci doi jucători la aceleași puncte sunt amândoi primii și următorul e al treilea. Alfabetic la egalitate, pentru că regulile nu dau un departajator, iar unul inventat aici ar decide pe ascuns cine ia banii.',
+  'The sum of their best {n} scores this period. Nothing below those {n} counts towards it, however many they played.':
+    'Suma scorurilor care se numără ({n}), cele mai bune din perioadă. Ce e sub ele nu intră, oricâte rezultate ar fi jucat.',
+  'How many of the {n} that count are filled. Short of {n} every result adds to the total; once there are {n}, a new one has to beat the cutoff to change anything.':
+    'Câte dintre scorurile care se numără ({n}) sunt ocupate. Până se umplu, fiecare rezultat adaugă la total; după aceea, unul nou trebuie să bată pragul ca să schimbe ceva.',
+  'Every result they entered this period, the ones too far down to count included.':
+    'Toate rezultatele introduse în perioada asta, inclusiv cele prea jos ca să se numere.',
+  'Their single highest score of the period, and the one the total leans on most.':
+    'Cel mai mare scor al perioadei, cel pe care se sprijină cel mai mult totalul.',
+  'The lowest score still counting. Once the quota is full a new result only moves the total if it beats this, which makes it the number to beat tonight.':
+    'Cel mai mic scor care încă se numără. Odată ce cota e plină, un rezultat nou mișcă totalul doar dacă îl bate — adică e numărul de bătut în seara asta.',
+  'How much of their total came out of the bounty term — 25 × (Bty / Bi), scaled by the stake like the rest of the score — over the total itself.':
+    'Cât din total a venit din termenul de bounty — 25 × (Bty / Bi), scalat cu stake-ul ca restul scorului — raportat la totalul însuși.',
+  'Prize money over every result this period, scoring or not. Bounties are not in it and the buy-in is not taken off.':
+    'Banii din premii pe toate rezultatele perioadei, punctate sau nu. Bounty-urile nu sunt incluse și buy-in-ul nu e scăzut.',
+  'Bounty money collected over the same results, counted as money rather than as the points it bought.':
+    'Banii din bounty-uri pe aceleași rezultate, numărați ca bani, nu ca punctele pe care i-au adus.',
+  'Prize and bounties added together: what the period was worth. Rounded to whole dollars that add up to each other, so the two halves and this always agree.':
+    'Premiile și bounty-urile adunate: cât a valorat perioada. Rotunjite la dolari întregi care se potrivesc, așa că cele două jumătăți și suma sunt mereu de acord.',
+  'Their share of the pot as the table stands, which is nothing outside the top three. The pot is split {split}, in whole dollars that add up to it exactly.':
+    'Partea lui din pot așa cum arată tabelul acum, adică nimic în afara primilor trei. Pot-ul se împarte {split}, în dolari întregi care îl acoperă exact.',
+  'Nights of the Daily Main they outlasted everybody else who was contesting it.':
+    'Serile de Daily Main în care a rezistat mai mult decât toți ceilalți înscriși.',
+  'Nights of the Main they were in with at least one other player. A night somebody played alone is not a last longer, so it is not counted.':
+    'Serile de Main în care a fost cu cel puțin un alt jucător. O seară jucată singur nu e un last longer, deci nu se numără.',
+  'Nights won over nights contested.': 'Serile câștigate raportate la serile cu adversari.',
+  'The highest they have finished in the Main itself, whether or not they won the night.':
+    'Cel mai sus a terminat în Main, indiferent dacă a câștigat seara.',
+  'Prize money from the nights they won the last longer, not from every night they played.':
+    'Banii din premii din serile în care a câștigat last longer-ul, nu din toate serile jucate.',
 
   // The last longer
   'A side contest in the $54 Daily Main on GGPoker: everybody in it plays the same tournament, and whoever busts last takes the night. No formula and no argument — you know who won before you go to bed.':

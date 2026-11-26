@@ -15,9 +15,11 @@
 
 import { useEffect, useRef } from 'react'
 import { AWARD_LABELS, awardsFor, type Award } from '../../lib/awards'
+import { STAT_HELP } from './statHelp'
 import { formatMoney } from '../../lib/formatNumber'
 import { useT } from '../../lib/i18n'
 import {
+  PRIZE_SHARES,
   wholeShares,
   type ChallengeResult,
   type Format,
@@ -29,6 +31,9 @@ import { profileFor, type PlayerCard } from '../../lib/playerProfiles'
 import { Avatar } from './Avatar'
 
 const points = (value: number) => Math.round(value).toLocaleString('en-US')
+
+/** The split, as the payout tooltip says it. */
+const SPLIT = PRIZE_SHARES.map((share) => `${share * 100}%`).join(' / ')
 
 /**
  * The figures the standings table colours itself against.
@@ -54,19 +59,31 @@ export interface RaceColumns {
 function Title({ award }: { award: Award }) {
   const t = useT()
 
+  const pct = (value: number, places = 1) => `${(value * 100).toFixed(places)}%`
+
   const why =
     award.id === 'giantKiller'
-      ? t('Best finish in the biggest field anybody played: {place} of {entrants}.', {
-          place: award.value,
-          entrants: (award.entrants ?? 0).toLocaleString('en-US'),
-        })
+      ? t(
+          'The best finish in the biggest field anybody played this period. Largest field first, then the highest place in it: {place} of {entrants}.',
+          {
+            place: award.value.toLocaleString('en-US'),
+            entrants: (award.entrants ?? 0).toLocaleString('en-US'),
+          },
+        )
       : award.id === 'bountyHunter'
-        ? t('The largest share of a total that came out of bounties: {pct}.', {
-            pct: `${(award.value * 100).toFixed(1)}%`,
-          })
-        : t('The tightest spread across a full quota of counting scores: {pct} off their own average.', {
-            pct: `${(award.value * 100).toFixed(0)}%`,
-          })
+        ? t(
+            'The largest share of a total that came out of the bounty term. Their bounty points over their points: {pct}.',
+            { pct: pct(award.value) },
+          )
+        : award.id === 'consistent'
+          ? t(
+              'The steadiest full quota of counting scores. The spread of those scores over their own average, so it is unevenness relative to their level rather than in points: {pct}. Needs a full quota, and at least one other player with one.',
+              { pct: pct(award.value, 0) },
+            )
+          : t(
+              'The total leaning hardest on a single night. Their best score over their points: {pct}. Needs a full quota, and at least one other player with one.',
+              { pct: pct(award.value, 0) },
+            )
 
   return (
     <span
@@ -89,18 +106,30 @@ export interface NightColumns {
 function Figure({
   label,
   value,
+  help,
+  helpVars,
   muted = false,
   tone,
 }: {
   label: string
   value: string
+  /**
+   * What it means and how it was worked out. Required rather than optional:
+   * a figure nobody can explain has no business being on the page, and an
+   * optional prop is how half of them end up without one.
+   */
+  help: string
+  helpVars?: Record<string, string | number>
   muted?: boolean
   /** Colour for the band this figure sits in; plain white without one. */
   tone?: string
 }) {
   const t = useT()
   return (
-    <div className="rounded-md border border-slate-800 bg-slate-950/60 px-3 py-2">
+    <div
+      title={t(help, helpVars)}
+      className="cursor-help rounded-md border border-slate-800 bg-slate-950/60 px-3 py-2"
+    >
       <p className="text-[10px] uppercase tracking-wider text-slate-500">{t(label)}</p>
       <p
         className={`text-lg font-bold tabular-nums ${
@@ -250,22 +279,32 @@ export function PlayerDialog({
                 <Figure
                   label="Points"
                   value={points(standing.points)}
+                  help={STAT_HELP.points}
+                  helpVars={{ n: format.best }}
                   tone={BAND_TEXT[band(standing.points, columns.points)]}
                 />
                 <Figure
                   label="Counting"
                   value={`${standing.counted} / ${format.best}`}
+                  help={STAT_HELP.counting}
+                  helpVars={{ n: format.best }}
                   tone={BAND_TEXT_SOFT[band(standing.counted, columns.counted)]}
                 />
-                <Figure label="Played" value={String(standing.played)} />
+                <Figure
+                  label="Played"
+                  value={String(standing.played)}
+                  help={STAT_HELP.played}
+                />
                 <Figure
                   label="Best score"
                   value={points(standing.best)}
+                  help={STAT_HELP.best}
                   tone={BAND_TEXT_SOFT[band(standing.best, columns.best)]}
                 />
                 <Figure
                   label="Cutoff"
                   value={standing.cutoff === null ? '—' : points(standing.cutoff)}
+                  help={STAT_HELP.cutoff}
                   muted={standing.cutoff === null}
                   tone={
                     standing.cutoff === null
@@ -275,6 +314,7 @@ export function PlayerDialog({
                 />
                 <Figure
                   label="From bounties"
+                  help={STAT_HELP.fromBounties}
                   value={
                     standing.points > 0
                       ? `${((standing.fromBounties / standing.points) * 100).toFixed(1)}%`
@@ -285,6 +325,7 @@ export function PlayerDialog({
                 <Figure
                   label="Prize"
                   value={prize === undefined ? '—' : `$${formatMoney(prizeWhole)}`}
+                  help={STAT_HELP.prize}
                   muted={!prize}
                   tone={
                     prize === undefined ? undefined : BAND_TEXT_SOFT[band(prize, columns.prize)]
@@ -293,11 +334,13 @@ export function PlayerDialog({
                 <Figure
                   label="Bounties"
                   value={bounties === undefined ? '—' : `$${formatMoney(bountyWhole)}`}
+                  help={STAT_HELP.bounties}
                   muted={!bounties}
                 />
                 <Figure
                   label="Total won"
                   value={money === undefined ? '—' : `$${formatMoney(money)}`}
+                  help={STAT_HELP.money}
                   muted={!money}
                   tone={
                     money === undefined ? undefined : BAND_TEXT_SOFT[band(money, columns.money)]
@@ -306,6 +349,8 @@ export function PlayerDialog({
                 <Figure
                   label="Payout"
                   value={payout === undefined ? '—' : `$${formatMoney(payout)}`}
+                  help={STAT_HELP.payout}
+                  helpVars={{ split: SPLIT }}
                   muted={payout === undefined}
                 />
               </div>
@@ -322,17 +367,24 @@ export function PlayerDialog({
                 <Figure
                   label="Won"
                   value={String(lastLonger.won)}
+                  help={STAT_HELP.llWon}
                   tone={BAND_TEXT[band(lastLonger.won, nightColumns.won)]}
                 />
-                <Figure label="Nights" value={String(lastLonger.played)} />
+                <Figure
+                  label="Nights"
+                  value={String(lastLonger.played)}
+                  help={STAT_HELP.llNights}
+                />
                 <Figure
                   label="Win rate"
                   value={`${lastLonger.winPct.toFixed(0)}%`}
+                  help={STAT_HELP.llWinPct}
                   tone={BAND_TEXT_SOFT[band(lastLonger.winPct, nightColumns.winPct)]}
                 />
                 <Figure
                   label="Deepest"
                   value={lastLonger.bestPlace === null ? '—' : String(lastLonger.bestPlace)}
+                  help={STAT_HELP.llDeepest}
                   muted={lastLonger.bestPlace === null}
                   tone={
                     lastLonger.bestPlace === null
@@ -343,6 +395,7 @@ export function PlayerDialog({
                 <Figure
                   label="Cashed"
                   value={`$${formatMoney(lastLonger.cashFromWins)}`}
+                  help={STAT_HELP.llCashed}
                   muted={lastLonger.cashFromWins === 0}
                   tone={BAND_TEXT_SOFT[band(lastLonger.cashFromWins, nightColumns.cash)]}
                 />
