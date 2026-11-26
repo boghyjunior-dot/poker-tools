@@ -1797,8 +1797,8 @@ export const ro: Dictionary = {
 
   // What it takes tonight
   'What it takes tonight': 'Ce trebuie în seara asta',
-  'The table above is what everybody has. This is what it would take to change it: the score your next result has to beat, and how deep you have to run tonight to beat it. Nobody is playing for points once their quota is full — they are playing to evict their own worst score.':
-    'Tabelul de sus e ce are fiecare. Asta e ce ar fi nevoie ca să se schimbe: scorul pe care trebuie să-l bată următorul tău rezultat, și cât de departe trebuie să ajungi în seara asta ca să-l bați. Odată ce cota e plină nimeni nu mai joacă pentru puncte — joacă să-și scoată afară propriul scor cel mai slab.',
+  'The standings are what everybody has. This is what it would take to change them: the score your next result has to beat, and how deep you have to run tonight to beat it. Nobody is playing for points once their quota is full — they are playing to evict their own worst score.':
+    'Clasamentul e ce are fiecare. Asta e ce ar fi nevoie ca să se schimbe: scorul pe care trebuie să-l bată următorul tău rezultat, și cât de departe trebuie să ajungi în seara asta ca să-l bați. Odată ce cota e plină nimeni nu mai joacă pentru puncte — joacă să-și scoată afară propriul scor cel mai slab.',
   'To move your total': 'Ca să-ți miști totalul',
   'To catch the leader': 'Ca să prinzi liderul',
   'Must beat': 'Trebuie bătut',

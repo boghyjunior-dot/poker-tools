@@ -635,32 +635,6 @@ export function LeaderboardPage() {
               </p>
             </Panel>
 
-            {cutoffOn && (
-              <Panel>
-                <h2 className="text-sm font-semibold text-white">
-                  {t('What it takes tonight')}
-                </h2>
-                <p className="mt-0.5 max-w-2xl text-xs text-slate-500">
-                  {t(
-                    'The table above is what everybody has. This is what it would take to change it: the score your next result has to beat, and how deep you have to run tonight to beat it. Nobody is playing for points once their quota is full — they are playing to evict their own worst score.',
-                  )}
-                </p>
-                <LocalOnlyBanner
-                  published={FEATURE_CUTOFF_PUBLISHED}
-                  variable={CUTOFF_VARIABLE}
-                  scope="panel"
-                  className="mt-3"
-                />
-                <div className="mt-4">
-                  <CutoffTargets
-                    table={table}
-                    format={format}
-                    cards={CHALLENGE_PLAYERS}
-                    onPick={pick}
-                  />
-                </div>
-              </Panel>
-            )}
             </>
           )}
 
@@ -764,6 +738,33 @@ export function LeaderboardPage() {
               </>
             )}
           </Panel>
+
+          {cutoffOn && view !== 'lastLonger' && (
+            <Panel>
+              <h2 className="text-sm font-semibold text-white">
+                {t('What it takes tonight')}
+              </h2>
+              <p className="mt-0.5 max-w-2xl text-xs text-slate-500">
+                {t(
+                  'The standings are what everybody has. This is what it would take to change them: the score your next result has to beat, and how deep you have to run tonight to beat it. Nobody is playing for points once their quota is full — they are playing to evict their own worst score.',
+                )}
+              </p>
+              <LocalOnlyBanner
+                published={FEATURE_CUTOFF_PUBLISHED}
+                variable={CUTOFF_VARIABLE}
+                scope="panel"
+                className="mt-3"
+              />
+              <div className="mt-4">
+                <CutoffTargets
+                  table={table}
+                  format={format}
+                  cards={CHALLENGE_PLAYERS}
+                  onPick={pick}
+                />
+              </div>
+            </Panel>
+          )}
 
           <Panel>
             <h2 className="text-sm font-semibold text-white">{t('How a score is worked out')}</h2>
