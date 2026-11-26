@@ -1571,6 +1571,8 @@ export const ro: Dictionary = {
   // ------------------------------------------------------------- session --
   "Local only — this page is not on the published site. Build with {variable}=true to ship it.":
     "Doar local — pagina asta nu e pe site-ul publicat. Rulează build cu {variable}=true ca să o publici.",
+  'Local only — this panel is not on the published site. Build with {variable}=true to ship it.':
+    'Doar local — panelul ăsta nu e pe site-ul publicat. Rulează build cu {variable}=true ca să îl publici.',
   "Local only":
     "Doar local",
   "Room": "Camera",
@@ -1792,6 +1794,29 @@ export const ro: Dictionary = {
     'Cifrele sunt colorate față de restul tabelului: verde e treimea de sus a coloanei, galben mijlocul, roșu partea de jos. O coloană în care toți sunt la egalitate rămâne galbenă.',
   'Cutoff is the lowest score still counting: once the quota is full, a new result only moves the total if it beats that. Pick a player to see who they are and what their total is made of.':
     'Pragul e cel mai mic scor care încă se numără: odată ce cota e plină, un rezultat nou mișcă totalul doar dacă îl bate. Alege un jucător ca să vezi cine e și din ce e făcut totalul lui.',
+
+  // What it takes tonight
+  'What it takes tonight': 'Ce trebuie în seara asta',
+  'The table above is what everybody has. This is what it would take to change it: the score your next result has to beat, and how deep you have to run tonight to beat it. Nobody is playing for points once their quota is full — they are playing to evict their own worst score.':
+    'Tabelul de sus e ce are fiecare. Asta e ce ar fi nevoie ca să se schimbe: scorul pe care trebuie să-l bată următorul tău rezultat, și cât de departe trebuie să ajungi în seara asta ca să-l bați. Odată ce cota e plină nimeni nu mai joacă pentru puncte — joacă să-și scoată afară propriul scor cel mai slab.',
+  'To move your total': 'Ca să-ți miști totalul',
+  'To catch the leader': 'Ca să prinzi liderul',
+  'Must beat': 'Trebuie bătut',
+  // The column heads are field sizes, so the label is only the preposition.
+  'in {field}': 'în {field}',
+  'top {pct}': 'top {pct}',
+  'any finish': 'orice loc',
+  'Level with the lead': 'La egalitate cu liderul',
+  'Room left, so every result adds': 'Mai e loc, deci orice rezultat adaugă',
+  'Out of reach in a field that size: winning it outright is worth less than the target.':
+    'Imposibil într-un field de mărimea asta: să-l câștigi valorează mai puțin decât ținta.',
+  'Depth is the real answer and it does not care how big the field is: beat that share of it and the score follows. The three columns are the same thing as a place you can aim at. A dash is a field that size being unable to get you there — winning it outright is worth less than the target, so it takes a bigger field or a dearer game.':
+    'Adâncimea e răspunsul adevărat și nu-i pasă cât de mare e field-ul: bate procentul ăla din el și scorul vine după. Cele trei coloane spun același lucru, ca un loc concret pe care poți ținti. O liniuță înseamnă că un field de mărimea aia nu te poate duce acolo — să-l câștigi valorează mai puțin decât ținta, deci e nevoie de un field mai mare sau de un turneu mai scump.',
+  // The numeral sits after the noun on purpose: Romanian wants "de" from
+  // twenty up, and the count here is 10 in the monthly race and 50 in the
+  // yearly one.
+  'No bounties are assumed, so every figure here is the hard way round: collect heads and the bar drops by whatever the table below says they are worth. And once a player is counting their full {n}, a new score has to replace their worst one rather than join it — which is why catching somebody costs more than the gap between you.':
+    'Nu se presupune niciun bounty, deci fiecare cifră de aici e varianta grea: strânge capete și pragul scade cu cât spune tabelul de mai jos că valorează. Și odată ce un jucător numără deja maximul de scoruri ({n}), un scor nou trebuie să-l înlocuiască pe cel mai slab, nu să i se adauge — de aceea e mai scump să prinzi pe cineva decât diferența dintre voi.',
 
   // Who has been ahead
   'Who has been ahead': 'Cine a fost în față',

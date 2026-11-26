@@ -24,7 +24,10 @@ import { racePath } from '../../lib/racePath'
 import { BAND_TEXT, BAND_TEXT_SOFT, band } from '../../lib/metricBand'
 import {
   CHALLENGE_VARIABLE,
+  CUTOFF_VARIABLE,
   FEATURE_CHALLENGE_PUBLISHED,
+  FEATURE_CUTOFF_ENABLED,
+  FEATURE_CUTOFF_PUBLISHED,
   FEATURE_LAST_LONGER_ENABLED,
   FEATURE_LAST_LONGER_PUBLISHED,
 } from '../../lib/featureFlags'
@@ -63,6 +66,7 @@ import { CHALLENGE_PLAYERS, ROSTER } from '../../content/challengePlayers'
 import { CHALLENGE_RESULTS } from '../../content/challengeResults'
 import { profileFor } from '../../lib/playerProfiles'
 import { Avatar } from './Avatar'
+import { CutoffTargets } from './CutoffTargets'
 import { PlayerDialog } from './PlayerDialog'
 import { PointsTable } from './PointsTable'
 import { RaceChart } from './RaceChart'
@@ -116,6 +120,8 @@ export function LeaderboardPage() {
     FEATURE_LAST_LONGER_PUBLISHED,
     pretending,
   )
+
+  const cutoffOn = showing(FEATURE_CUTOFF_ENABLED, FEATURE_CUTOFF_PUBLISHED, pretending)
 
   const [picked, setPicked] = useState<ViewId>('monthly')
   // Falling back rather than remembering: flipping the preview switch while
@@ -629,6 +635,32 @@ export function LeaderboardPage() {
               </p>
             </Panel>
 
+            {cutoffOn && (
+              <Panel>
+                <h2 className="text-sm font-semibold text-white">
+                  {t('What it takes tonight')}
+                </h2>
+                <p className="mt-0.5 max-w-2xl text-xs text-slate-500">
+                  {t(
+                    'The table above is what everybody has. This is what it would take to change it: the score your next result has to beat, and how deep you have to run tonight to beat it. Nobody is playing for points once their quota is full — they are playing to evict their own worst score.',
+                  )}
+                </p>
+                <LocalOnlyBanner
+                  published={FEATURE_CUTOFF_PUBLISHED}
+                  variable={CUTOFF_VARIABLE}
+                  scope="panel"
+                  className="mt-3"
+                />
+                <div className="mt-4">
+                  <CutoffTargets
+                    table={table}
+                    format={format}
+                    cards={CHALLENGE_PLAYERS}
+                    onPick={pick}
+                  />
+                </div>
+              </Panel>
+            )}
             </>
           )}
 

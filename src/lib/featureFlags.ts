@@ -79,6 +79,21 @@ export const FEATURE_LAST_LONGER_ENABLED = isEnabled(import.meta.env, LAST_LONGE
 /** True once the last longer is set to ship. */
 export const FEATURE_LAST_LONGER_PUBLISHED = isPublished(import.meta.env, LAST_LONGER_VARIABLE)
 
+export const CUTOFF_VARIABLE = 'VITE_PUBLISH_CUTOFF'
+
+/**
+ * The cutoff targets are held back on their own flag.
+ *
+ * Every other panel on the leaderboard reports what happened. This one tells
+ * people what to go and do tonight, which is a thing that can be wrong in a
+ * way a standings table cannot, so it runs locally until the numbers have
+ * been read against a month of real results.
+ */
+export const FEATURE_CUTOFF_ENABLED = isEnabled(import.meta.env, CUTOFF_VARIABLE)
+
+/** True once the targets are set to ship. */
+export const FEATURE_CUTOFF_PUBLISHED = isPublished(import.meta.env, CUTOFF_VARIABLE)
+
 export const CHALLENGE_VARIABLE = 'VITE_PUBLISH_CHALLENGE'
 
 /**

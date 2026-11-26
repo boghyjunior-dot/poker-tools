@@ -211,6 +211,51 @@ export function score(result: ChallengeResult): number {
   )
 }
 
+/**
+ * The shallowest finish that still beats a score, as a share of the field.
+ *
+ * This is the finishing term turned around, and the formula happens to make
+ * that easy: a target of T at a stake factor of f needs N/R to be at least
+ * (T / 100f) squared, and N over R is a ratio. So the answer is a share of
+ * the field and nothing else — "top 4%" is the whole of it whether the field
+ * is 500 or 15,000, which is the property the lookup tables already lean on.
+ *
+ * Bounties are left out on purpose. A haul can only lower the bar, and
+ * nobody can plan one: the honest answer to "what do I need tonight" is what
+ * you need without one.
+ *
+ * Capped at the whole field, because a share deeper than that means turn up.
+ */
+export function depthNeeded(target: number, buyIn: number): number {
+  if (!Number.isFinite(target) || target <= 0) return 1
+  const factor = stakeFactor(buyIn)
+  return Math.min(1, Math.pow((100 * factor) / target, 2))
+}
+
+/**
+ * The deepest place in a field of N that still beats a score, or null if
+ * even winning it would not.
+ *
+ * Strictly beats. A result level with the cutoff changes nothing, so a place
+ * that merely equals it is not an answer — and the boundary is checked
+ * against the score rather than trusted to the arithmetic, because at the
+ * edge the rounding has to fall the player's way instead of ours.
+ */
+export function placeNeeded(
+  target: number,
+  entrants: number,
+  buyIn: number,
+): number | null {
+  if (!Number.isFinite(entrants) || entrants < 1) return null
+  const field = Math.floor(entrants)
+  const factor = stakeFactor(buyIn)
+  const scoreAt = (place: number) => finishPoints(field, place) * factor
+
+  let place = Math.min(field, Math.floor(field * depthNeeded(target, buyIn)))
+  if (place >= 1 && scoreAt(place) <= target) place -= 1
+  return place >= 1 ? place : null
+}
+
 export type FormatId = 'monthly' | 'yearly'
 
 export interface Format {
@@ -305,6 +350,26 @@ export function standings(
     previous = row.points
     return { rank, ...row }
   })
+}
+
+/**
+ * The single score that would take a player's total to a given number.
+ *
+ * One result, not a night's work. If their quota is full the new score
+ * replaces the cutoff rather than adding to it, which is why catching
+ * somebody costs more the better your own worst counting score already is: a
+ * full ten is a tax on every result after it.
+ *
+ * Zero once they are already there, because then there is nothing to ask
+ * for. The clamp is on the gap rather than the answer: somebody level with
+ * the total they are being measured against needs no result at all, and
+ * taking the cutoff off afterwards would have handed the leader their own
+ * cutoff as a target.
+ */
+export function scoreToReach(row: Standing, total: number): number {
+  const gap = total - row.points
+  if (!(gap > 0)) return 0
+  return gap + (row.cutoff ?? 0)
 }
 
 /**

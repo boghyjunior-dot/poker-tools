@@ -12,6 +12,7 @@ import {
   bountyPoints,
   cashByPlayer,
   countedFor,
+  depthNeeded,
   finishPoints,
   inMonth,
   inYear,
@@ -26,17 +27,20 @@ import {
   monthlyQualifiers,
   monthsIn,
   payouts,
+  placeNeeded,
   pot,
   openingMonth,
   openingYear,
   prizes,
   score,
+  scoreToReach,
   seasonMonths,
   seasonYears,
   stakeFactor,
   standings,
   yearsIn,
   type ChallengeResult,
+  type Standing,
 } from './leaderboard'
 
 let seq = 0
@@ -866,3 +870,141 @@ describe('telling a demonstration from a competition', () => {
     expect(isPlaceholder([result({ id: 'r-0001' }), result({ id: 'demo-0099' })])).toBe(true)
   })
 })
+
+describe('what it would take tonight', () => {
+  const row = (over: Partial<Standing> = {}): Standing => ({
+    rank: 1,
+    player: 'Ana',
+    points: 0,
+    counted: 0,
+    played: 0,
+    best: 0,
+    cutoff: null,
+    fromBounties: 0,
+    ...over,
+  })
+
+  describe('the depth a target needs', () => {
+    it('is the finishing term turned around', () => {
+      // 100 root(N/R) = 1000 at the floor stake wants N/R = 100, which is
+      // the top one per cent of whatever the field happens to be.
+      expect(depthNeeded(1000, STAKE_FLOOR)).toBeCloseTo(0.01, 9)
+      expect(depthNeeded(200, STAKE_FLOOR)).toBeCloseTo(0.25, 9)
+    })
+
+    it('is the whole field when turning up already beats it', () => {
+      // Last of the field is worth 100 at the floor, so anything under that
+      // is beaten by any finish at all.
+      expect(depthNeeded(99, STAKE_FLOOR)).toBe(1)
+      expect(depthNeeded(0, STAKE_FLOOR)).toBe(1)
+      expect(depthNeeded(-50, STAKE_FLOOR)).toBe(1)
+      expect(depthNeeded(Number.NaN, STAKE_FLOOR)).toBe(1)
+    })
+
+    it('asks for less of a dearer field, by the stake factor squared', () => {
+      const cheap = depthNeeded(1000, STAKE_FLOOR)
+      const dear = depthNeeded(1000, STAKE_CEILING)
+      expect(dear).toBeGreaterThan(cheap)
+      // Finishing points go as the root of the field, so a factor of f on
+      // the score is f squared on the depth.
+      expect(dear / cheap).toBeCloseTo(stakeFactor(STAKE_CEILING) ** 2, 9)
+    })
+  })
+
+  describe('the place a target needs', () => {
+    it('beats the target rather than matching it', () => {
+      // 10th of 1,000 is worth exactly 1,000, and a result level with the
+      // cutoff moves nothing, so the answer is the place above it.
+      expect(finishPoints(1000, 10)).toBeCloseTo(1000, 9)
+      expect(placeNeeded(1000, 1000, STAKE_FLOOR)).toBe(9)
+    })
+
+    it('is the same share of a bigger field', () => {
+      expect(placeNeeded(1000, 10000, STAKE_FLOOR)).toBe(99)
+      expect(placeNeeded(1000, 2500, STAKE_FLOOR)).toBe(24)
+    })
+
+    it('is any finish when the target is nothing', () => {
+      expect(placeNeeded(0, 1500, STAKE_FLOOR)).toBe(1500)
+      expect(placeNeeded(99, 1500, STAKE_FLOOR)).toBe(1500)
+    })
+
+    it('is null when winning it outright would not do', () => {
+      // A win in 1,000 is worth 3,162 at the floor stake.
+      expect(placeNeeded(5000, 1000, STAKE_FLOOR)).toBeNull()
+      expect(placeNeeded(3163, 1000, STAKE_FLOOR)).toBeNull()
+      expect(placeNeeded(3000, 1000, STAKE_FLOOR)).toBe(1)
+    })
+
+    it('handles a field nobody could call one', () => {
+      expect(placeNeeded(50, 1, STAKE_FLOOR)).toBe(1)
+      expect(placeNeeded(150, 1, STAKE_FLOOR)).toBeNull()
+      expect(placeNeeded(100, 0, STAKE_FLOOR)).toBeNull()
+      expect(placeNeeded(100, Number.NaN, STAKE_FLOOR)).toBeNull()
+    })
+
+    it('lets a dearer game finish shallower', () => {
+      const cheap = placeNeeded(1000, 2500, STAKE_FLOOR) ?? 0
+      const dear = placeNeeded(1000, 2500, STAKE_CEILING) ?? 0
+      expect(dear).toBeGreaterThan(cheap)
+    })
+
+    it('agrees with the scoring formula on both sides of the line', () => {
+      // The test that matters: whatever the inverse says, scoring that
+      // finish has to beat the target and scoring one place deeper has not.
+      for (const buyIn of [STAKE_FLOOR, 11, 22, 54, STAKE_CEILING]) {
+        for (const entrants of [100, 1000, 2500, 9999]) {
+          for (const target of [120, 500, 1000, 2000, 4000]) {
+            const place = placeNeeded(target, entrants, buyIn)
+            if (place === null) {
+              expect(score(result({ entrants, place: 1, buyIn }))).toBeLessThanOrEqual(target)
+              continue
+            }
+            expect(score(result({ entrants, place, buyIn }))).toBeGreaterThan(target)
+            if (place < entrants) {
+              expect(score(result({ entrants, place: place + 1, buyIn }))).toBeLessThanOrEqual(
+                target,
+              )
+            }
+          }
+        }
+      }
+    })
+  })
+
+  describe('the score that reaches a total', () => {
+    it('is the plain gap while the quota has room', () => {
+      expect(scoreToReach(row({ points: 400, cutoff: null }), 1000)).toBe(600)
+    })
+
+    it('is the gap plus the cutoff once the quota is full', () => {
+      // A new score replaces the worst one rather than joining it, so the
+      // ground that score was already holding has to be made up as well.
+      expect(scoreToReach(row({ points: 400, counted: 10, cutoff: 150 }), 1000)).toBe(750)
+    })
+
+    it('is nothing once they are there, and never less', () => {
+      expect(scoreToReach(row({ points: 1000, cutoff: 150 }), 1000)).toBe(0)
+      expect(scoreToReach(row({ points: 2000, cutoff: 150 }), 1000)).toBe(0)
+    })
+
+    it('costs more than the gap, read off a real table', () => {
+      const format = { ...FORMATS.monthly, best: 2 }
+      const log = [
+        result({ player: 'Ana', entrants: 1000, place: 10 }),
+        result({ player: 'Ana', entrants: 1000, place: 40 }),
+        result({ player: 'Bogdan', entrants: 1000, place: 100 }),
+        result({ player: 'Bogdan', entrants: 1000, place: 250 }),
+      ]
+      const [ana, bogdan] = standings(log, format)
+      const needed = scoreToReach(bogdan, ana.points)
+
+      expect(bogdan.counted).toBe(2)
+      // Swapping it for the cutoff lands him exactly level, which is first
+      // place: ties share a rank, so catching is enough.
+      expect(bogdan.points - (bogdan.cutoff ?? 0) + needed).toBeCloseTo(ana.points, 6)
+      expect(needed).toBeGreaterThan(ana.points - bogdan.points)
+    })
+  })
+})
+
