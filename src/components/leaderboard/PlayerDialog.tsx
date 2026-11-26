@@ -17,6 +17,7 @@ import { useEffect, useRef } from 'react'
 import { formatMoney } from '../../lib/formatNumber'
 import { useT } from '../../lib/i18n'
 import {
+  wholeShares,
   type ChallengeResult,
   type Format,
   type LastLongerStanding,
@@ -40,6 +41,7 @@ export interface RaceColumns {
   best: number[]
   cutoff: number[]
   prize: number[]
+  money: number[]
 }
 
 export interface NightColumns {
@@ -85,6 +87,8 @@ export function PlayerDialog({
   counted,
   payout,
   prize,
+  bounties,
+  money,
   cards,
   format,
   columns,
@@ -102,6 +106,10 @@ export function PlayerDialog({
   payout: number | undefined
   /** Prize money won over the period, across every result. */
   prize: number | undefined
+  /** Bounty money over the same results, which is not a prize. */
+  bounties: number | undefined
+  /** The two of them added up: what the month was actually worth. */
+  money: number | undefined
   cards: readonly PlayerCard[]
   format: Format
   columns: RaceColumns
@@ -117,6 +125,15 @@ export function PlayerDialog({
     if (player && !dialog.open) dialog.showModal()
     if (!player && dialog.open) dialog.close()
   }, [player])
+
+  /**
+   * The prize and the heads in whole dollars that add up to the total.
+   *
+   * Rounded apart they do not: $3,265.60 and $475.60 are shown as $3,266 and
+   * $476, which is a dollar more than the $3,741 above them, and the first
+   * thing somebody does with two figures and a total is add them up.
+   */
+  const [prizeWhole, bountyWhole] = wholeShares([prize ?? 0, bounties ?? 0], money)
 
   const card = player ? profileFor(player, cards) : null
   /**
@@ -211,14 +228,6 @@ export function PlayerDialog({
                   }
                 />
                 <Figure
-                  label="Prize"
-                  value={prize === undefined ? '—' : `$${formatMoney(prize)}`}
-                  muted={!prize}
-                  tone={
-                    prize === undefined ? undefined : BAND_TEXT_SOFT[band(prize, columns.prize)]
-                  }
-                />
-                <Figure
                   label="From bounties"
                   value={
                     standing.points > 0
@@ -226,6 +235,27 @@ export function PlayerDialog({
                       : '—'
                   }
                   muted={standing.fromBounties === 0}
+                />
+                <Figure
+                  label="Prize"
+                  value={prize === undefined ? '—' : `$${formatMoney(prizeWhole)}`}
+                  muted={!prize}
+                  tone={
+                    prize === undefined ? undefined : BAND_TEXT_SOFT[band(prize, columns.prize)]
+                  }
+                />
+                <Figure
+                  label="Bounties"
+                  value={bounties === undefined ? '—' : `$${formatMoney(bountyWhole)}`}
+                  muted={!bounties}
+                />
+                <Figure
+                  label="Total won"
+                  value={money === undefined ? '—' : `$${formatMoney(money)}`}
+                  muted={!money}
+                  tone={
+                    money === undefined ? undefined : BAND_TEXT_SOFT[band(money, columns.money)]
+                  }
                 />
                 <Figure
                   label="Payout"

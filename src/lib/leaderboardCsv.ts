@@ -35,7 +35,8 @@ export function csvRows(rows: readonly (string | number)[][]): string {
 export function standingsCsv(
   table: readonly Standing[],
   format: Format,
-  prize: (player: string) => number,
+  /** Every dollar won, as the Prizes column has it: cashes and heads. */
+  prizes: (player: string) => number,
   payout: (player: string) => number | undefined,
 ): string {
   const head = [
@@ -47,7 +48,7 @@ export function standingsCsv(
     'Played',
     'Best',
     'Cutoff',
-    'Prize',
+    'Prizes',
     'Payout',
   ]
   const rows = table.map((row) => [
@@ -59,7 +60,7 @@ export function standingsCsv(
     row.played,
     Math.round(row.best),
     row.cutoff === null ? '' : Math.round(row.cutoff),
-    Math.round(prize(row.player)),
+    Math.round(prizes(row.player)),
     payout(row.player) === undefined ? '' : Math.round(payout(row.player) ?? 0),
   ])
   return csvRows([head, ...rows])

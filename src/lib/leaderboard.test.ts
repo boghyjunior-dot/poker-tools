@@ -9,6 +9,7 @@ import {
   STAKE_CEILING,
   STAKE_EXPONENT,
   STAKE_FLOOR,
+  bountyByPlayer,
   bountyPoints,
   cashByPlayer,
   countedFor,
@@ -24,6 +25,7 @@ import {
   ineligible,
   lastLongerRounds,
   lastLongerStandings,
+  moneyByPlayer,
   monthlyQualifiers,
   monthsIn,
   payouts,
@@ -37,6 +39,7 @@ import {
   seasonMonths,
   seasonYears,
   stakeFactor,
+  wholeShares,
   standings,
   yearsIn,
   type ChallengeResult,
@@ -771,6 +774,51 @@ describe('prize money per player', () => {
     expect(paid.get('Ana')).toBe(0)
   })
 
+  it('adds the heads up on their own', () => {
+    const heads = bountyByPlayer([
+      result({ player: 'Ana', buyIn: 54, bounties: 108 }),
+      result({ player: 'Ana', buyIn: 54, bounties: 27 }),
+      result({ player: 'Bogdan', buyIn: 54, bounties: 0 }),
+    ])
+    expect(heads.get('Ana')).toBe(135)
+    expect(heads.get('Bogdan')).toBe(0)
+  })
+
+  it('adds cashes and heads together for what the month was worth', () => {
+    const log = [
+      result({ player: 'Ana', buyIn: 54, cashed: 200, bounties: 300 }),
+      result({ player: 'Ana', buyIn: 54, cashed: 0, bounties: 54 }),
+      result({ player: 'Bogdan', buyIn: 54, cashed: 90, bounties: 0 }),
+    ]
+    const all = moneyByPlayer(log)
+    expect(all.get('Ana')).toBe(554)
+    expect(all.get('Bogdan')).toBe(90)
+  })
+
+  it('splits into the two figures the player window shows', () => {
+    // The three have to agree, because the window shows the parts under
+    // the sum and somebody will add them up.
+    const log = [
+      result({ player: 'Ana', buyIn: 54, cashed: 200, bounties: 300 }),
+      result({ player: 'Ana', buyIn: 11, cashed: 45, bounties: 22 }),
+    ]
+    const cash = cashByPlayer(log).get('Ana') ?? 0
+    const heads = bountyByPlayer(log).get('Ana') ?? 0
+    expect(cash + heads).toBe(moneyByPlayer(log).get('Ana'))
+  })
+
+  it('counts money from a result that scored no points at all', () => {
+    // Out of the band, so the points ignore it. The money happened.
+    const log = [result({ player: 'Ana', buyIn: 215, cashed: 900, bounties: 430 })]
+    expect(moneyByPlayer(log).get('Ana')).toBe(1330)
+  })
+
+  it('ignores a negative in either half', () => {
+    const log = [result({ player: 'Ana', buyIn: 54, cashed: -50, bounties: -20 })]
+    expect(moneyByPlayer(log).get('Ana')).toBe(0)
+    expect(bountyByPlayer(log).get('Ana')).toBe(0)
+  })
+
   it('ignores a negative, which is not a cash', () => {
     expect(cashByPlayer([result({ player: 'Ana', cashed: -50 })]).get('Ana')).toBe(0)
   })
@@ -868,6 +916,63 @@ describe('telling a demonstration from a competition', () => {
   it('still says yes when one placeholder is left among real rows', () => {
     // A half-cleared file is the dangerous case: it reads as real.
     expect(isPlaceholder([result({ id: 'r-0001' }), result({ id: 'demo-0099' })])).toBe(true)
+  })
+})
+
+describe('fitting whole units into a total', () => {
+  const sum = (parts: readonly number[]) => parts.reduce((total, part) => total + part, 0)
+
+  it('adds up to the total rather than to the rounded parts', () => {
+    // The case the money columns kept getting wrong: rounded apart these
+    // are 3,266 and 476, which is a dollar more than the 3,741 above them.
+    expect(Math.round(3265.6) + Math.round(475.6)).toBe(3742)
+
+    const parts = wholeShares([3265.6, 475.6])
+    expect(sum(parts)).toBe(3741)
+    // Which half gives up the dollar is not worth pinning down: the two
+    // fractions are the same to the eye and differ only in the last bits of
+    // a float. Every part staying within a dollar of itself is the promise.
+    expect(Math.abs(parts[0] - 3265.6)).toBeLessThan(1)
+    expect(Math.abs(parts[1] - 475.6)).toBeLessThan(1)
+  })
+
+  it('gives everybody their floor and the spare to the largest fraction', () => {
+    expect(wholeShares([137.5, 82.5, 55])).toEqual([138, 82, 55])
+    expect(wholeShares([0.2, 0.3, 0.5])).toEqual([0, 0, 1])
+  })
+
+  it('keeps the order it was given when fractions tie', () => {
+    // Stable, so the caller decides who the spare unit favours by the order
+    // the parts arrive in.
+    expect(wholeShares([10.5, 20.5])).toEqual([11, 20])
+    expect(wholeShares([20.5, 10.5])).toEqual([21, 10])
+  })
+
+  it('hits a total it is handed rather than the one it works out', () => {
+    // The window is given the figure the standings column shows, so the two
+    // cannot disagree even if the halves were summed somewhere else.
+    expect(sum(wholeShares([100.4, 100.4], 201))).toBe(201)
+  })
+
+  it('leaves whole parts alone', () => {
+    expect(wholeShares([10, 20, 30])).toEqual([10, 20, 30])
+  })
+
+  it('has nothing to do with no parts', () => {
+    expect(wholeShares([])).toEqual([])
+  })
+
+  it('treats a part that is not a number as nothing', () => {
+    // The 11 is the lone real part rounding up, not the NaN contributing.
+    expect(wholeShares([Number.NaN, 10.5])).toEqual([0, 11])
+    expect(wholeShares([Number.NaN, 10.4])).toEqual([0, 10])
+  })
+
+  it('always adds up, over a spread of awkward splits', () => {
+    for (let i = 0; i < 200; i += 1) {
+      const parts = [i / 7, i / 3, i / 11, i / 13]
+      expect(sum(wholeShares(parts))).toBe(Math.round(sum(parts)))
+    }
   })
 })
 

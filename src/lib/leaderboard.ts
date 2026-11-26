@@ -384,9 +384,51 @@ export function scoreToReach(row: Standing, total: number): number {
  * they are not a cash, and the buy-ins are not taken off.
  */
 export function cashByPlayer(results: readonly ChallengeResult[]): Map<string, number> {
+  return sumByPlayer(results, (result) => result.cashed)
+}
+
+/**
+ * Bounty money won per player, on the same terms.
+ *
+ * Money rather than the points it bought. The bounty term in the formula is
+ * a ratio to the buy-in and this is not: a head is cash in hand, and a
+ * player looking at what their month was worth wants the amount.
+ */
+export function bountyByPlayer(results: readonly ChallengeResult[]): Map<string, number> {
+  return sumByPlayer(results, (result) => result.bounties)
+}
+
+/**
+ * Every dollar a player took off the table, cashes and heads together.
+ *
+ * The standings show this one, because the question a table of money
+ * answers is "how did the month go" and nobody settles that by leaving the
+ * knockouts out. The player window shows the two apart and this underneath
+ * them, since the split is what you want once you are looking at one person
+ * — a month made of heads is a different month from one made of final
+ * tables, and the sum alone hides which you had.
+ *
+ * Summed per result rather than by adding the two maps, so a player who
+ * appears in one and not the other cannot go missing.
+ */
+export function moneyByPlayer(results: readonly ChallengeResult[]): Map<string, number> {
+  return sumByPlayer(results, (result) => Math.max(0, result.cashed) + Math.max(0, result.bounties))
+}
+
+/**
+ * One amount per result, totalled by player.
+ *
+ * Negatives are floored rather than subtracted: a loss is the buy-in, which
+ * these figures deliberately do not take off, so a negative in either field
+ * is bad data and not a debt.
+ */
+function sumByPlayer(
+  results: readonly ChallengeResult[],
+  amount: (result: ChallengeResult) => number,
+): Map<string, number> {
   const out = new Map<string, number>()
   for (const result of results) {
-    out.set(result.player, (out.get(result.player) ?? 0) + Math.max(0, result.cashed))
+    out.set(result.player, (out.get(result.player) ?? 0) + Math.max(0, amount(result)))
   }
   return out
 }
@@ -469,24 +511,45 @@ export function payouts(
   // Walked in table order rather than the map's, so the odd dollar goes up
   // the standings instead of wherever the entries happened to be made.
   const rows = table.filter((row) => exact.has(row.player))
+  const whole = wholeShares(rows.map((row) => exact.get(row.player) ?? 0))
 
-  const whole = new Map<string, number>()
-  let handed = 0
-  for (const row of rows) {
-    const floor = Math.floor(exact.get(row.player) ?? 0)
-    whole.set(row.player, floor)
-    handed += floor
-  }
+  return new Map(rows.map((row, index) => [row.player, whole[index]]))
+}
 
-  const total = Math.round([...exact.values()].reduce((sum, value) => sum + value, 0))
-  // A stable sort, so players left on the same fraction keep their order and
-  // the dollar goes to the better finish.
-  const spare = rows
-    .map((row) => ({ player: row.player, part: (exact.get(row.player) ?? 0) % 1 }))
-    .sort((a, b) => b.part - a.part)
+/**
+ * Whole units for the parts of a total, adding up to the total.
+ *
+ * Rounding each part on its own is the thing that cannot be allowed: three
+ * shares of $275 are $137.50, $82.50 and $55, which round to $276 and pay
+ * out a dollar nobody put in. Two halves of a figure do the same — a prize
+ * and a bounty haul rounded apart will sit under a total they do not make.
+ *
+ * So the total is rounded once and the parts are fitted into it: everybody
+ * takes their floor, and the remainder goes a unit at a time to the largest
+ * fractions. The odd-chip rule a live room already uses, and the reason a
+ * tie can land a unit apart — which is also what happens at a real table
+ * when the chips will not divide.
+ *
+ * The sort is stable, so parts left on the same fraction keep the order they
+ * were given in and the caller decides who the spare unit favours.
+ */
+export function wholeShares(parts: readonly number[], total?: number): number[] {
+  const exact = parts.map((part) => (Number.isFinite(part) ? part : 0))
+  const whole = exact.map((part) => Math.floor(part))
+  let handed = whole.reduce((sum, part) => sum + part, 0)
 
-  for (let i = 0; handed < total && i < spare.length; i += 1) {
-    whole.set(spare[i].player, (whole.get(spare[i].player) ?? 0) + 1)
+  const target = Math.round(
+    total !== undefined && Number.isFinite(total)
+      ? total
+      : exact.reduce((sum, part) => sum + part, 0),
+  )
+
+  const spare = exact
+    .map((part, index) => ({ index, fraction: part % 1 }))
+    .sort((a, b) => b.fraction - a.fraction)
+
+  for (let i = 0; handed < target && i < spare.length; i += 1) {
+    whole[spare[i].index] += 1
     handed += 1
   }
 

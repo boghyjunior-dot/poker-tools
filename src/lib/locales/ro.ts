@@ -1780,6 +1780,11 @@ export const ro: Dictionary = {
   Best: 'Cel mai bun',
   Cutoff: 'Prag',
   Prize: 'Premiu',
+  // The standings column, which is cashes and bounties together.
+  Prizes: 'Premii',
+  'Cashes and bounties together. The player window has them apart.':
+    'Cash-urile și bounty-urile la un loc. În fereastra jucătorului sunt separate.',
+  'Total won': 'Total câștigat',
   // Left in English: the money the pot pays you, which is not the same thing
   // as the prize money you won at the table.
   Payout: 'Payout',

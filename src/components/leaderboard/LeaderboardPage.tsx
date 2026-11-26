@@ -40,6 +40,7 @@ import {
   CHALLENGE_NAME,
   STAKE_CEILING,
   STAKE_FLOOR,
+  bountyByPlayer,
   cashByPlayer,
   eligible,
   history,
@@ -49,6 +50,7 @@ import {
   isPlaceholder,
   lastLongerRounds,
   lastLongerStandings,
+  moneyByPlayer,
   monthlyQualifiers,
   PRIZE_SHARES,
   openingMonth,
@@ -194,6 +196,14 @@ export function LeaderboardPage() {
   // that moved when a score fell out of somebody's top ten would be one
   // nobody could reconcile against their own records.
   const won = useMemo(() => cashByPlayer(inPeriod), [inPeriod])
+  const heads = useMemo(() => bountyByPlayer(inPeriod), [inPeriod])
+  /**
+   * The two above added up, which is what the standings column shows.
+   *
+   * Taken from the results rather than by adding the two maps, so the
+   * figure on the table and the two it is made of can never drift apart.
+   */
+  const money = useMemo(() => moneyByPlayer(inPeriod), [inPeriod])
 
   /**
    * Each column's figures, so a cell can be coloured against its own column.
@@ -209,8 +219,9 @@ export function LeaderboardPage() {
       best: table.map((row) => row.best),
       cutoff: table.map((row) => row.cutoff ?? 0),
       prize: table.map((row) => won.get(row.player) ?? 0),
+      money: table.map((row) => money.get(row.player) ?? 0),
     }),
-    [table, won],
+    [table, won, money],
   )
   const working = useMemo(
     () => (open ? countedFor(scoring, open, format) : []),
@@ -242,7 +253,7 @@ export function LeaderboardPage() {
         : standingsCsv(
             table,
             format,
-            (player) => won.get(player) ?? 0,
+            (player) => money.get(player) ?? 0,
             (player) => paid.get(player),
           )
     downloadCsv(csvName(view === 'lastLonger' ? 'last-longer' : view, period), csv)
@@ -540,7 +551,7 @@ export function LeaderboardPage() {
                       <th className="px-2 py-3 text-right font-medium">{t('Counting')}</th>
                       <th className="px-2 py-3 text-right font-medium">{t('Best')}</th>
                       <th className="px-2 py-3 text-right font-medium">{t('Cutoff')}</th>
-                      <th className="px-2 py-3 text-right font-medium">{t('Prize')}</th>
+                      <th className="px-2 py-3 text-right font-medium">{t('Prizes')}</th>
                       <th className="px-4 py-3 text-right font-medium">{t('Payout')}</th>
                     </tr>
                   </thead>
@@ -605,10 +616,11 @@ export function LeaderboardPage() {
                         </td>
                         <td
                           className={`px-2 py-2.5 text-right tabular-nums ${
-                            BAND_TEXT_SOFT[band(won.get(row.player) ?? 0, columns.prize)]
+                            BAND_TEXT_SOFT[band(money.get(row.player) ?? 0, columns.money)]
                           }`}
+                          title={t('Cashes and bounties together. The player window has them apart.')}
                         >
-                          ${formatMoney(won.get(row.player) ?? 0)}
+                          ${formatMoney(money.get(row.player) ?? 0)}
                         </td>
                         <td
                           className={`px-4 py-2.5 text-right font-semibold tabular-nums ${
@@ -801,6 +813,8 @@ export function LeaderboardPage() {
           counted={working}
           payout={open ? paid.get(open) : undefined}
           prize={open ? (won.get(open) ?? 0) : undefined}
+          bounties={open ? (heads.get(open) ?? 0) : undefined}
+          money={open ? (money.get(open) ?? 0) : undefined}
           cards={CHALLENGE_PLAYERS}
           format={format}
           columns={columns}

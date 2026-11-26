@@ -59,7 +59,7 @@ describe('the standings as a file', () => {
   const lines = csv.split('\r\n')
 
   it('starts with a header naming every column the table shows', () => {
-    expect(lines[0]).toBe('Rank,Player,Points,Counting,Of,Played,Best,Cutoff,Prize,Payout')
+    expect(lines[0]).toBe('Rank,Player,Points,Counting,Of,Played,Best,Cutoff,Prizes,Payout')
   })
 
   it('has a row per player, including those who have not played', () => {
