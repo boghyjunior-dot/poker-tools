@@ -1968,6 +1968,12 @@ export const ro: Dictionary = {
   'R — where you finished': 'R — locul pe care ai terminat',
   'Bi — what the seat cost': 'Bi — cât a costat locul',
   'Bty — heads collected, in money': 'Bty — capete strânse, în bani',
+  'Money in': 'Banii în',
+  Currency: 'Monedă',
+  'Counted at $1 = {rate}, taken on {date}. Heads over the buy-in is a ratio, so the currency drops out of that term; the band and the stake multiplier are in dollars, so the buy-in is turned into dollars first — {converted} here.':
+    'Socotit la $1 = {rate}, curs luat pe {date}. Capetele raportate la buy-in sunt un raport, deci moneda dispare din termenul ăla; intervalul și multiplicatorul de stake sunt în dolari, așa că buy-in-ul e trecut întâi în dolari — {converted} aici.',
+  'A {bi} buy-in is {usd}, outside the ${low}–${high} band, so a result like this would not be in the challenge at all. The score below is what the arithmetic gives, not what you would be credited.':
+    'Un buy-in de {bi} înseamnă {usd}, în afara intervalului ${low}–${high}, deci un rezultat ca ăsta nu ar intra deloc în challenge. Scorul de mai jos e ce dă aritmetica, nu ce ți s-ar credita.',
   'Finish — 100 × √(N / R)': 'Clasare — 100 × √(N / R)',
   'Bounty — 25 × (Bty / Bi)': 'Bounty — 25 × (Bty / Bi)',
   'Stake — ⁴√(Bi / 5)': 'Stake — ⁴√(Bi / 5)',
