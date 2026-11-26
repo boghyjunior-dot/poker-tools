@@ -20,6 +20,7 @@ import {
   lastLongerCsv,
   standingsCsv,
 } from '../../lib/leaderboardCsv'
+import { awards } from '../../lib/awards'
 import { racePath } from '../../lib/racePath'
 import { BAND_TEXT, BAND_TEXT_SOFT, band } from '../../lib/metricBand'
 import {
@@ -227,6 +228,12 @@ export function LeaderboardPage() {
     () => (open ? countedFor(scoring, open, format) : []),
     [scoring, open, format],
   )
+  /**
+   * Worked out over the whole table rather than per player, because every
+   * title is a comparison: the window can only show one of these once
+   * somebody has decided who holds it.
+   */
+  const titles = useMemo(() => awards(scoring, table, format), [scoring, table, format])
   const nights = useMemo(() => lastLongerRounds(inPeriod, DAILY_MAIN), [inPeriod])
   const lastLonger = useMemo(() => lastLongerStandings(inPeriod, DAILY_MAIN), [inPeriod])
   const llColumns = useMemo(
@@ -811,6 +818,7 @@ export function LeaderboardPage() {
           lastLonger={lastLongerOn ? lastLonger.find((row) => row.player === open) : undefined}
           showLastLonger={lastLongerOn}
           counted={working}
+          awards={titles}
           payout={open ? paid.get(open) : undefined}
           prize={open ? (won.get(open) ?? 0) : undefined}
           bounties={open ? (heads.get(open) ?? 0) : undefined}

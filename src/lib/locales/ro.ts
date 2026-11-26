@@ -1885,6 +1885,18 @@ export const ro: Dictionary = {
   // The player window
   'No description yet — still scores all the same.':
     'Încă fără descriere — scorul se adună oricum.',
+
+  // The titles. Left in English like the competition's own names: they are
+  // nicknames people will say out loud, not labels to be read.
+  'Giant Killer': 'Giant Killer',
+  'Bounty Hunter': 'Bounty Hunter',
+  'Mr. Consistent': 'Mr. Consistent',
+  'Best finish in the biggest field anybody played: {place} of {entrants}.':
+    'Cel mai bun loc în cel mai mare field jucat de cineva: {place} din {entrants}.',
+  'The largest share of a total that came out of bounties: {pct}.':
+    'Cea mai mare parte dintr-un total venită din bounty-uri: {pct}.',
+  'The tightest spread across a full quota of counting scores: {pct} off their own average.':
+    'Cea mai mică împrăștiere pe o cotă plină de scoruri numărate: {pct} față de propria medie.',
   '{label} race': 'Clasamentul {label}',
   'The {n} scores counting': 'Scorurile care se numără ({n})',
   'Best score': 'Cel mai bun scor',

@@ -14,6 +14,7 @@
  */
 
 import { useEffect, useRef } from 'react'
+import { AWARD_LABELS, awardsFor, type Award } from '../../lib/awards'
 import { formatMoney } from '../../lib/formatNumber'
 import { useT } from '../../lib/i18n'
 import {
@@ -42,6 +43,39 @@ export interface RaceColumns {
   cutoff: number[]
   prize: number[]
   money: number[]
+}
+
+/**
+ * A title, worn under the name.
+ *
+ * The label is the whole of it and the reason sits in the tooltip, because
+ * a row of badges is read at a glance and a row of sentences is not.
+ */
+function Title({ award }: { award: Award }) {
+  const t = useT()
+
+  const why =
+    award.id === 'giantKiller'
+      ? t('Best finish in the biggest field anybody played: {place} of {entrants}.', {
+          place: award.value,
+          entrants: (award.entrants ?? 0).toLocaleString('en-US'),
+        })
+      : award.id === 'bountyHunter'
+        ? t('The largest share of a total that came out of bounties: {pct}.', {
+            pct: `${(award.value * 100).toFixed(1)}%`,
+          })
+        : t('The tightest spread across a full quota of counting scores: {pct} off their own average.', {
+            pct: `${(award.value * 100).toFixed(0)}%`,
+          })
+
+  return (
+    <span
+      title={why}
+      className="rounded-full border border-amber-800/60 bg-amber-950/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-300"
+    >
+      {t(AWARD_LABELS[award.id])}
+    </span>
+  )
 }
 
 export interface NightColumns {
@@ -85,6 +119,7 @@ export function PlayerDialog({
   lastLonger,
   showLastLonger,
   counted,
+  awards,
   payout,
   prize,
   bounties,
@@ -104,6 +139,8 @@ export function PlayerDialog({
   counted: { result: ChallengeResult; score: number }[]
   /** What they are owed out of the pot, if they are in the money. */
   payout: number | undefined
+  /** Every title anybody holds this period; the window shows this one's. */
+  awards: readonly Award[]
   /** Prize money won over the period, across every result. */
   prize: number | undefined
   /** Bounty money over the same results, which is not a prize. */
@@ -134,6 +171,8 @@ export function PlayerDialog({
    * thing somebody does with two figures and a total is add them up.
    */
   const [prizeWhole, bountyWhole] = wholeShares([prize ?? 0, bounties ?? 0], money)
+
+  const titles = player ? awardsFor(awards, player) : []
 
   const card = player ? profileFor(player, cards) : null
   /**
@@ -182,6 +221,13 @@ export function PlayerDialog({
                   ? t(card.description)
                   : t('No description yet — still scores all the same.')}
               </p>
+              {titles.length > 0 && (
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  {titles.map((award) => (
+                    <Title key={award.id} award={award} />
+                  ))}
+                </div>
+              )}
             </div>
             <button
               type="button"
